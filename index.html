@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>App de Gestão - DRE V20 (Correção de Abas)</title>
+    <title>App de Gestão - DRE V21 (Estável)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -21,8 +21,7 @@
 </head>
 <body class="bg-gray-100 text-gray-800">
     
-    <!-- Conteúdo Principal do App -->
-    <div id="main-app" class="container mx-auto max-w-7xl p-4 sm:p-6 md:p-8">
+    <div class="container mx-auto max-w-7xl p-4 sm:p-6 md:p-8">
         <header class="bg-white p-6 rounded-xl shadow-md mb-8 flex flex-col sm:flex-row justify-between items-center">
              <div>
                 <h1 id="header-company-name" class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Painel de Gestão</h1>
@@ -46,22 +45,7 @@
                 </div>
 
                 <div id="tabs-content-container" class="mt-6">
-                    <!-- Abas de Lançamento -->
-                    <div id="tab-calibracao" class="tab-content active">
-                        <form id="settings-form" class="space-y-8">
-                             <div class="p-4 border rounded-lg">
-                                <h3 class="text-lg font-semibold text-gray-700 mb-4">Identificação da Empresa</h3>
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                     <div><label for="companyName" class="text-sm">Razão Social</label><input type="text" id="companyName" placeholder="Nome da sua empresa" class="w-full p-2 border rounded-lg"></div>
-                                     <div><label for="companyCnpj" class="text-sm">CNPJ</label><input type="text" id="companyCnpj" placeholder="00.000.000/0001-00" class="w-full p-2 border rounded-lg"></div>
-                                </div>
-                            </div>
-                            <div class="p-4 border rounded-lg"><h3 class="text-lg font-semibold text-gray-700 mb-4">Impostos e Regime</h3><div class="grid grid-cols-1 sm:grid-cols-2 gap-4"><select id="taxRegime" class="w-full p-2 border rounded-lg sm:col-span-2"><option value="simples">Simples Nacional</option><option value="presumido">Lucro Presumido</option><option value="real">Lucro Real</option></select><div><label for="taxRate" class="text-sm">Alíquota Efetiva (%)</label><input type="number" id="taxRate" step="0.01" placeholder="Ex: 6.5" class="w-full p-2 border rounded-lg"></div></div></div>
-                            <div class="p-4 border rounded-lg"><h3 class="text-lg font-semibold text-gray-700 mb-4">Taxas de Meios de Pagamento</h3><div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"><div><label class="text-sm">Débito (%)</label><input type="number" id="debitFee" step="0.01" placeholder="1.49" class="w-full p-2 border rounded-lg"></div><div><label class="text-sm">Crédito à Vista (%)</label><input type="number" id="creditFee" step="0.01" placeholder="3.29" class="w-full p-2 border rounded-lg"></div><div><label class="text-sm">Taxa App Delivery (%)</label><input type="number" id="deliveryAppFee" step="0.01" placeholder="27" class="w-full p-2 border rounded-lg"></div></div></div>
-                            <button type="submit" class="w-full bg-green-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-green-700">Guardar Configurações</button>
-                            <p id="save-feedback" class="text-center text-green-700 font-medium h-4"></p>
-                        </form>
-                    </div>
+                    <div id="tab-calibracao" class="tab-content active"><form id="settings-form" class="space-y-8"><div class="p-4 border rounded-lg"><h3 class="text-lg font-semibold text-gray-700 mb-4">Identificação da Empresa</h3><div class="grid grid-cols-1 sm:grid-cols-2 gap-4"><div><label for="companyName" class="text-sm">Razão Social</label><input type="text" id="companyName" placeholder="Nome da sua empresa" class="w-full p-2 border rounded-lg"></div><div><label for="companyCnpj" class="text-sm">CNPJ</label><input type="text" id="companyCnpj" placeholder="00.000.000/0001-00" class="w-full p-2 border rounded-lg"></div></div></div><div class="p-4 border rounded-lg"><h3 class="text-lg font-semibold text-gray-700 mb-4">Impostos e Regime</h3><div class="grid grid-cols-1 sm:grid-cols-2 gap-4"><select id="taxRegime" class="w-full p-2 border rounded-lg sm:col-span-2"><option value="simples">Simples Nacional</option><option value="presumido">Lucro Presumido</option><option value="real">Lucro Real</option></select><div><label for="taxRate" class="text-sm">Alíquota Efetiva (%)</label><input type="number" id="taxRate" step="0.01" placeholder="Ex: 6.5" class="w-full p-2 border rounded-lg"></div></div></div><div class="p-4 border rounded-lg"><h3 class="text-lg font-semibold text-gray-700 mb-4">Taxas de Meios de Pagamento</h3><div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"><div><label class="text-sm">Débito (%)</label><input type="number" id="debitFee" step="0.01" placeholder="1.49" class="w-full p-2 border rounded-lg"></div><div><label class="text-sm">Crédito à Vista (%)</label><input type="number" id="creditFee" step="0.01" placeholder="3.29" class="w-full p-2 border rounded-lg"></div><div><label class="text-sm">Taxa App Delivery (%)</label><input type="number" id="deliveryAppFee" step="0.01" placeholder="27" class="w-full p-2 border rounded-lg"></div></div></div><button type="submit" class="w-full bg-green-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-green-700">Guardar Configurações</button><p id="save-feedback" class="text-center text-green-700 font-medium h-4"></p></form></div>
                     <div id="tab-receitas" class="tab-content"><h3 class="text-lg font-semibold text-gray-700 mb-4">Lançar Receita</h3><form id="form-receitas" class="grid grid-cols-1 sm:grid-cols-2 gap-4" data-main-category="RECEITA_BRUTA"><select name="subCategory" class="w-full p-2 border rounded-lg" required><option value="Venda - Crédito">Venda - Cartão de Crédito</option><option value="Venda - Débito">Venda - Cartão de Débito</option><option value="Venda - Pix">Venda - Pix</option><option value="Venda - Dinheiro">Venda - Dinheiro</option><option value="Venda - iFood/Apps">Venda - iFood/Apps</option></select><input type="text" name="description" placeholder="Descrição (Opcional)" class="w-full p-2 border rounded-lg"><input type="number" name="amount" step="0.01" placeholder="Valor (R$)" class="w-full p-2 border rounded-lg" required><input type="date" name="date" class="w-full p-2 border rounded-lg" required><button type="submit" class="sm:col-span-2 w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700">Adicionar Receita</button></form></div>
                     <div id="tab-custos" class="tab-content"><h3 class="text-lg font-semibold text-gray-700 mb-4">Lançar Custo Variável (Consumo)</h3><form id="form-custos" class="grid grid-cols-1 sm:grid-cols-2 gap-4" data-main-category="CUSTOS_VARIAVEIS"><select name="subCategory" class="w-full p-2 border rounded-lg sm:col-span-2"><option value="Insumos Alimentares">Insumos Alimentares</option><option value="Insumos Não-Alimentares">Insumos Não-Alimentares</option><option value="Bebidas e Similares">Bebidas e Similares</option><option value="Produtos de Limpeza">Produtos de Limpeza</option><option value="Embalagens e Descartáveis">Embalagens e Descartáveis</option><option value="Gás">Gás</option><option value="Papelaria e Escritório">Papelaria e Escritório</option></select><input type="number" name="amount" step="0.01" placeholder="Valor (R$)" class="w-full p-2 border rounded-lg" required><input type="text" name="invoice" placeholder="Nº da NF (Opcional)" class="w-full p-2 border rounded-lg"><input type="text" name="provider" placeholder="Fornecedor" class="w-full p-2 border rounded-lg" required><input type="date" name="date" class="w-full p-2 border rounded-lg" required><button type="submit" class="sm:col-span-2 w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700">Adicionar Custo</button></form></div>
                     <div id="tab-despesas" class="tab-content"><h3 class="text-lg font-semibold text-gray-700 mb-4">Lançar Despesa Fixa</h3><form id="form-despesas" class="grid grid-cols-1 sm:grid-cols-2 gap-4" data-main-category="DESPESAS_FIXAS"><select name="subCategory" class="w-full p-2 border rounded-lg sm:col-span-2"><option value="Aluguel">Aluguel</option><option value="Pró-labore">Pró-labore</option><option value="Condomínio">Condomínio</option><option value="IPTU">IPTU</option><option value="Energia Elétrica">Energia Elétrica</option><option value="Água">Água</option><option value="Internet e Telefone">Internet e Telefone</option><option value="Contabilidade">Contabilidade</option><option value="Software/Sistemas">Software/Sistemas</option><option value="Segurança/Alarme">Segurança/Alarme</option><option value="Manutenção">Manutenção</option><option value="Marketing">Marketing</option></select><input type="text" name="description" placeholder="Descrição (Opcional)" class="w-full p-2 border rounded-lg"><input type="number" name="amount" step="0.01" placeholder="Valor (R$)" class="w-full p-2 border rounded-lg" required><input type="date" name="date" class="w-full p-2 border rounded-lg" required><button type="submit" class="sm:col-span-2 w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700">Adicionar Despesa</button></form></div>
@@ -107,232 +91,234 @@
         const db = getFirestore(app);
         let currentUserId = null, unsubscribe = null, currentTransactions = [], settings = {};
         
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                currentUserId = user.uid;
-                initializeDRE();
-            } else { 
-                signInAnonymously(auth).catch(error => console.error("Falha na autenticação:", error));
-            }
-        });
-
-        const monthFilter = document.getElementById('month-filter');
-        const yearFilter = document.getElementById('year-filter');
-        const viewModeSelect = document.getElementById('view-mode');
-        const transactionsList = document.getElementById('transactions-list');
-        const settingsForm = document.getElementById('settings-form');
-        const saveFeedback = document.getElementById('save-feedback');
-        
-        async function loadSettings() {
-            if(!currentUserId) return;
-            const settingsRef = doc(db, `artifacts/${appId}/users/${currentUserId}/settings`, 'config');
-            const docSnap = await getDoc(settingsRef);
-            if (docSnap.exists()) {
-                settings = docSnap.data();
-                for (const key in settings) {
-                    const el = document.getElementById(key);
-                    if(el) el.value = settings[key];
+        document.addEventListener('DOMContentLoaded', () => {
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    currentUserId = user.uid;
+                    initializeDRE();
+                } else { 
+                    signInAnonymously(auth).catch(error => console.error("Falha na autenticação:", error));
                 }
-                document.getElementById('header-company-name').textContent = settings.companyName || 'Painel de Gestão';
-                document.getElementById('header-company-cnpj').textContent = settings.companyCnpj ? `CNPJ: ${settings.companyCnpj}` : 'Lance as suas receitas e despesas.';
-            }
-        }
-        
-        settingsForm.addEventListener('submit', async (e) => {
-            e.preventDefault(); if(!currentUserId) return;
-            const settingsData = {};
-            settingsForm.querySelectorAll('input, select').forEach(i => { settingsData[i.id] = (i.type === 'number' ? (parseFloat(i.value) || 0) : i.value); });
-            const settingsRef = doc(db, `artifacts/${appId}/users/${currentUserId}/settings`, 'config');
-            await setDoc(settingsRef, settingsData, { merge: true });
-            settings = settingsData;
-            loadSettings();
-            saveFeedback.textContent = "Configurações guardadas!";
-            setTimeout(() => saveFeedback.textContent = "", 3000);
-        });
+            });
 
-        function initializeDRE() {
-            loadSettings();
-            const today = new Date();
-            const currentYear = today.getFullYear();
-            yearFilter.innerHTML = '';
-            for (let i = 0; i < 5; i++) {
-                const year = currentYear - i;
-                yearFilter.innerHTML += `<option value="${year}">${year}</option>`;
-            }
-            monthFilter.value = `${currentYear}-${(today.getMonth() + 1).toString().padStart(2, '0')}`;
-            document.querySelectorAll('input[type="date"]').forEach(el => el.valueAsDate = today);
+            const monthFilter = document.getElementById('month-filter');
+            const yearFilter = document.getElementById('year-filter');
+            const viewModeSelect = document.getElementById('view-mode');
+            const transactionsList = document.getElementById('transactions-list');
+            const settingsForm = document.getElementById('settings-form');
+            const saveFeedback = document.getElementById('save-feedback');
             
-            loadDataForPeriod();
-            monthFilter.addEventListener('change', loadDataForPeriod);
-            yearFilter.addEventListener('change', loadDataForPeriod);
-            viewModeSelect.addEventListener('change', () => {
-                const isMonthly = viewModeSelect.value === 'monthly';
-                monthFilter.style.display = isMonthly ? 'block' : 'none';
-                yearFilter.style.display = isMonthly ? 'none' : 'block';
+            async function loadSettings() {
+                if(!currentUserId) return;
+                const settingsRef = doc(db, `artifacts/${appId}/users/${currentUserId}/settings`, 'config');
+                const docSnap = await getDoc(settingsRef);
+                if (docSnap.exists()) {
+                    settings = docSnap.data();
+                    for (const key in settings) {
+                        const el = document.getElementById(key);
+                        if(el) el.value = settings[key];
+                    }
+                    document.getElementById('header-company-name').textContent = settings.companyName || 'Painel de Gestão';
+                    document.getElementById('header-company-cnpj').textContent = settings.companyCnpj ? `CNPJ: ${settings.companyCnpj}` : 'Lance as suas receitas e despesas.';
+                }
+            }
+            
+            settingsForm.addEventListener('submit', async (e) => {
+                e.preventDefault(); if(!currentUserId) return;
+                const settingsData = {};
+                settingsForm.querySelectorAll('input, select').forEach(i => { settingsData[i.id] = (i.type === 'number' ? (parseFloat(i.value) || 0) : i.value); });
+                const settingsRef = doc(db, `artifacts/${appId}/users/${currentUserId}/settings`, 'config');
+                await setDoc(settingsRef, settingsData, { merge: true });
+                settings = settingsData;
+                loadSettings();
+                saveFeedback.textContent = "Configurações guardadas!";
+                setTimeout(() => saveFeedback.textContent = "", 3000);
+            });
+
+            function initializeDRE() {
+                loadSettings();
+                const today = new Date();
+                const currentYear = today.getFullYear();
+                yearFilter.innerHTML = '';
+                for (let i = 0; i < 5; i++) {
+                    const year = currentYear - i;
+                    yearFilter.innerHTML += `<option value="${year}">${year}</option>`;
+                }
+                monthFilter.value = `${currentYear}-${(today.getMonth() + 1).toString().padStart(2, '0')}`;
+                document.querySelectorAll('input[type="date"]').forEach(el => el.valueAsDate = today);
+                
                 loadDataForPeriod();
-            });
-        }
-        
-        function loadDataForPeriod() {
-            if (!currentUserId) return;
-            if (unsubscribe) unsubscribe();
-            let startDate, endDate;
-            if (viewModeSelect.value === 'monthly') {
-                const [year, month] = monthFilter.value.split('-').map(Number);
-                startDate = Timestamp.fromDate(new Date(year, month - 1, 1));
-                endDate = Timestamp.fromDate(new Date(year, month, 0, 23, 59, 59));
-            } else {
-                const year = parseInt(yearFilter.value);
-                startDate = Timestamp.fromDate(new Date(year, 0, 1));
-                endDate = Timestamp.fromDate(new Date(year, 11, 31, 23, 59, 59));
+                monthFilter.addEventListener('change', loadDataForPeriod);
+                yearFilter.addEventListener('change', loadDataForPeriod);
+                viewModeSelect.addEventListener('change', () => {
+                    const isMonthly = viewModeSelect.value === 'monthly';
+                    monthFilter.style.display = isMonthly ? 'block' : 'none';
+                    yearFilter.style.display = isMonthly ? 'none' : 'block';
+                    loadDataForPeriod();
+                });
             }
-            const q = query(collection(db, `artifacts/${appId}/users/${currentUserId}/transactions`), where("date", ">=", startDate), where("date", "<=", endDate));
-            unsubscribe = onSnapshot(q, (snapshot) => {
-                currentTransactions = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-                renderTransactionsList(currentTransactions);
-                calculateAndRenderDRE(currentTransactions);
-            });
-        }
-
-        function renderTransactionsList(transactions) {
-            transactionsList.innerHTML = '<tr><td colspan="3" class="text-center p-4 text-gray-500">Nenhum lançamento no período.</td></tr>';
-            if (transactions.length === 0) return;
-            transactionsList.innerHTML = '';
-            transactions.sort((a,b) => b.date.toMillis() - a.date.toMillis()).forEach(t => {
-                const tr = document.createElement('tr');
-                const mainDesc = t.subCategory || 'Lançamento';
-                const subDesc = t.description || t.provider || t.date.toDate().toLocaleDateString('pt-BR');
-                const amount = t.amount;
-                tr.innerHTML = `<td class="px-4 py-3"><div class="text-sm text-gray-900">${mainDesc}</div><div class="text-xs text-gray-500">${subDesc}</div></td><td class="px-4 py-3 text-sm">${formatCurrency(amount)}</td><td class="px-4 py-3"><button data-id="${t.id}" class="delete-btn text-red-600 hover:text-red-900 text-sm">Apagar</button></td>`;
-                transactionsList.appendChild(tr);
-            });
-        }
-
-        function formatCurrency(value) { return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
-        
-        function calculateAndRenderDRE(transactions) {
-            const totals = { RECEITA_BRUTA: 0, CUSTOS_VARIAVEIS: 0, DESPESAS_FIXAS: 0, MAO_DE_OBRA: 0 };
-            transactions.forEach(t => { if (totals[t.mainCategory] !== undefined) totals[t.mainCategory] += t.amount; });
             
-            const taxRate = settings.taxRate || 0;
-            const impostos = totals.RECEITA_BRUTA * (taxRate / 100);
-            
-            const totalDespesasFixas = totals.DESPESAS_FIXAS + impostos;
-            
-            const receitaLiquida = totals.RECEITA_BRUTA;
-            const lucroBruto = receitaLiquida - totals.CUSTOS_VARIAVEIS;
-            const resultadoOperacional = lucroBruto - totalDespesasFixas - totals.MAO_DE_OBRA;
-            const resultadoLiquido = resultadoOperacional;
-
-            document.getElementById('dre-container').innerHTML = `
-                <div class="dre-item"><span>(+) Receita Bruta</span><span>${formatCurrency(totals.RECEITA_BRUTA)}</span></div>
-                <div class="dre-item total"><span>(=) Receita Operacional Líquida</span><span>${formatCurrency(receitaLiquida)}</span></div>
-                <div class="dre-item"><span>(-) Custos Variáveis (CMV)</span><span>${formatCurrency(totals.CUSTOS_VARIAVEIS)}</span></div>
-                <div class="dre-item total"><span>(=) Lucro Bruto</span><span>${formatCurrency(lucroBruto)}</span></div>
-                <div class="dre-item"><span>(-) Despesas com Pessoal</span><span>${formatCurrency(totals.MAO_DE_OBRA)}</span></div>
-                <div class="dre-item"><span>(-) Despesas Fixas (+ Impostos)</span><span>${formatCurrency(totalDespesasFixas)}</span></div>
-                <div class="dre-item text-base sm:text-lg ${resultadoLiquido >= 0 ? 'net-profit' : 'net-loss'}"><span>(=) Lucro Líquido</span><span>${formatCurrency(resultadoLiquido)}</span></div>`;
-            
-            const indicatorsContainer = document.getElementById('indicators-container');
-            if(totals.RECEITA_BRUTA > 0) {
-                indicatorsContainer.innerHTML = `
-                    <div class="indicator-item"><span>% Custo (CMV)</span><span class="font-bold float-right">${((totals.CUSTOS_VARIAVEIS / totals.RECEITA_BRUTA) * 100).toFixed(2)}%</span></div>
-                    <div class="indicator-item"><span>% Mão de Obra</span><span class="font-bold float-right">${((totals.MAO_DE_OBRA / totals.RECEITA_BRUTA) * 100).toFixed(2)}%</span></div>
-                    <div class="indicator-item"><span>% Despesas Fixas (+ Impostos)</span><span class="font-bold float-right">${((totalDespesasFixas / totals.RECEITA_BRUTA) * 100).toFixed(2)}%</span></div>
-                    <div class="indicator-item font-bold ${resultadoLiquido >= 0 ? 'text-green-700' : 'text-red-700'}"><span>% Lucro Líquido</span><span class="float-right">${((resultadoLiquido / totals.RECEITA_BRUTA) * 100).toFixed(2)}%</span></div>
-                `;
-            } else { indicatorsContainer.innerHTML = `<p class="text-center text-gray-500">Aguardando receita para calcular...</p>`; }
-        }
-        
-        document.querySelectorAll('form').forEach(form => {
-            if(form.id === 'settings-form') return;
-            form.addEventListener('submit', async (e) => {
-                e.preventDefault(); if (!currentUserId) return;
-                const mainCategory = e.target.dataset.mainCategory;
-                if(!mainCategory) return;
-                const formData = new FormData(e.target);
-                const data = { mainCategory };
-                for (let [key, value] of formData.entries()) {
-                    if(key === 'amount') value = parseFloat(value) || 0;
-                    if(key === 'date') value = Timestamp.fromDate(new Date(value + 'T00:00:00'));
-                    data[key] = value;
+            function loadDataForPeriod() {
+                if (!currentUserId) return;
+                if (unsubscribe) unsubscribe();
+                let startDate, endDate;
+                if (viewModeSelect.value === 'monthly') {
+                    const [year, month] = monthFilter.value.split('-').map(Number);
+                    startDate = Timestamp.fromDate(new Date(year, month - 1, 1));
+                    endDate = Timestamp.fromDate(new Date(year, month, 0, 23, 59, 59));
+                } else {
+                    const year = parseInt(yearFilter.value);
+                    startDate = Timestamp.fromDate(new Date(year, 0, 1));
+                    endDate = Timestamp.fromDate(new Date(year, 11, 31, 23, 59, 59));
                 }
-                await addDoc(collection(db, `artifacts/${appId}/users/${currentUserId}/transactions`), data);
-                e.target.reset();
-                document.querySelectorAll('input[type="date"]').forEach(el => el.valueAsDate = new Date());
+                const q = query(collection(db, `artifacts/${appId}/users/${currentUserId}/transactions`), where("date", ">=", startDate), where("date", "<=", endDate));
+                unsubscribe = onSnapshot(q, (snapshot) => {
+                    currentTransactions = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                    renderTransactionsList(currentTransactions);
+                    calculateAndRenderDRE(currentTransactions);
+                });
+            }
+
+            function renderTransactionsList(transactions) {
+                transactionsList.innerHTML = '<tr><td colspan="3" class="text-center p-4 text-gray-500">Nenhum lançamento no período.</td></tr>';
+                if (transactions.length === 0) return;
+                transactionsList.innerHTML = '';
+                transactions.sort((a,b) => b.date.toMillis() - a.date.toMillis()).forEach(t => {
+                    const tr = document.createElement('tr');
+                    const mainDesc = t.subCategory || 'Lançamento';
+                    const subDesc = t.description || t.provider || t.date.toDate().toLocaleDateString('pt-BR');
+                    const amount = t.amount;
+                    tr.innerHTML = `<td class="px-4 py-3"><div class="text-sm text-gray-900">${mainDesc}</div><div class="text-xs text-gray-500">${subDesc}</div></td><td class="px-4 py-3 text-sm">${formatCurrency(amount)}</td><td class="px-4 py-3"><button data-id="${t.id}" class="delete-btn text-red-600 hover:text-red-900 text-sm">Apagar</button></td>`;
+                    transactionsList.appendChild(tr);
+                });
+            }
+
+            function formatCurrency(value) { return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
+            
+            function calculateAndRenderDRE(transactions) {
+                const totals = { RECEITA_BRUTA: 0, CUSTOS_VARIAVEIS: 0, DESPESAS_FIXAS: 0, MAO_DE_OBRA: 0 };
+                transactions.forEach(t => { if (totals[t.mainCategory] !== undefined) totals[t.mainCategory] += t.amount; });
+                
+                const taxRate = settings.taxRate || 0;
+                const impostos = totals.RECEITA_BRUTA * (taxRate / 100);
+                
+                const totalDespesasFixas = totals.DESPESAS_FIXAS + impostos;
+                
+                const receitaLiquida = totals.RECEITA_BRUTA;
+                const lucroBruto = receitaLiquida - totals.CUSTOS_VARIAVEIS;
+                const resultadoOperacional = lucroBruto - totalDespesasFixas - totals.MAO_DE_OBRA;
+                const resultadoLiquido = resultadoOperacional;
+
+                document.getElementById('dre-container').innerHTML = `
+                    <div class="dre-item"><span>(+) Receita Bruta</span><span>${formatCurrency(totals.RECEITA_BRUTA)}</span></div>
+                    <div class="dre-item total"><span>(=) Receita Operacional Líquida</span><span>${formatCurrency(receitaLiquida)}</span></div>
+                    <div class="dre-item"><span>(-) Custos Variáveis (CMV)</span><span>${formatCurrency(totals.CUSTOS_VARIAVEIS)}</span></div>
+                    <div class="dre-item total"><span>(=) Lucro Bruto</span><span>${formatCurrency(lucroBruto)}</span></div>
+                    <div class="dre-item"><span>(-) Despesas com Pessoal</span><span>${formatCurrency(totals.MAO_DE_OBRA)}</span></div>
+                    <div class="dre-item"><span>(-) Despesas Fixas (+ Impostos)</span><span>${formatCurrency(totalDespesasFixas)}</span></div>
+                    <div class="dre-item text-base sm:text-lg ${resultadoLiquido >= 0 ? 'net-profit' : 'net-loss'}"><span>(=) Lucro Líquido</span><span>${formatCurrency(resultadoLiquido)}</span></div>`;
+                
+                const indicatorsContainer = document.getElementById('indicators-container');
+                if(totals.RECEITA_BRUTA > 0) {
+                    indicatorsContainer.innerHTML = `
+                        <div class="indicator-item"><span>% Custo (CMV)</span><span class="font-bold float-right">${((totals.CUSTOS_VARIAVEIS / totals.RECEITA_BRUTA) * 100).toFixed(2)}%</span></div>
+                        <div class="indicator-item"><span>% Mão de Obra</span><span class="font-bold float-right">${((totals.MAO_DE_OBRA / totals.RECEITA_BRUTA) * 100).toFixed(2)}%</span></div>
+                        <div class="indicator-item"><span>% Despesas Fixas (+ Impostos)</span><span class="font-bold float-right">${((totalDespesasFixas / totals.RECEITA_BRUTA) * 100).toFixed(2)}%</span></div>
+                        <div class="indicator-item font-bold ${resultadoLiquido >= 0 ? 'text-green-700' : 'text-red-700'}"><span>% Lucro Líquido</span><span class="float-right">${((resultadoLiquido / totals.RECEITA_BRUTA) * 100).toFixed(2)}%</span></div>
+                    `;
+                } else { indicatorsContainer.innerHTML = `<p class="text-center text-gray-500">Aguardando receita para calcular...</p>`; }
+            }
+            
+            document.querySelectorAll('form').forEach(form => {
+                if(form.id === 'settings-form') return;
+                form.addEventListener('submit', async (e) => {
+                    e.preventDefault(); if (!currentUserId) return;
+                    const mainCategory = e.target.dataset.mainCategory;
+                    if(!mainCategory) return;
+                    const formData = new FormData(e.target);
+                    const data = { mainCategory };
+                    for (let [key, value] of formData.entries()) {
+                        if(key === 'amount') value = parseFloat(value) || 0;
+                        if(key === 'date') value = Timestamp.fromDate(new Date(value + 'T00:00:00'));
+                        data[key] = value;
+                    }
+                    await addDoc(collection(db, `artifacts/${appId}/users/${currentUserId}/transactions`), data);
+                    e.target.reset();
+                    document.querySelectorAll('input[type="date"]').forEach(el => el.valueAsDate = new Date());
+                });
             });
-        });
-        
-        transactionsList.addEventListener('click', async (e) => {
-            if (e.target.classList.contains('delete-btn')) {
-                const docId = e.target.dataset.id;
-                if (window.confirm('Tem a certeza que quer apagar este lançamento?')) {
-                    await deleteDoc(doc(db, `artifacts/${appId}/users/${currentUserId}/transactions`, docId));
+            
+            transactionsList.addEventListener('click', async (e) => {
+                if (e.target.classList.contains('delete-btn')) {
+                    const docId = e.target.dataset.id;
+                    if (window.confirm('Tem a certeza que quer apagar este lançamento?')) {
+                        await deleteDoc(doc(db, `artifacts/${appId}/users/${currentUserId}/transactions`, docId));
+                    }
                 }
-            }
-        });
+            });
 
-        const tabsContainer = document.getElementById('tabs-container');
-        const tabContentsContainer = document.getElementById('tabs-content-container');
-        tabsContainer.addEventListener('click', (e) => {
-            const clickedTab = e.target.closest('.tab-button');
-            if (!clickedTab) return;
+            const tabsContainer = document.getElementById('tabs-container');
+            const tabContentsContainer = document.getElementById('tabs-content-container');
+            tabsContainer.addEventListener('click', (e) => {
+                const clickedTab = e.target.closest('.tab-button');
+                if (!clickedTab) return;
+                
+                tabsContainer.querySelectorAll('.tab-button').forEach(tab => tab.classList.remove('active'));
+                clickedTab.classList.add('active');
+                
+                tabContentsContainer.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                
+                const targetId = `tab-${clickedTab.dataset.tab}`;
+                document.getElementById(targetId).classList.add('active');
+            });
             
-            tabsContainer.querySelectorAll('.tab-button').forEach(tab => tab.classList.remove('active'));
-            clickedTab.classList.add('active');
-            
-            tabContentsContainer.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-            
-            const targetId = `tab-${clickedTab.dataset.tab}`;
-            document.getElementById(targetId).classList.add('active');
-        });
-        
-        document.getElementById('generate-pdf-btn').addEventListener('click', () => {
-            const { jsPDF } = window;
-            const doc = new jsPDF();
-            let y = 15;
-            const addText = (text, x, size, style = 'normal') => { if (y > 280) { doc.addPage(); y = 15; } doc.setFontSize(size).setFont('helvetica', style); doc.text(text, x, y); y += size * 0.5; };
-            const addLineItem = (item) => { if (y > 280) { doc.addPage(); y = 15; } const desc = `${item.date.toDate().toLocaleDateString('pt-BR')} - ${item.subCategory || 'Lançamento'} ${item.description || item.provider ? `(${item.description || item.provider})` : ''}`; doc.setFontSize(10).setFont('helvetica', 'normal'); doc.text(desc, 16, y, { maxWidth: 140 }); doc.text(formatCurrency(item.amount), 195, y, { align: 'right' }); y += 5; };
-            const addSectionTotal = (label, value) => { if (y > 280) { doc.addPage(); y = 15; } doc.setLineWidth(0.2).line(14, y, 195, y); y += 5; doc.setFontSize(10).setFont('helvetica', 'bold'); doc.text(label, 14, y); doc.text(formatCurrency(value), 195, y, { align: 'right' }); y += 8; };
-            
-            let periodName;
-            if (viewModeSelect.value === 'monthly') {
-                 periodName = new Date(monthFilter.value + '-02').toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
-            } else {
-                 periodName = `Ano de ${yearFilter.value}`;
-            }
-
-            addText(`Relatório DRE - ${settings.companyName || 'Empresa'}`, 14, 18, 'bold');
-            addText(periodName.toUpperCase(), 14, 12, 'normal'); y += 5;
-
-            const categories = { RECEITA_BRUTA: 'Receitas', CUSTOS_VARIAVEIS: 'Custos Variáveis', DESPESAS_FIXAS: 'Despesas Fixas', MAO_DE_OBRA: 'Mão de Obra'};
-            const totals = { RECEITA_BRUTA: 0, CUSTOS_VARIAVEIS: 0, DESPESAS_FIXAS: 0, MAO_DE_OBRA: 0 };
-            currentTransactions.forEach(t => { if (totals[t.mainCategory] !== undefined) totals[t.mainCategory] += t.amount; });
-            const impostos = totals.RECEITA_BRUTA * ((settings.taxRate || 0) / 100);
-
-            for (const catKey in categories) {
-                const catTransactions = currentTransactions.filter(t => t.mainCategory === catKey);
-                if (catTransactions.length > 0) {
-                    addText(categories[catKey], 14, 14, 'bold'); y += 2;
-                    catTransactions.sort((a,b) => a.date.toMillis() - b.date.toMillis()).forEach(addLineItem);
-                    addSectionTotal(`Total ${categories[catKey]}`, totals[catKey]);
+            document.getElementById('generate-pdf-btn').addEventListener('click', () => {
+                const { jsPDF } = window;
+                const doc = new jsPDF();
+                let y = 15;
+                const addText = (text, x, size, style = 'normal') => { if (y > 280) { doc.addPage(); y = 15; } doc.setFontSize(size).setFont('helvetica', style); doc.text(text, x, y); y += size * 0.5; };
+                const addLineItem = (item) => { if (y > 280) { doc.addPage(); y = 15; } const desc = `${item.date.toDate().toLocaleDateString('pt-BR')} - ${item.subCategory || 'Lançamento'} ${item.description || item.provider ? `(${item.description || item.provider})` : ''}`; doc.setFontSize(10).setFont('helvetica', 'normal'); doc.text(desc, 16, y, { maxWidth: 140 }); doc.text(formatCurrency(item.amount), 195, y, { align: 'right' }); y += 5; };
+                const addSectionTotal = (label, value) => { if (y > 280) { doc.addPage(); y = 15; } doc.setLineWidth(0.2).line(14, y, 195, y); y += 5; doc.setFontSize(10).setFont('helvetica', 'bold'); doc.text(label, 14, y); doc.text(formatCurrency(value), 195, y, { align: 'right' }); y += 8; };
+                
+                let periodName;
+                if (viewModeSelect.value === 'monthly') {
+                     periodName = new Date(monthFilter.value + '-02').toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
+                } else {
+                     periodName = `Ano de ${yearFilter.value}`;
                 }
-            }
-            
-            if(y > 250) { doc.addPage(); y = 15; }
-            addText('Taxas e Impostos (Calibrado)', 14, 14, 'bold'); y += 2;
-            doc.setFontSize(10).setFont('helvetica', 'normal');
-            doc.text(`Alíquota Efetiva (Simples):`, 16, y); doc.text(`${settings.taxRate || 0}%`, 195, y, { align: 'right' }); y += 5;
-            doc.text(`Impostos sobre Fatura (Valor):`, 16, y); doc.text(formatCurrency(impostos), 195, y, { align: 'right' }); y += 8;
-            
-            if(y > 200) { doc.addPage(); y = 15; }
-            doc.setLineWidth(0.5).line(14, y, 195, y); y+=2;
-            addText('Resumo DRE', 14, 16, 'bold'); y+= 5;
-            document.querySelectorAll('#dre-container .dre-item').forEach(item => { const [label, value] = [item.children[0].textContent, item.children[1].textContent]; doc.setFontSize(11).setFont('helvetica', item.classList.contains('total') || item.classList.contains('net-profit') || item.classList.contains('net-loss') ? 'bold' : 'normal'); doc.text(label, 16, y); doc.text(value, 195, y, { align: 'right' }); y += 6; });
-            y += 5;
-            addText('Indicadores (%)', 14, 16, 'bold'); y+= 5;
-            document.querySelectorAll('#indicators-container .indicator-item').forEach(item => { const [label, value] = [item.children[0].textContent, item.children[1].textContent]; doc.setFontSize(11).setFont('helvetica', item.classList.contains('font-bold') ? 'bold' : 'normal'); doc.text(label, 16, y); doc.text(value, 195, y, { align: 'right' }); y += 6; });
-            doc.save(`DRE_Relatorio_${periodName.replace(/\s/g, '_')}.pdf`);
+
+                addText(`Relatório DRE - ${settings.companyName || 'Empresa'}`, 14, 18, 'bold');
+                addText(periodName.toUpperCase(), 14, 12, 'normal'); y += 5;
+
+                const categories = { RECEITA_BRUTA: 'Receitas', CUSTOS_VARIAVEIS: 'Custos Variáveis', DESPESAS_FIXAS: 'Despesas Fixas', MAO_DE_OBRA: 'Mão de Obra'};
+                const totals = { RECEITA_BRUTA: 0, CUSTOS_VARIAVEIS: 0, DESPESAS_FIXAS: 0, MAO_DE_OBRA: 0 };
+                currentTransactions.forEach(t => { if (totals[t.mainCategory] !== undefined) totals[t.mainCategory] += t.amount; });
+                const impostos = totals.RECEITA_BRUTA * ((settings.taxRate || 0) / 100);
+
+                for (const catKey in categories) {
+                    const catTransactions = currentTransactions.filter(t => t.mainCategory === catKey);
+                    if (catTransactions.length > 0) {
+                        addText(categories[catKey], 14, 14, 'bold'); y += 2;
+                        catTransactions.sort((a,b) => a.date.toMillis() - b.date.toMillis()).forEach(addLineItem);
+                        addSectionTotal(`Total ${categories[catKey]}`, totals[catKey]);
+                    }
+                }
+                
+                if(y > 250) { doc.addPage(); y = 15; }
+                addText('Taxas e Impostos (Calibrado)', 14, 14, 'bold'); y += 2;
+                doc.setFontSize(10).setFont('helvetica', 'normal');
+                doc.text(`Alíquota Efetiva (Simples):`, 16, y); doc.text(`${settings.taxRate || 0}%`, 195, y, { align: 'right' }); y += 5;
+                doc.text(`Impostos sobre Fatura (Valor):`, 16, y); doc.text(formatCurrency(impostos), 195, y, { align: 'right' }); y += 8;
+                
+                if(y > 200) { doc.addPage(); y = 15; }
+                doc.setLineWidth(0.5).line(14, y, 195, y); y+=2;
+                addText('Resumo DRE', 14, 16, 'bold'); y+= 5;
+                document.querySelectorAll('#dre-container .dre-item').forEach(item => { const [label, value] = [item.children[0].textContent, item.children[1].textContent]; doc.setFontSize(11).setFont('helvetica', item.classList.contains('total') || item.classList.contains('net-profit') || item.classList.contains('net-loss') ? 'bold' : 'normal'); doc.text(label, 16, y); doc.text(value, 195, y, { align: 'right' }); y += 6; });
+                y += 5;
+                addText('Indicadores (%)', 14, 16, 'bold'); y+= 5;
+                document.querySelectorAll('#indicators-container .indicator-item').forEach(item => { const [label, value] = [item.children[0].textContent, item.children[1].textContent]; doc.setFontSize(11).setFont('helvetica', item.classList.contains('font-bold') ? 'bold' : 'normal'); doc.text(label, 16, y); doc.text(value, 195, y, { align: 'right' }); y += 6; });
+                doc.save(`DRE_Relatorio_${periodName.replace(/\s/g, '_')}.pdf`);
+            });
         });
     </script>
 </body>

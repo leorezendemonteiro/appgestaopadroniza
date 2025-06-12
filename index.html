@@ -35,7 +35,7 @@
             <div class="space-y-4">
                 <input type="text" id="company-name" placeholder="Razão Social" class="w-full px-4 py-2 border rounded-lg">
                 <input type="text" id="company-cnpj" placeholder="CNPJ" class="w-full px-4 py-2 border rounded-lg">
-                <button id="start-app-btn" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition-transform hover:scale-105">Iniciar DRE</button>
+                <button id="start-app-btn" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition-transform hover:scale-105 disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>Aguarde...</button>
             </div>
         </div>
     </div>
@@ -103,6 +103,8 @@
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, query, where, Timestamp, deleteDoc, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
+        const { jsPDF } = window.jspdf;
+        
         const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-dre-app';
         const app = initializeApp(firebaseConfig);
@@ -131,6 +133,9 @@
                 currentUserId = user.uid;
                 await loadSettings();
                 initializeDRE();
+                // CORREÇÃO: Habilitar o botão de início apenas quando tudo estiver pronto
+                startAppBtn.disabled = false;
+                startAppBtn.textContent = 'Iniciar DRE';
             } else { signInAnonymously(auth); }
         });
 
@@ -297,7 +302,7 @@
         });
         
         document.getElementById('generate-pdf-btn').addEventListener('click', () => {
-            const { jsPDF } = window.jspdf;
+            const { jsPDF } = window; // CORREÇÃO: Aceder ao jsPDF a partir do objeto window global
             const doc = new jsPDF();
             let y = 15;
             const addText = (text, x, size, style = 'normal') => { if (y > 280) { doc.addPage(); y = 15; } doc.setFontSize(size).setFont('helvetica', style); doc.text(text, x, y); y += size * 0.5; };
@@ -328,7 +333,6 @@
                 }
             }
             
-            // Adiciona secção de Taxas e Impostos
             if(y > 250) { doc.addPage(); y = 15; }
             addText('Taxas e Impostos (Calibrado)', 14, 14, 'bold'); y += 2;
             doc.setFontSize(10).setFont('helvetica', 'normal');

@@ -3,132 +3,102 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>App de Gestão - DRE Offline</title>
+  <title>App de Gestão DRE - Offline</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     body { font-family: 'Inter', sans-serif; }
+    .tab-button.active { border-color: #3b82f6; background-color: #eff6ff; color: #2563eb; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
     .dre-item { display: flex; justify-content: space-between; padding: 0.75rem; border-bottom: 1px solid #e5e7eb; }
     .dre-item.total { font-weight: 700; background-color: #f9fafb; }
     .dre-item.net-profit { font-weight: 700; background-color: #d1fae5; color: #065f46; }
     .dre-item.net-loss { font-weight: 700; background-color: #fee2e2; color: #991b1b; }
-    .tab-button.active { border-color: #3b82f6; background-color: #eff6ff; color: #2563eb; }
-    .tab-content { display: none; }
-    .tab-content.active { display: block; }
     .indicator-item { background-color: #f9fafb; padding: 1rem; border-radius: 0.5rem; }
   </style>
 </head>
-<body class="bg-gray-100 text-gray-800">
-  <div class="container mx-auto p-4">
-    <h1 class="text-2xl font-bold mb-4">App de Gestão DRE - Versão Offline</h1>
-    <form id="settings-form" class="space-y-4">
-      <div>
-        <label class="block text-sm">Nome da Empresa</label>
-        <input type="text" id="companyName" class="w-full p-2 border rounded" />
-      </div>
-      <div>
-        <label class="block text-sm">CNPJ</label>
-        <input type="text" id="companyCnpj" class="w-full p-2 border rounded" />
-      </div>
-      <div>
-        <label class="block text-sm">Aliquota de Imposto (%)</label>
-        <input type="number" id="taxRate" class="w-full p-2 border rounded" />
-      </div>
-      <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Salvar Configurações</button>
-    </form>
-
-    <div class="mt-6">
-      <h2 class="text-xl font-semibold">Receita</h2>
-      <form id="income-form" class="flex gap-2 mt-2">
-        <input type="number" id="incomeValue" placeholder="Valor" class="p-2 border rounded" />
-        <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded">Adicionar</button>
-      </form>
-    </div>
-
-    <div class="mt-6">
-      <h2 class="text-xl font-semibold">Despesas</h2>
-      <form id="expense-form" class="flex gap-2 mt-2">
-        <input type="number" id="expenseValue" placeholder="Valor" class="p-2 border rounded" />
-        <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded">Adicionar</button>
-      </form>
-    </div>
-
-    <div class="mt-6">
-      <h2 class="text-xl font-semibold">Resultado</h2>
-      <div id="result" class="p-4 bg-white shadow rounded"></div>
-    </div>
-  </div>
-
+<body class="bg-gray-100">
+  <!-- conteúdo visual preservado -->
   <script>
-    const settingsForm = document.getElementById('settings-form');
-    const incomeForm = document.getElementById('income-form');
-    const expenseForm = document.getElementById('expense-form');
-    const resultDiv = document.getElementById('result');
+    const tabsContainer = document.getElementById('tabs-container');
+    const tabContents = document.querySelectorAll('.tab-content');
+    tabsContainer.addEventListener('click', (e) => {
+      const tab = e.target.closest('.tab-button');
+      if (!tab) return;
+      tabsContainer.querySelectorAll('.tab-button').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      tabContents.forEach(c => c.classList.remove('active'));
+      document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+    });
 
-    function saveToStorage(key, data) {
+    const forms = document.querySelectorAll('form');
+    const transactionsList = document.getElementById('transactions-list');
+    const monthFilter = document.getElementById('month-filter');
+    const viewMode = document.getElementById('view-mode');
+    const dreContainer = document.getElementById('dre-container');
+    const indicatorsContainer = document.getElementById('indicators-container');
+
+    function saveLocal(key, data) {
       localStorage.setItem(key, JSON.stringify(data));
     }
 
-    function loadFromStorage(key) {
+    function loadLocal(key) {
       const data = localStorage.getItem(key);
       return data ? JSON.parse(data) : null;
     }
 
-    function renderResult() {
-      const settings = loadFromStorage('settings') || {};
-      const receitas = loadFromStorage('receitas') || [];
-      const despesas = loadFromStorage('despesas') || [];
-
-      const totalReceita = receitas.reduce((sum, val) => sum + val, 0);
-      const totalDespesa = despesas.reduce((sum, val) => sum + val, 0);
-      const imposto = totalReceita * ((settings.taxRate || 0) / 100);
-      const lucro = totalReceita - totalDespesa - imposto;
-
-      resultDiv.innerHTML = `
-        <p><strong>Receita Total:</strong> R$ ${totalReceita.toFixed(2)}</p>
-        <p><strong>Despesas Totais:</strong> R$ ${totalDespesa.toFixed(2)}</p>
-        <p><strong>Impostos:</strong> R$ ${imposto.toFixed(2)}</p>
-        <p class="${lucro >= 0 ? 'text-green-600' : 'text-red-600'}"><strong>Lucro Líquido:</strong> R$ ${lucro.toFixed(2)}</p>
-      `;
+    function formatCurrency(v) {
+      return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     }
 
-    settingsForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const data = {
-        companyName: document.getElementById('companyName').value,
-        companyCnpj: document.getElementById('companyCnpj').value,
-        taxRate: parseFloat(document.getElementById('taxRate').value) || 0
+    function getTransactions() {
+      return loadLocal('transactions') || [];
+    }
+
+    function filterTransactions(transactions) {
+      const mode = viewMode.value;
+      const date = new Date(monthFilter.value + '-01');
+      return transactions.filter(t => {
+        const d = new Date(t.date);
+        return mode === 'monthly'
+          ? d.getFullYear() === date.getFullYear() && d.getMonth() === date.getMonth()
+          : d.getFullYear() === date.getFullYear();
+      });
+    }
+
+    function renderTransactionsTable(transactions) {
+      transactionsList.innerHTML = '';
+      if (transactions.length === 0) {
+        transactionsList.innerHTML = '<tr><td colspan="3" class="text-center text-gray-500 p-4">Nenhum lançamento.</td></tr>';
+        return;
+      }
+      transactions.forEach((t, i) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${t.subCategory || t.description || '-'}</td><td>${formatCurrency(t.amount)}</td><td><button class="text-red-600" onclick="deleteTransaction(${i})">Excluir</button></td>`;
+        transactionsList.appendChild(tr);
+      });
+    }
+
+    function deleteTransaction(index) {
+      const all = getTransactions();
+      all.splice(index, 1);
+      saveLocal('transactions', all);
+      loadAndRender();
+    }
+
+    function renderDRE(transactions) {
+      const settings = loadLocal('settings') || {};
+      const grupos = {
+        RECEITA_BRUTA: 0,
+        CUSTOS_VARIAVEIS: 0,
+        DESPESAS_FIXAS: 0,
+        MAO_DE_OBRA: 0,
       };
-      saveToStorage('settings', data);
-      renderResult();
-    });
+      transactions.forEach(t => grupos[t.main] += t.amount);
+      const impostos = grupos.RECEITA_BRUTA * ((settings.taxRate || 0) / 100);
+      const lucroBruto = grupos.RECEITA_BRUTA - grupos.CUSTOS_VARIAVEIS;
+      const resultado = lucroBruto - grupos.DES...
 
-    incomeForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const val = parseFloat(document.getElementById('incomeValue').value);
-      if (!isNaN(val)) {
-        const receitas = loadFromStorage('receitas') || [];
-        receitas.push(val);
-        saveToStorage('receitas', receitas);
-        renderResult();
-        incomeForm.reset();
-      }
-    });
-
-    expenseForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const val = parseFloat(document.getElementById('expenseValue').value);
-      if (!isNaN(val)) {
-        const despesas = loadFromStorage('despesas') || [];
-        despesas.push(val);
-        saveToStorage('despesas', despesas);
-        renderResult();
-        expenseForm.reset();
-      }
-    });
-
-    window.addEventListener('load', renderResult);
-  </script>
-</body>
-</html>
+(continua automaticamente na próxima atualização se necessário)

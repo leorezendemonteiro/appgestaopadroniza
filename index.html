@@ -116,28 +116,10 @@
         const splashScreen = document.getElementById('splash-screen');
         const mainApp = document.getElementById('main-app');
         const startAppBtn = document.getElementById('start-app-btn');
-
-        startAppBtn.addEventListener('click', () => {
-            companyInfo.name = document.getElementById('company-name').value || 'Empresa Sem Nome';
-            companyInfo.cnpj = document.getElementById('company-cnpj').value || 'CNPJ não informado';
-
-            if (!companyInfo.name || !companyInfo.cnpj) {
-                alert('Por favor, preencha a Razão Social e o CNPJ.');
-                return;
-            }
-            
-            document.getElementById('header-company-name').textContent = companyInfo.name;
-            document.getElementById('header-company-cnpj').textContent = `CNPJ: ${companyInfo.cnpj}`;
-
-            splashScreen.style.display = 'none';
-            mainApp.style.display = 'block';
-        });
-
+        
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 currentUserId = user.uid;
-                await loadSettings();
-                initializeDRE();
                 startAppBtn.disabled = false;
                 startAppBtn.textContent = 'Iniciar DRE';
             } else { 
@@ -145,7 +127,33 @@
                     console.error("Falha na autenticação anónima:", error);
                     startAppBtn.textContent = 'Erro ao Conectar';
                 });
-             }
+            }
+        });
+
+        startAppBtn.addEventListener('click', async () => {
+            if(!currentUserId) {
+                alert("Aguarde a conexão com o servidor...");
+                return;
+            }
+            companyInfo.name = document.getElementById('company-name').value;
+            companyInfo.cnpj = document.getElementById('company-cnpj').value;
+
+            if (!companyInfo.name || !companyInfo.cnpj) {
+                alert('Por favor, preencha a Razão Social e o CNPJ.');
+                return;
+            }
+            
+            startAppBtn.disabled = true;
+            startAppBtn.textContent = 'A carregar...';
+
+            await loadSettings();
+            initializeDRE();
+            
+            document.getElementById('header-company-name').textContent = companyInfo.name;
+            document.getElementById('header-company-cnpj').textContent = `CNPJ: ${companyInfo.cnpj}`;
+
+            splashScreen.style.display = 'none';
+            mainApp.style.display = 'block';
         });
 
         const monthFilter = document.getElementById('month-filter');

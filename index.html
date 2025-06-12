@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>App de Gestão - DRE V11 (PDF com Taxas)</title>
+    <title>App de Gestão - DRE V12 (Correções)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -120,6 +120,11 @@
         startAppBtn.addEventListener('click', () => {
             companyInfo.name = document.getElementById('company-name').value || 'Empresa Sem Nome';
             companyInfo.cnpj = document.getElementById('company-cnpj').value || 'CNPJ não informado';
+
+            if (!companyInfo.name || !companyInfo.cnpj) {
+                alert('Por favor, preencha a Razão Social e o CNPJ.');
+                return;
+            }
             
             document.getElementById('header-company-name').textContent = companyInfo.name;
             document.getElementById('header-company-cnpj').textContent = `CNPJ: ${companyInfo.cnpj}`;
@@ -133,10 +138,14 @@
                 currentUserId = user.uid;
                 await loadSettings();
                 initializeDRE();
-                // CORREÇÃO: Habilitar o botão de início apenas quando tudo estiver pronto
                 startAppBtn.disabled = false;
                 startAppBtn.textContent = 'Iniciar DRE';
-            } else { signInAnonymously(auth); }
+            } else { 
+                signInAnonymously(auth).catch(error => {
+                    console.error("Falha na autenticação anónima:", error);
+                    startAppBtn.textContent = 'Erro ao Conectar';
+                });
+             }
         });
 
         const monthFilter = document.getElementById('month-filter');
@@ -302,7 +311,7 @@
         });
         
         document.getElementById('generate-pdf-btn').addEventListener('click', () => {
-            const { jsPDF } = window; // CORREÇÃO: Aceder ao jsPDF a partir do objeto window global
+            const { jsPDF } = window;
             const doc = new jsPDF();
             let y = 15;
             const addText = (text, x, size, style = 'normal') => { if (y > 280) { doc.addPage(); y = 15; } doc.setFontSize(size).setFont('helvetica', style); doc.text(text, x, y); y += size * 0.5; };

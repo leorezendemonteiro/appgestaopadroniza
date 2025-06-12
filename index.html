@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>App de Gestão - DRE V12 (Correções)</title>
+    <title>App de Gestão - DRE V13 (Correções)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -117,7 +117,7 @@
         const mainApp = document.getElementById('main-app');
         const startAppBtn = document.getElementById('start-app-btn');
         
-        onAuthStateChanged(auth, async (user) => {
+        onAuthStateChanged(auth, (user) => {
             if (user) {
                 currentUserId = user.uid;
                 startAppBtn.disabled = false;
@@ -132,26 +132,22 @@
 
         startAppBtn.addEventListener('click', async () => {
             if(!currentUserId) {
-                alert("Aguarde a conexão com o servidor...");
-                return;
-            }
-            companyInfo.name = document.getElementById('company-name').value;
-            companyInfo.cnpj = document.getElementById('company-cnpj').value;
-
-            if (!companyInfo.name || !companyInfo.cnpj) {
-                alert('Por favor, preencha a Razão Social e o CNPJ.');
+                alert("Aguarde, a conexão com o servidor está a ser estabelecida.");
                 return;
             }
             
             startAppBtn.disabled = true;
             startAppBtn.textContent = 'A carregar...';
 
-            await loadSettings();
-            initializeDRE();
+            companyInfo.name = document.getElementById('company-name').value || 'Empresa Sem Nome';
+            companyInfo.cnpj = document.getElementById('company-cnpj').value || 'CNPJ não informado';
             
             document.getElementById('header-company-name').textContent = companyInfo.name;
             document.getElementById('header-company-cnpj').textContent = `CNPJ: ${companyInfo.cnpj}`;
-
+            
+            await loadSettings();
+            initializeDRE();
+            
             splashScreen.style.display = 'none';
             mainApp.style.display = 'block';
         });
@@ -163,6 +159,7 @@
         function initializeDRE() {
             const today = new Date();
             const currentYear = today.getFullYear();
+            yearFilter.innerHTML = '';
             for (let i = 0; i < 5; i++) {
                 const year = currentYear - i;
                 yearFilter.innerHTML += `<option value="${year}">${year}</option>`;
@@ -222,7 +219,7 @@
         settingsForm.addEventListener('submit', async (e) => {
             e.preventDefault(); if(!currentUserId) return;
             const settingsData = {};
-            settingsForm.querySelectorAll('input, select').forEach(i => { settingsData[i.id] = (i.type === 'number') ? parseFloat(i.value) || 0 : i.value; });
+            settingsForm.querySelectorAll('input, select').forEach(i => { settingsData[i.id] = (i.type === 'number' ? (parseFloat(i.value) || 0) : i.value); });
             const settingsRef = doc(db, `artifacts/${appId}/users/${currentUserId}/settings`, 'config');
             await setDoc(settingsRef, settingsData, { merge: true });
             settings = settingsData;

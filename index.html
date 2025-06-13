@@ -13,167 +13,289 @@
     .tab-content.active { display: block; }
   </style>
 </head>
-<body class="bg-gray-100 p-4">
-  <div class="max-w-5xl mx-auto">
-    <h1 class="text-2xl font-bold mb-4">Painel de Gestão DRE (Offline)</h1>
-    <div id="tabs" class="flex space-x-2 border-b mb-4">
-      <button class="tab-button px-4 py-2 active" data-tab="calibracao">Calibração</button>
-      <button class="tab-button px-4 py-2" data-tab="receitas">Receitas</button>
-      <button class="tab-button px-4 py-2" data-tab="custos">Custos Variáveis</button>
-      <button class="tab-button px-4 py-2" data-tab="despesas">Despesas Fixas</button>
-      <button class="tab-button px-4 py-2" data-tab="maodeobra">Mão de Obra</button>
-    </div>
+<body class="bg-gray-100 p-0 m-0">
+<div id="intro" class="w-full h-screen bg-cover bg-center flex flex-col justify-center items-center text-white" style="background-image: url('https://images.unsplash.com/photo-1581093588401-12f3e59f7a3e?auto=format&fit=crop&w=1470&q=80');">
+  <img src="https://i.postimg.cc/vBvK9KGz/ges.jpg" alt="Logo Padroniza" class="w-32 h-32 mb-6">
+  <div class="bg-white p-6 rounded shadow text-gray-900 w-80">
+    <h1 class="text-xl font-bold mb-4 text-center">Iniciar Gestão DRE</h1>
+    <input id="introCompanyName" placeholder="Razão Social" class="w-full mb-2 p-2 border rounded">
+    <input id="introCompanyCnpj" placeholder="CNPJ" class="w-full mb-4 p-2 border rounded">
+    <button onclick="startApp()" class="w-full bg-green-600 text-white px-4 py-2 rounded">Entrar</button>
+  </div>
+</div>
 
-    <div id="tab-calibracao" class="tab-content active space-y-4">
-      <input id="companyName" placeholder="Razão Social" class="w-full p-2 border rounded">
-      <input id="companyCnpj" placeholder="CNPJ" class="w-full p-2 border rounded">
-      <select id="taxRegime" class="w-full p-2 border rounded">
-        <option value="simples">Simples Nacional</option>
-        <option value="presumido">Lucro Presumido</option>
-        <option value="real">Lucro Real</option>
-      </select>
-      <input id="taxRate" type="number" placeholder="Alíquota Efetiva (%)" class="w-full p-2 border rounded">
-      <button onclick="saveSettings()" class="bg-green-600 text-white px-4 py-2 rounded">Salvar Calibração</button>
-    </div>
-
-    <div id="tab-receitas" class="tab-content">
-      <form onsubmit="addEntry(event, 'RECEITA_BRUTA')" class="grid grid-cols-1 gap-2">
-        <select name="subCategory" class="p-2 border rounded">
-          <option value="Crédito">Crédito</option>
-          <option value="Débito">Débito</option>
-          <option value="Pix">Pix</option>
-          <option value="Dinheiro">Dinheiro</option>
-          <option value="iFood">iFood</option>
-        </select>
-        <input name="description" placeholder="Descrição" class="p-2 border rounded">
-        <input name="amount" type="number" step="0.01" placeholder="Valor" class="p-2 border rounded">
-        <input name="date" type="date" class="p-2 border rounded">
-        <button class="bg-blue-600 text-white px-4 py-2 rounded">Adicionar Receita</button>
-      </form>
-    </div>
-
-    <div id="tab-custos" class="tab-content">
-      <form onsubmit="addEntry(event, 'CUSTOS_VARIAVEIS')" class="grid grid-cols-1 gap-2">
-        <input name="subCategory" placeholder="Tipo de Custo" class="p-2 border rounded">
-        <input name="description" placeholder="Descrição" class="p-2 border rounded">
-        <input name="amount" type="number" step="0.01" placeholder="Valor" class="p-2 border rounded">
-        <input name="date" type="date" class="p-2 border rounded">
-        <button class="bg-blue-600 text-white px-4 py-2 rounded">Adicionar Custo</button>
-      </form>
-    </div>
-
-    <div id="tab-despesas" class="tab-content">
-      <form onsubmit="addEntry(event, 'DESPESAS_FIXAS')" class="grid grid-cols-1 gap-2">
-        <input name="subCategory" placeholder="Tipo de Despesa" class="p-2 border rounded">
-        <input name="description" placeholder="Descrição" class="p-2 border rounded">
-        <input name="amount" type="number" step="0.01" placeholder="Valor" class="p-2 border rounded">
-        <input name="date" type="date" class="p-2 border rounded">
-        <button class="bg-blue-600 text-white px-4 py-2 rounded">Adicionar Despesa</button>
-      </form>
-    </div>
-
-    <div id="tab-maodeobra" class="tab-content">
-      <form onsubmit="addEntry(event, 'MAO_DE_OBRA')" class="grid grid-cols-1 gap-2">
-        <input name="subCategory" placeholder="Tipo de Custo com Pessoal" class="p-2 border rounded">
-        <input name="description" placeholder="Descrição" class="p-2 border rounded">
-        <input name="amount" type="number" step="0.01" placeholder="Valor" class="p-2 border rounded">
-        <input name="date" type="date" class="p-2 border rounded">
-        <button class="bg-blue-600 text-white px-4 py-2 rounded">Adicionar Mão de Obra</button>
-      </form>
-    </div>
-
-    <hr class="my-6">
-    <div class="flex items-center gap-4">
-      <input type="month" id="monthFilter" class="p-2 border rounded">
-      <button onclick="generatePDF()" class="bg-red-600 text-white px-4 py-2 rounded">Gerar PDF</button>
-    </div>
-
-    <div class="mt-4">
-      <h2 class="text-lg font-semibold">DRE</h2>
-      <div id="dre"></div>
-    </div>
+<div id="mainApp" class="hidden p-4">
+  <div class="flex space-x-2 mb-4">
+    <button class="tab-button active" onclick="showTab('calibracao')">Calibração</button>
+    <button class="tab-button" onclick="showTab('receitas')">Receitas</button>
+    <button class="tab-button" onclick="showTab('cmv')">Custos (CMV)</button>
+    <button class="tab-button" onclick="showTab('fixos')">Despesas Fixas</button>
+    <button class="tab-button" onclick="showTab('mo')">Mão de Obra</button>
+    <button class="tab-button" onclick="showTab('relatorio')">Relatório</button>
   </div>
 
-  <script>
-    const tabs = document.querySelectorAll('.tab-button');
-    const contents = document.querySelectorAll('.tab-content');
-    tabs.forEach(btn => {
-      btn.addEventListener('click', () => {
-        tabs.forEach(t => t.classList.remove('active'));
-        contents.forEach(c => c.classList.remove('active'));
-        btn.classList.add('active');
-        document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
-      });
-    });
+  <div id="tabsContainer">
+    <!-- Abas serão geradas pelo JavaScript -->
+  </div>
+</div>
 
-    document.getElementById('monthFilter').value = new Date().toISOString().slice(0, 7);
+<script>
+// JavaScript completo com todas as funções embutidas
 
-    function saveSettings() {
-      const s = {
-        companyName: document.getElementById('companyName').value,
-        companyCnpj: document.getElementById('companyCnpj').value,
-        taxRegime: document.getElementById('taxRegime').value,
-        taxRate: parseFloat(document.getElementById('taxRate').value || 0)
-      };
-      localStorage.setItem('settings', JSON.stringify(s));
-      alert('Calibração salva!');
-    }
+// 1. Controle de abas
+function showTab(tabId) {
+  document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+  document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+  document.getElementById(tabId).classList.add('active');
+  event.target.classList.add('active');
+}
 
-    function addEntry(e, category) {
-      e.preventDefault();
-      const form = e.target;
-      const data = Object.fromEntries(new FormData(form).entries());
-      data.amount = parseFloat(data.amount);
-      data.main = category;
-      const current = JSON.parse(localStorage.getItem('transactions') || '[]');
-      current.push(data);
-      localStorage.setItem('transactions', JSON.stringify(current));
-      form.reset();
-      updateDRE();
-    }
+// 2. Início do app
+function startApp() {
+  const name = document.getElementById('introCompanyName').value;
+  const cnpj = document.getElementById('introCompanyCnpj').value;
+  if (!name || !cnpj) return alert('Preencha os dois campos.');
+  const settings = { companyName: name, companyCnpj: cnpj };
+  localStorage.setItem('settings', JSON.stringify(settings));
+  document.getElementById('intro').style.display = 'none';
+  document.getElementById('mainApp').classList.remove('hidden');
+  loadTabs();
+  loadAllData();
+}
 
-    function updateDRE() {
-      const data = JSON.parse(localStorage.getItem('transactions') || '[]');
-      const month = document.getElementById('monthFilter').value;
-      const settings = JSON.parse(localStorage.getItem('settings') || '{}');
-      const filtered = data.filter(t => t.date?.startsWith(month));
-      const groups = { RECEITA_BRUTA: 0, CUSTOS_VARIAVEIS: 0, DESPESAS_FIXAS: 0, MAO_DE_OBRA: 0 };
-      filtered.forEach(t => groups[t.main] += t.amount);
-      const impostos = groups.RECEITA_BRUTA * ((settings.taxRate || 0) / 100);
-      const lucroBruto = groups.RECEITA_BRUTA - groups.CUSTOS_VARIAVEIS;
-      const lucroLiquido = lucroBruto - groups.DESPESAS_FIXAS - groups.MAO_DE_OBRA - impostos;
+// 3. Carregar tabs dinamicamente
+function loadTabs() {
+  const container = document.getElementById('tabsContainer');
+  container.innerHTML = `
+    <div id="calibracao" class="tab-content active">
+      <h2 class="text-xl font-bold mb-4">Calibração</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <input id="companyName" placeholder="Razão Social" class="p-2 border rounded">
+        <input id="companyCnpj" placeholder="CNPJ" class="p-2 border rounded">
+        <select id="taxRegime" class="p-2 border rounded">
+          <option value="Simples Nacional">Simples Nacional</option>
+          <option value="Lucro Presumido">Lucro Presumido</option>
+          <option value="Lucro Real">Lucro Real</option>
+        </select>
+        <input id="taxRate" type="number" step="0.01" placeholder="Alíquota Efetiva (%)" class="p-2 border rounded">
+        <input id="taxCredit" type="number" step="0.01" placeholder="Taxa Cartão Crédito (%)" class="p-2 border rounded">
+        <input id="taxDebit" type="number" step="0.01" placeholder="Taxa Cartão Débito (%)" class="p-2 border rounded">
+        <input id="taxDelivery" type="number" step="0.01" placeholder="Taxa Delivery/iFood (%)" class="p-2 border rounded">
+      </div>
+      <button onclick="saveSettings()" class="bg-green-600 text-white px-4 py-2 rounded">Salvar Calibração</button>
+    </div>
+    <div id="receitas" class="tab-content">
+      <h2 class="text-xl font-bold mb-4">Receitas</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        <select id="tipoReceita" class="p-2 border rounded">
+          <option value="Alimentar">Alimentar</option>
+          <option value="Não Alimentar">Não Alimentar</option>
+          <option value="Bebidas e Similares">Bebidas e Similares</option>
+          <option value="Limpeza e Higiene">Limpeza e Higiene</option>
+          <option value="Gás">Gás</option>
+          <option value="Embalagens">Embalagens e Descartáveis</option>
+          <option value="Papelaria">Papelaria e Escritório</option>
+        </select>
+        <input id="valorReceita" type="number" placeholder="Valor (R$)" class="p-2 border rounded">
+        <input id="dataReceita" type="date" class="p-2 border rounded">
+      </div>
+      <button onclick="addReceita()" class="bg-blue-600 text-white px-4 py-2 rounded">Adicionar Receita</button>
+      <ul id="listaReceitas" class="mt-4"></ul>
+    </div>
+    <div id="cmv" class="tab-content">
+      <h2 class="text-xl font-bold mb-4">Custos (CMV)</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        <input id="tipoCmv" placeholder="Tipo (ex: Carnes, Bebidas)" class="p-2 border rounded">
+        <input id="valorCmv" type="number" placeholder="Valor (R$)" class="p-2 border rounded">
+        <input id="dataCmv" type="date" class="p-2 border rounded">
+      </div>
+      <button onclick="addCMV()" class="bg-blue-600 text-white px-4 py-2 rounded">Adicionar Custo</button>
+      <ul id="listaCmv" class="mt-4"></ul>
+    </div>
+    <div id="fixos" class="tab-content">
+      <h2 class="text-xl font-bold mb-4">Despesas Fixas</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        <input id="tipoFixo" placeholder="Tipo (ex: Aluguel, Energia)" class="p-2 border rounded">
+        <input id="valorFixo" type="number" placeholder="Valor (R$)" class="p-2 border rounded">
+        <input id="dataFixo" type="date" class="p-2 border rounded">
+      </div>
+      <button onclick="addFixo()" class="bg-blue-600 text-white px-4 py-2 rounded">Adicionar Despesa</button>
+      <ul id="listaFixos" class="mt-4"></ul>
+    </div>
+    <div id="mo" class="tab-content">
+      <h2 class="text-xl font-bold mb-4">Mão de Obra</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        <input id="tipoMO" placeholder="Tipo (ex: Salário, INSS)" class="p-2 border rounded">
+        <input id="valorMO" type="number" placeholder="Valor (R$)" class="p-2 border rounded">
+        <input id="dataMO" type="date" class="p-2 border rounded">
+      </div>
+      <button onclick="addMO()" class="bg-blue-600 text-white px-4 py-2 rounded">Adicionar Custo</button>
+      <ul id="listaMO" class="mt-4"></ul>
+    </div>
+    <div id="relatorio" class="tab-content">
+      <h2 class="text-xl font-bold mb-4">Relatório PDF</h2>
+      <button onclick="generatePDF()" class="bg-indigo-600 text-white px-4 py-2 rounded mb-4">Gerar PDF</button>
+    </div>
+  `;
+  loadSettings();
+}
 
-      document.getElementById('dre').innerHTML = `
-        <div>(+) Receita Bruta: R$ ${groups.RECEITA_BRUTA.toFixed(2)}</div>
-        <div>(-) Custos Variáveis: R$ ${groups.CUSTOS_VARIAVEIS.toFixed(2)}</div>
-        <div>(-) Despesas Fixas: R$ ${groups.DESPESAS_FIXAS.toFixed(2)}</div>
-        <div>(-) Mão de Obra: R$ ${groups.MAO_DE_OBRA.toFixed(2)}</div>
-        <div>(-) Impostos: R$ ${impostos.toFixed(2)}</div>
-        <div class="font-bold">(=) Lucro Líquido: R$ ${lucroLiquido.toFixed(2)}</div>`;
-    }
+function saveSettings() {
+  const settings = {
+    companyName: document.getElementById('companyName').value,
+    companyCnpj: document.getElementById('companyCnpj').value,
+    taxRegime: document.getElementById('taxRegime').value,
+    taxRate: parseFloat(document.getElementById('taxRate').value) || 0,
+    taxCredit: parseFloat(document.getElementById('taxCredit').value) || 0,
+    taxDebit: parseFloat(document.getElementById('taxDebit').value) || 0,
+    taxDelivery: parseFloat(document.getElementById('taxDelivery').value) || 0
+  };
+  localStorage.setItem('settings', JSON.stringify(settings));
+  alert('Calibração salva com sucesso!');
+}
 
-    function generatePDF() {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
-      const settings = JSON.parse(localStorage.getItem('settings') || '{}');
-      const month = document.getElementById('monthFilter').value;
-      const data = JSON.parse(localStorage.getItem('transactions') || '[]');
-      const filtered = data.filter(t => t.date?.startsWith(month));
+function loadSettings() {
+  const data = JSON.parse(localStorage.getItem('settings'));
+  if (!data) return;
+  document.getElementById('companyName').value = data.companyName || '';
+  document.getElementById('companyCnpj').value = data.companyCnpj || '';
+  document.getElementById('taxRegime').value = data.taxRegime || 'Simples Nacional';
+  document.getElementById('taxRate').value = data.taxRate || '';
+  document.getElementById('taxCredit').value = data.taxCredit || '';
+  document.getElementById('taxDebit').value = data.taxDebit || '';
+  document.getElementById('taxDelivery').value = data.taxDelivery || '';
+}
 
-      let y = 10;
-      doc.setFontSize(12);
-      doc.text(`Relatório DRE - ${settings.companyName || 'Empresa'}`, 10, y); y += 6;
-      doc.text(`CNPJ: ${settings.companyCnpj || '-'}`, 10, y); y += 6;
-      doc.text(`Período: ${month}`, 10, y); y += 8;
-      filtered.forEach(t => {
-        doc.text(`${t.date} - ${t.subCategory || t.description || '-'}: R$ ${t.amount.toFixed(2)}`, 10, y);
-        y += 6;
-      });
-      doc.save('relatorio_dre.pdf');
-    }
+function addReceita() {
+  const receitas = JSON.parse(localStorage.getItem('receitas') || '[]');
+  receitas.push({
+    tipo: document.getElementById('tipoReceita').value,
+    valor: parseFloat(document.getElementById('valorReceita').value) || 0,
+    data: document.getElementById('dataReceita').value
+  });
+  localStorage.setItem('receitas', JSON.stringify(receitas));
+  document.getElementById('valorReceita').value = '';
+  loadReceitas();
+}
 
-    document.getElementById('monthFilter').addEventListener('change', updateDRE);
-    window.onload = updateDRE;
-  </script>
+function loadReceitas() {
+  const lista = document.getElementById('listaReceitas');
+  lista.innerHTML = '';
+  const receitas = JSON.parse(localStorage.getItem('receitas') || '[]');
+  receitas.forEach((r, i) => {
+    const li = document.createElement('li');
+    li.textContent = `${r.tipo} - R$ ${r.valor.toFixed(2)} - ${r.data}`;
+    lista.appendChild(li);
+  });
+}
+
+function addCMV() {
+  const cmv = JSON.parse(localStorage.getItem('cmv') || '[]');
+  cmv.push({
+    tipo: document.getElementById('tipoCmv').value,
+    valor: parseFloat(document.getElementById('valorCmv').value) || 0,
+    data: document.getElementById('dataCmv').value
+  });
+  localStorage.setItem('cmv', JSON.stringify(cmv));
+  document.getElementById('valorCmv').value = '';
+  loadCMV();
+}
+
+function loadCMV() {
+  const lista = document.getElementById('listaCmv');
+  lista.innerHTML = '';
+  const cmv = JSON.parse(localStorage.getItem('cmv') || '[]');
+  cmv.forEach((r, i) => {
+    const li = document.createElement('li');
+    li.textContent = `${r.tipo} - R$ ${r.valor.toFixed(2)} - ${r.data}`;
+    lista.appendChild(li);
+  });
+}
+
+function addFixo() {
+  const fixos = JSON.parse(localStorage.getItem('fixos') || '[]');
+  fixos.push({
+    tipo: document.getElementById('tipoFixo').value,
+    valor: parseFloat(document.getElementById('valorFixo').value) || 0,
+    data: document.getElementById('dataFixo').value
+  });
+  localStorage.setItem('fixos', JSON.stringify(fixos));
+  document.getElementById('valorFixo').value = '';
+  loadFixos();
+}
+
+function loadFixos() {
+  const lista = document.getElementById('listaFixos');
+  lista.innerHTML = '';
+  const fixos = JSON.parse(localStorage.getItem('fixos') || '[]');
+  fixos.forEach((r, i) => {
+    const li = document.createElement('li');
+    li.textContent = `${r.tipo} - R$ ${r.valor.toFixed(2)} - ${r.data}`;
+    lista.appendChild(li);
+  });
+}
+
+function addMO() {
+  const mo = JSON.parse(localStorage.getItem('mo') || '[]');
+  mo.push({
+    tipo: document.getElementById('tipoMO').value,
+    valor: parseFloat(document.getElementById('valorMO').value) || 0,
+    data: document.getElementById('dataMO').value
+  });
+  localStorage.setItem('mo', JSON.stringify(mo));
+  document.getElementById('valorMO').value = '';
+  loadMO();
+}
+
+function loadMO() {
+  const lista = document.getElementById('listaMO');
+  lista.innerHTML = '';
+  const mo = JSON.parse(localStorage.getItem('mo') || '[]');
+  mo.forEach((r, i) => {
+    const li = document.createElement('li');
+    li.textContent = `${r.tipo} - R$ ${r.valor.toFixed(2)} - ${r.data}`;
+    lista.appendChild(li);
+  });
+}
+
+function loadAllData() {
+  loadReceitas();
+  loadCMV();
+  loadFixos();
+  loadMO();
+}
+
+function generatePDF() {
+  const receitas = JSON.parse(localStorage.getItem('receitas') || '[]');
+  const cmv = JSON.parse(localStorage.getItem('cmv') || '[]');
+  const fixos = JSON.parse(localStorage.getItem('fixos') || '[]');
+  const mo = JSON.parse(localStorage.getItem('mo') || '[]');
+  const settings = JSON.parse(localStorage.getItem('settings') || '{}');
+  const receitaTotal = receitas.reduce((sum, r) => sum + r.valor, 0);
+  const cmvTotal = cmv.reduce((sum, r) => sum + r.valor, 0);
+  const fixosTotal = fixos.reduce((sum, r) => sum + r.valor, 0);
+  const moTotal = mo.reduce((sum, r) => sum + r.valor, 0);
+  const impostos = (settings.taxRate || 0) / 100 * receitaTotal;
+  const lucroBruto = receitaTotal - cmvTotal;
+  const lucroLiquido = receitaTotal - cmvTotal - fixosTotal - moTotal - impostos;
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  doc.setFontSize(14);
+  doc.text("Relatório DRE - Padroniza", 10, 10);
+  doc.setFontSize(10);
+  doc.text(`Empresa: ${settings.companyName || ''}`, 10, 20);
+  doc.text(`CNPJ: ${settings.companyCnpj || ''}`, 10, 26);
+  doc.text(`Receita Total: R$ ${receitaTotal.toFixed(2)}`, 10, 36);
+  doc.text(`CMV: R$ ${cmvTotal.toFixed(2)}`, 10, 42);
+  doc.text(`Despesas Fixas: R$ ${fixosTotal.toFixed(2)}`, 10, 48);
+  doc.text(`Mão de Obra: R$ ${moTotal.toFixed(2)}`, 10, 54);
+  doc.text(`Impostos: R$ ${impostos.toFixed(2)}`, 10, 60);
+  doc.setFontSize(12);
+  doc.text(`Lucro Bruto: R$ ${lucroBruto.toFixed(2)}`, 10, 70);
+  doc.text(`Lucro Líquido: R$ ${lucroLiquido.toFixed(2)}`, 10, 76);
+  doc.save('relatorio_dre.pdf');
+}
+</script>
 </body>
 </html>

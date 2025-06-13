@@ -61,22 +61,41 @@ function gerarRelatorioPDF() {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
   const settings = JSON.parse(localStorage.getItem('settings')) || {};
-  const receitas = JSON.parse(localStorage.getItem('receitas') || '[]');
-  const cmv = JSON.parse(localStorage.getItem('cmv') || '[]');
-  const fixos = JSON.parse(localStorage.getItem('fixos') || '[]');
-  const mo = JSON.parse(localStorage.getItem('mo') || '[]');
+  const tipo = document.getElementById('tipoRelatorio').value;
+  const periodo = document.getElementById('periodoRelatorio').value;
+  const ano = periodo.split('-')[0];
+  const mes = periodo.split('-')[1];
+
+  function filtrarPorPeriodo(lista) {
+    return lista.filter(item => {
+      if (!item.data) return false;
+      const data = new Date(item.data);
+      if (tipo === 'mensal') {
+        return (
+          data.getMonth() + 1 === parseInt(mes) &&
+          data.getFullYear() === parseInt(ano)
+        );
+      } else {
+        return data.getFullYear() === parseInt(ano);
+      }
+    });
+  }
+
+  const receitas = filtrarPorPeriodo(JSON.parse(localStorage.getItem('receitas') || '[]'));
+  const cmv = filtrarPorPeriodo(JSON.parse(localStorage.getItem('cmv') || '[]'));
+  const fixos = filtrarPorPeriodo(JSON.parse(localStorage.getItem('fixos') || '[]'));
+  const mo = filtrarPorPeriodo(JSON.parse(localStorage.getItem('mo') || '[]'));
 
   const totalReceitas = receitas.reduce((sum, r) => sum + r.valor, 0);
   const totalCMV = cmv.reduce((sum, c) => sum + c.valor, 0);
   const totalFixos = fixos.reduce((sum, f) => sum + f.valor, 0);
   const totalMO = mo.reduce((sum, m) => sum + m.valor, 0);
   const totalImpostos = (settings.taxRate || 0) / 100 * totalReceitas;
-
   const lucroBruto = totalReceitas - totalCMV;
   const lucroLiquido = lucroBruto - totalFixos - totalMO - totalImpostos;
 
   doc.setFontSize(16);
-  doc.text(`Relatório DRE`, 14, 20);
+  doc.text(`Relatório DRE (${tipo.toUpperCase()} - ${periodo})`, 14, 20);
   doc.setFontSize(12);
   doc.text(`Empresa: ${settings.companyName || ''}`, 14, 30);
   doc.text(`CNPJ: ${settings.companyCnpj || ''}`, 14, 38);
@@ -90,7 +109,8 @@ function gerarRelatorioPDF() {
   doc.setFontSize(14);
   doc.text(`= Lucro Líquido: R$ ${lucroLiquido.toFixed(2)}`, 14, 100);
 
-  doc.save('relatorio-dre.pdf');
+  doc.save(`relatorio-dre-${tipo}-${periodo}.pdf`);
+}
 }
 </script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>

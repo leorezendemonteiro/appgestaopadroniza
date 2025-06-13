@@ -34,60 +34,35 @@
     <button class="tab-button" onclick="showTab('relatorio')">Relatório</button>
   </div>
 
-  <div id="tabsContainer">
-    <div id="calibracao" class="tab-content active">
-      <h2 class="text-xl font-bold mb-4">Calibração</h2>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        <input id="companyName" placeholder="Razão Social" class="p-2 border rounded">
-        <input id="companyCnpj" placeholder="CNPJ" class="p-2 border rounded">
-        <select id="taxRegime" class="p-2 border rounded">
-          <option value="Simples Nacional">Simples Nacional</option>
-          <option value="Lucro Presumido">Lucro Presumido</option>
-          <option value="Lucro Real">Lucro Real</option>
-        </select>
-        <input id="taxRate" type="number" step="0.01" placeholder="Alíquota Efetiva (%)" class="p-2 border rounded">
-        <input id="taxCredit" type="number" step="0.01" placeholder="Taxa Cartão Crédito (%)" class="p-2 border rounded">
-        <input id="taxDebit" type="number" step="0.01" placeholder="Taxa Cartão Débito (%)" class="p-2 border rounded">
-        <input id="taxDelivery" type="number" step="0.01" placeholder="Taxa Delivery/iFood (%)" class="p-2 border rounded">
+  $1
+
+    <div id="fixos" class="tab-content">
+      <h2 class="text-xl font-bold mb-4">Despesas Fixas</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        <input id="tipoFixo" placeholder="Tipo (ex: Aluguel, Energia)" class="p-2 border rounded">
+        <input id="valorFixo" type="number" placeholder="Valor (R$)" class="p-2 border rounded">
+        <input id="dataFixo" type="date" class="p-2 border rounded">
       </div>
-      <button onclick="saveSettings()" class="bg-green-600 text-white px-4 py-2 rounded">Salvar Calibração</button>
+      <button onclick="addFixo()" class="bg-blue-600 text-white px-4 py-2 rounded">Adicionar Despesa</button>
+      <ul id="listaFixos" class="mt-4"></ul>
     </div>
 
-    <div id="receitas" class="tab-content">
-      <h2 class="text-xl font-bold mb-4">Receitas</h2>
+    <div id="mo" class="tab-content">
+      <h2 class="text-xl font-bold mb-4">Mão de Obra</h2>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-        <select id="tipoReceita" class="p-2 border rounded">
-          <option value="Cartão de Crédito">Cartão de Crédito</option>
-          <option value="Cartão de Débito">Cartão de Débito</option>
-          <option value="Pix">Pix</option>
-          <option value="Dinheiro">Dinheiro</option>
-          <option value="Delivery/iFood">Delivery/iFood</option>
-        </select>
-        <input id="valorReceita" type="number" placeholder="Valor (R$)" class="p-2 border rounded">
-        <input id="dataReceita" type="date" class="p-2 border rounded">
+        <input id="tipoMO" placeholder="Tipo (ex: Salário, INSS)" class="p-2 border rounded">
+        <input id="valorMO" type="number" placeholder="Valor (R$)" class="p-2 border rounded">
+        <input id="dataMO" type="date" class="p-2 border rounded">
       </div>
-      <button onclick="addReceita()" class="bg-blue-600 text-white px-4 py-2 rounded">Adicionar Receita</button>
-      <ul id="listaReceitas" class="mt-4"></ul>
+      <button onclick="addMO()" class="bg-blue-600 text-white px-4 py-2 rounded">Adicionar Custo</button>
+      <ul id="listaMO" class="mt-4"></ul>
     </div>
 
-    <div id="cmv" class="tab-content">
-      <h2 class="text-xl font-bold mb-4">Custos Variáveis (CMV)</h2>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-        <select id="tipoCmv" class="p-2 border rounded">
-          <option value="Alimentos">Alimentos</option>
-          <option value="Bebidas">Bebidas</option>
-          <option value="Limpeza e Higiene">Limpeza e Higiene</option>
-          <option value="Gás">Gás</option>
-          <option value="Embalagens">Embalagens</option>
-          <option value="Papelaria">Papelaria</option>
-        </select>
-        <input id="valorCmv" type="number" placeholder="Valor (R$)" class="p-2 border rounded">
-        <input id="dataCmv" type="date" class="p-2 border rounded">
-      </div>
-      <button onclick="addCMV()" class="bg-blue-600 text-white px-4 py-2 rounded">Adicionar Custo</button>
-      <ul id="listaCmv" class="mt-4"></ul>
+    <div id="relatorio" class="tab-content">
+      <h2 class="text-xl font-bold mb-4">Relatório</h2>
+      <p class="mb-4">Em breve você poderá gerar um relatório em PDF com todos os lançamentos e análise de lucro.</p>
+      <button onclick="alert('Função de PDF será integrada em breve.')" class="bg-red-600 text-white px-4 py-2 rounded">Gerar Relatório PDF</button>
     </div>
-  </div>
 </div>
 
 <script>

@@ -3,351 +3,145 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gestão DRE - App Web Local</title>
-  <script src="https://cdn.tailwindcss.com">function addFixo() {
-  const fixos = JSON.parse(localStorage.getItem('fixos') || '[]');
-  fixos.push({
-    tipo: document.getElementById('tipoFixo').value,
-    valor: parseFloat(document.getElementById('valorFixo').value) || 0,
-    data: document.getElementById('dataFixo').value
-  });
-  localStorage.setItem('fixos', JSON.stringify(fixos));
-  document.getElementById('valorFixo').value = '';
-  loadFixos();
+  <title>Gestão DRE - CORRETAGESTAO02</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .tab-button { padding: 8px 16px; margin-right: 4px; background: #ccc; border: none; cursor: pointer; }
+    .tab-button.active { background: #666; color: #fff; }
+  </style>
+</head>
+<body>
+  <h1>Relatório DRE com Gráficos e PDFs</h1>
+
+  <div>
+    <label for="tipoRelatorio">Tipo de Relatório:</label>
+    <select id="tipoRelatorio">
+      <option value="mensal">Mensal</option>
+      <option value="anual">Anual</option>
+    </select>
+    <input id="periodoRelatorio" type="month">
+    <button onclick="gerarRelatorioPDF()">Gerar PDF Completo</button>
+    <button onclick="gerarResumoDRE()">Gerar PDF Resumido</button>
+  </div>
+
+  <canvas id="graficoDRE" width="600" height="300"></canvas>
+  <div id="resumoValores"></div>
+  <div id="detalhamentoLancamentos"></div>
+
+<script>
+function formatarReal(valor) {
+  return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
-function loadFixos() {
-  const lista = document.getElementById('listaFixos');
-  lista.innerHTML = '';
-  const fixos = JSON.parse(localStorage.getItem('fixos') || '[]');
-  fixos.forEach(r => {
-    const li = document.createElement('li');
-    li.textContent = `${r.tipo} - R$ ${r.valor.toFixed(2)} - ${r.data}`;
-    lista.appendChild(li);
-  });
-}
-
-function addMO() {
-  const mo = JSON.parse(localStorage.getItem('mo') || '[]');
-  mo.push({
-    tipo: document.getElementById('tipoMO').value,
-    valor: parseFloat(document.getElementById('valorMO').value) || 0,
-    data: document.getElementById('dataMO').value
-  });
-  localStorage.setItem('mo', JSON.stringify(mo));
-  document.getElementById('valorMO').value = '';
-  loadMO();
-}
-
-function loadMO() {
-  const lista = document.getElementById('listaMO');
-  lista.innerHTML = '';
-  const mo = JSON.parse(localStorage.getItem('mo') || '[]');
-  mo.forEach(r => {
-    const li = document.createElement('li');
-    li.textContent = `${r.tipo} - R$ ${r.valor.toFixed(2)} - ${r.data}`;
-    lista.appendChild(li);
-  });
-}
-
-function loadAllData() {
-  loadReceitas();
-  loadCMV();
-  loadFixos();
-  loadMO();
-}
-
-function gerarRelatorioPDF() {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
+function calcularTotais() {
   const settings = JSON.parse(localStorage.getItem('settings')) || {};
   const tipo = document.getElementById('tipoRelatorio').value;
   const periodo = document.getElementById('periodoRelatorio').value;
   const ano = periodo.split('-')[0];
   const mes = periodo.split('-')[1];
 
-  function filtrarPorPeriodo(lista) {
+  function filtrar(lista) {
     return lista.filter(item => {
-      if (!item.data) return false;
-      const data = new Date(item.data);
-      if (tipo === 'mensal') {
-        return (
-          data.getMonth() + 1 === parseInt(mes) &&
-          data.getFullYear() === parseInt(ano)
-        );
-      } else {
-        return data.getFullYear() === parseInt(ano);
-      }
+      const d = new Date(item.data);
+      return tipo === 'anual' ? d.getFullYear() === +ano : (d.getMonth() + 1 === +mes && d.getFullYear() === +ano);
     });
   }
 
-  const receitas = filtrarPorPeriodo(JSON.parse(localStorage.getItem('receitas') || '[]'));
-  const cmv = filtrarPorPeriodo(JSON.parse(localStorage.getItem('cmv') || '[]'));
-  const fixos = filtrarPorPeriodo(JSON.parse(localStorage.getItem('fixos') || '[]'));
-  const mo = filtrarPorPeriodo(JSON.parse(localStorage.getItem('mo') || '[]'));
+  const receitas = filtrar(JSON.parse(localStorage.getItem('receitas') || '[]'));
+  const cmv = filtrar(JSON.parse(localStorage.getItem('cmv') || '[]'));
+  const fixos = filtrar(JSON.parse(localStorage.getItem('fixos') || '[]'));
+  const mo = filtrar(JSON.parse(localStorage.getItem('mo') || '[]'));
 
-  const totalReceitas = receitas.reduce((sum, r) => sum + r.valor, 0);
-  const totalCMV = cmv.reduce((sum, c) => sum + c.valor, 0);
-  const totalFixos = fixos.reduce((sum, f) => sum + f.valor, 0);
-  const totalMO = mo.reduce((sum, m) => sum + m.valor, 0);
-  const totalImpostos = (settings.taxRate || 0) / 100 * totalReceitas;
+  const totalReceitas = receitas.reduce((acc, r) => acc + r.valor, 0);
+  const totalCMV = cmv.reduce((acc, r) => acc + r.valor, 0);
+  const totalFixos = fixos.reduce((acc, r) => acc + r.valor, 0);
+  const totalMO = mo.reduce((acc, r) => acc + r.valor, 0);
+  const impostos = (settings.taxRate || 0) / 100 * totalReceitas;
   const lucroBruto = totalReceitas - totalCMV;
-  const lucroLiquido = lucroBruto - totalFixos - totalMO - totalImpostos;
+  const lucroLiquido = lucroBruto - totalFixos - totalMO - impostos;
 
-  doc.setFontSize(16);
-  doc.text(`Relatório DRE (${tipo.toUpperCase()} - ${periodo})`, 14, 20);
-  doc.setFontSize(12);
-  doc.text(`Empresa: ${settings.companyName || ''}`, 14, 30);
-  doc.text(`CNPJ: ${settings.companyCnpj || ''}`, 14, 38);
-
-  doc.text(`Receita Bruta: R$ ${totalReceitas.toFixed(2)}`, 14, 50);
-  doc.text(`(-) CMV: R$ ${totalCMV.toFixed(2)}`, 14, 58);
-  doc.text(`= Lucro Bruto: R$ ${lucroBruto.toFixed(2)}`, 14, 66);
-  doc.text(`(-) Despesas Fixas: R$ ${totalFixos.toFixed(2)}`, 14, 74);
-  doc.text(`(-) Mão de Obra: R$ ${totalMO.toFixed(2)}`, 14, 82);
-  doc.text(`(-) Impostos: R$ ${totalImpostos.toFixed(2)}`, 14, 90);
-  doc.setFontSize(14);
-  doc.text(`= Lucro Líquido: R$ ${lucroLiquido.toFixed(2)}`, 14, 100);
-
-  doc.save(`relatorio-dre-${tipo}-${periodo}.pdf`);
+  return { totalReceitas, totalCMV, totalFixos, totalMO, impostos, lucroLiquido, receitas, cmv, fixos, mo };
 }
-}
-</script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <style>
-    body { font-family: sans-serif; }
-    .tab-button.active { background-color: #e0f2fe; font-weight: bold; border-bottom: 2px solid #0284c7; }
-    .tab-content { display: none; }
-    .tab-content.active { display: block; }
-  </style>
-</head>
-<body class="bg-gray-100 p-0 m-0">
-<div id="intro" class="w-full h-screen bg-cover bg-center flex flex-col justify-center items-center text-white" style="background-image: url('https://images.unsplash.com/photo-1581093588401-12f3e59f7a3e?auto=format&fit=crop&w=1470&q=80');">
-  <img src="https://i.postimg.cc/vBvK9KGz/ges.jpg" alt="Logo Padroniza" class="w-32 h-32 mb-6">
-  <div class="bg-white p-6 rounded shadow text-gray-900 w-80">
-    <h1 class="text-xl font-bold mb-4 text-center">Iniciar Gestão DRE</h1>
-    <input id="introCompanyName" placeholder="Razão Social" class="w-full mb-2 p-2 border rounded">
-    <input id="introCompanyCnpj" placeholder="CNPJ" class="w-full mb-4 p-2 border rounded">
-    <button onclick="startApp()" class="w-full bg-green-600 text-white px-4 py-2 rounded">Entrar</button>
-  </div>
-</div>
-<div id="mainApp" class="hidden p-4">
-  <div class="flex space-x-2 mb-4">
-    <button class="tab-button active" onclick="showTab('calibracao')">Calibração</button>
-    <button class="tab-button" onclick="showTab('receitas')">Receitas</button>
-    <button class="tab-button" onclick="showTab('cmv')">Custos (CMV)</button>
-    <button class="tab-button" onclick="showTab('fixos')">Despesas Fixas</button>
-    <button class="tab-button" onclick="showTab('mo')">Mão de Obra</button>
-    <button class="tab-button" onclick="showTab('relatorio')">Relatório</button>
-  </div>
-</div>
 
+function atualizarGrafico() {
+  const ctx = document.getElementById('graficoDRE').getContext('2d');
+  const { totalReceitas, totalCMV, totalFixos, totalMO, impostos, lucroLiquido } = calcularTotais();
 
-    <div id="calibracao" class="tab-content active">
-      <h2 class="text-xl font-bold mb-4">Calibração</h2>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <input id="companyName" placeholder="Razão Social" class="p-2 border rounded">
-        <input id="companyCnpj" placeholder="CNPJ" class="p-2 border rounded">
-        <select id="taxRegime" class="p-2 border rounded">
-          <option value="Simples Nacional">Simples Nacional</option>
-          <option value="Lucro Presumido">Lucro Presumido</option>
-        </select>
-        <input id="taxRate" type="number" placeholder="Alíquota (%)" class="p-2 border rounded">
-        <input id="taxCredit" type="number" placeholder="Taxa Crédito (%)" class="p-2 border rounded">
-        <input id="taxDebit" type="number" placeholder="Taxa Débito (%)" class="p-2 border rounded">
-        <input id="taxDelivery" type="number" placeholder="Taxa Delivery (%)" class="p-2 border rounded">
-      </div>
-      <button onclick="saveSettings()" class="mt-4 bg-green-600 text-white px-4 py-2 rounded">Salvar Calibração</button>
-    </div>
-
-    <div id="receitas" class="tab-content">
-      <h2 class="text-xl font-bold mb-4">Receitas</h2>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-        <select id="tipoReceita" class="p-2 border rounded">
-          <option value="Crédito">Cartão de Crédito</option>
-          <option value="Débito">Cartão de Débito</option>
-          <option value="Pix">Pix</option>
-          <option value="Dinheiro">Dinheiro</option>
-          <option value="Delivery">Delivery / iFood</option>
-        </select>
-        <input id="valorReceita" type="number" placeholder="Valor (R$)" class="p-2 border rounded">
-        <input id="dataReceita" type="date" class="p-2 border rounded">
-      </div>
-      <button onclick="addReceita()" class="bg-blue-600 text-white px-4 py-2 rounded">Adicionar Receita</button>
-      <ul id="listaReceitas" class="mt-4"></ul>
-    </div>
-
-    <div id="cmv" class="tab-content">
-      <h2 class="text-xl font-bold mb-4">Custos (CMV)</h2>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-        <select id="tipoCmv" class="p-2 border rounded">
-          <option value="Alimentar">Alimentar</option>
-          <option value="Não Alimentar">Não Alimentar</option>
-          <option value="Bebidas e Similares">Bebidas e Similares</option>
-          <option value="Produtos de Limpeza">Produtos de Limpeza</option>
-          <option value="Gás">Gás</option>
-          <option value="Embalagens e Descartáveis">Embalagens e Descartáveis</option>
-          <option value="Papelaria e Escritório">Papelaria e Escritório</option>
-        </select>
-        <input id="valorCmv" type="number" placeholder="Valor (R$)" class="p-2 border rounded">
-        <input id="dataCmv" type="date" class="p-2 border rounded">
-      </div>
-      <button onclick="addCMV()" class="bg-blue-600 text-white px-4 py-2 rounded">Adicionar Custo</button>
-      <ul id="listaCmv" class="mt-4"></ul>
-    </div>
-
-  
-    <div id="fixos" class="tab-content">
-  <h2 class="text-xl font-bold mb-4">Despesas Fixas</h2>
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-    <select id="tipoFixo" class="p-2 border rounded">
-      <option value="Aluguel">Aluguel</option>
-      <option value="IPTU">IPTU</option>
-      <option value="Água">Água</option>
-      <option value="Energia Elétrica">Energia Elétrica</option>
-      <option value="Internet/Telefone">Internet/Telefone</option>
-      <option value="Mensalidade Software">Mensalidade Software</option>
-      <option value="Contabilidade">Contabilidade</option>
-      <option value="Marketing">Marketing</option>
-      <option value="Parcela Financiamento">Parcela Financiamento</option>
-      <option value="Pró-labore">Pró-labore</option>
-    </select>
-        <input id="valorFixo" type="number" placeholder="Valor (R$)" class="p-2 border rounded">
-        <input id="dataFixo" type="date" class="p-2 border rounded">
-      </div>
-      <button onclick="addFixo()" class="bg-blue-600 text-white px-4 py-2 rounded">Adicionar Despesa</button>
-      <ul id="listaFixos" class="mt-4"></ul>
-    </div>
-
-    <div id="mo" class="tab-content">
-  <h2 class="text-xl font-bold mb-4">Mão de Obra</h2>
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-    <select id="tipoMO" class="p-2 border rounded">
-      <option value="Salários">Salários</option>
-      <option value="Férias">Férias</option>
-      <option value="Verbas Rescisórias">Verbas Rescisórias</option>
-      <option value="INSS">INSS</option>
-      <option value="FGTS">FGTS</option>
-      <option value="Vale Transporte">Vale Transporte</option>
-      <option value="Vale Alimentação">Vale Alimentação</option>
-      <option value="Exames Periódicos">Exames Periódicos</option>
-      <option value="Uniformes">Uniformes</option>
-    </select>
-        <input id="valorMO" type="number" placeholder="Valor (R$)" class="p-2 border rounded">
-        <input id="dataMO" type="date" class="p-2 border rounded">
-      </div>
-      <button onclick="addMO()" class="bg-blue-600 text-white px-4 py-2 rounded">Adicionar Custo</button>
-      <ul id="listaMO" class="mt-4"></ul>
-    </div>
-
-    <div id="relatorio" class="tab-content">
-  <h2 class="text-xl font-bold mb-4">Relatório</h2>
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-    <select id="tipoRelatorio" class="p-2 border rounded">
-      <option value="mensal">Mensal</option>
-      <option value="anual">Anual</option>
-    </select>
-    <input id="periodoRelatorio" type="month" class="p-2 border rounded">
-  </div>
-      <p class="mb-4">Em breve você poderá gerar um relatório em PDF com todos os lançamentos e análise de lucro.</p>
-      <button onclick="gerarRelatorioPDF()" class="bg-red-600 text-white px-4 py-2 rounded">Gerar Relatório PDF</button>
-    </div>
-</div>
-
-<script>
-function showTab(tabId) {
-  document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-  document.getElementById(tabId).classList.add('active');
-  document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
-  const clicked = [...document.querySelectorAll('.tab-button')].find(b => b.textContent.trim() === tabId.charAt(0).toUpperCase() + tabId.slice(1).replace('-', ' '));
-  if (clicked) clicked.classList.add('active');
-}
-function startApp() {
-  const name = document.getElementById('introCompanyName').value;
-  const cnpj = document.getElementById('introCompanyCnpj').value;
-  if (!name || !cnpj) {
-    alert('Por favor, preencha todos os campos.');
-    return;
-  }
-  localStorage.setItem('settings', JSON.stringify({ companyName: name, companyCnpj: cnpj }));
-  document.getElementById('intro').classList.add('hidden');
-  document.getElementById('mainApp').classList.remove('hidden');
-  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-  document.getElementById('calibracao').classList.add('active');
-  loadTabs();
-  if (typeof loadAllData === 'function') loadAllData();
-}
-function loadTabs() {
-  loadSettings();
-  loadReceitas?.();
-  loadCMV?.();
-}
-function saveSettings() {
-  const settings = {
-    companyName: document.getElementById('companyName').value,
-    companyCnpj: document.getElementById('companyCnpj').value,
-    taxRegime: document.getElementById('taxRegime').value,
-    taxRate: parseFloat(document.getElementById('taxRate').value) || 0,
-    taxCredit: parseFloat(document.getElementById('taxCredit').value) || 0,
-    taxDebit: parseFloat(document.getElementById('taxDebit').value) || 0,
-    taxDelivery: parseFloat(document.getElementById('taxDelivery').value) || 0
+  const chartData = {
+    labels: ['CMV', 'Fixos', 'Mão de Obra', 'Impostos/Taxas', 'Lucro Líquido'],
+    datasets: [{
+      data: [
+        (totalCMV / totalReceitas * 100),
+        (totalFixos / totalReceitas * 100),
+        (totalMO / totalReceitas * 100),
+        (impostos / totalReceitas * 100),
+        (lucroLiquido / totalReceitas * 100)
+      ],
+      backgroundColor: ['#f87171', '#facc15', '#60a5fa', '#34d399', '#a78bfa'],
+    }]
   };
-  localStorage.setItem('settings', JSON.stringify(settings));
-  alert('Calibração salva com sucesso!');
-}
-function loadSettings() {
-  const data = JSON.parse(localStorage.getItem('settings'));
-  if (!data) return;
-  document.getElementById('companyName').value = data.companyName || '';
-  document.getElementById('companyCnpj').value = data.companyCnpj || '';
-  document.getElementById('taxRegime').value = data.taxRegime || 'Simples Nacional';
-  document.getElementById('taxRate').value = data.taxRate || '';
-  document.getElementById('taxCredit').value = data.taxCredit || '';
-  document.getElementById('taxDebit').value = data.taxDebit || '';
-  document.getElementById('taxDelivery').value = data.taxDelivery || '';
-}
-function addReceita() {
-  const receitas = JSON.parse(localStorage.getItem('receitas') || '[]');
-  receitas.push({
-    tipo: document.getElementById('tipoReceita').value,
-    valor: parseFloat(document.getElementById('valorReceita').value) || 0,
-    data: document.getElementById('dataReceita').value
-  });
-  localStorage.setItem('receitas', JSON.stringify(receitas));
-  document.getElementById('valorReceita').value = '';
-  loadReceitas();
-}
-function loadReceitas() {
-  const lista = document.getElementById('listaReceitas');
-  lista.innerHTML = '';
-  const receitas = JSON.parse(localStorage.getItem('receitas') || '[]');
-  receitas.forEach((r, i) => {
-    const li = document.createElement('li');
-    li.textContent = `${r.tipo} - R$ ${r.valor.toFixed(2)} - ${r.data}`;
-    lista.appendChild(li);
+
+  if (window.chartInstance) window.chartInstance.destroy();
+  window.chartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: chartData,
+    options: {
+      plugins: {
+        tooltip: { callbacks: { label: ctx => ctx.raw.toFixed(2) + '%' } },
+        legend: { display: false }
+      },
+      scales: { y: { title: { display: true, text: '% sobre Receita' }, beginAtZero: true, max: 100 } }
+    }
   });
 }
-function addCMV() {
-  const cmv = JSON.parse(localStorage.getItem('cmv') || '[]');
-  cmv.push({
-    tipo: document.getElementById('tipoCmv').value,
-    valor: parseFloat(document.getElementById('valorCmv').value) || 0,
-    data: document.getElementById('dataCmv').value
-  });
-  localStorage.setItem('cmv', JSON.stringify(cmv));
-  document.getElementById('valorCmv').value = '';
-  loadCMV();
+
+function gerarRelatorioPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  const dados = calcularTotais();
+
+  doc.text('Relatório Completo DRE', 14, 20);
+  doc.setFontSize(10);
+  let y = 30;
+
+  for (const tipo of ['receitas', 'cmv', 'fixos', 'mo']) {
+    doc.text(tipo.toUpperCase(), 14, y); y += 6;
+    dados[tipo].forEach(item => {
+      doc.text(`• ${item.tipo} - ${item.descricao || '-'} - ${item.fornecedor || '-'} - ${item.data} - ${formatarReal(item.valor)}`, 14, y);
+      y += 6;
+      if (y > 280) { doc.addPage(); y = 20; }
+    });
+    y += 4;
+  }
+
+  doc.save('relatorio-completo.pdf');
 }
-function loadCMV() {
-  const lista = document.getElementById('listaCmv');
-  lista.innerHTML = '';
-  const cmv = JSON.parse(localStorage.getItem('cmv') || '[]');
-  cmv.forEach((r, i) => {
-    const li = document.createElement('li');
-    li.textContent = `${r.tipo} - R$ ${r.valor.toFixed(2)} - ${r.data}`;
-    lista.appendChild(li);
-  });
+
+function gerarResumoDRE() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  const { totalReceitas, totalCMV, totalFixos, totalMO, impostos, lucroLiquido } = calcularTotais();
+
+  doc.setFontSize(14);
+  doc.text('DRE Resumido', 14, 20);
+  doc.setFontSize(12);
+  doc.text(`Receita Bruta: ${formatarReal(totalReceitas)}`, 14, 30);
+  doc.text(`CMV: ${formatarReal(totalCMV)} (${(totalCMV / totalReceitas * 100).toFixed(2)}%)`, 14, 40);
+  doc.text(`Despesas Fixas: ${formatarReal(totalFixos)} (${(totalFixos / totalReceitas * 100).toFixed(2)}%)`, 14, 50);
+  doc.text(`Mão de Obra: ${formatarReal(totalMO)} (${(totalMO / totalReceitas * 100).toFixed(2)}%)`, 14, 60);
+  doc.text(`Impostos: ${formatarReal(impostos)} (${(impostos / totalReceitas * 100).toFixed(2)}%)`, 14, 70);
+  doc.text(`Lucro Líquido: ${formatarReal(lucroLiquido)} (${(lucroLiquido / totalReceitas * 100).toFixed(2)}%)`, 14, 80);
+
+  doc.save('dre-resumido.pdf');
 }
+
+// Gatilhos
+['tipoRelatorio', 'periodoRelatorio'].forEach(id => document.getElementById(id).addEventListener('change', atualizarGrafico));
 </script>
+
 </body>
 </html>

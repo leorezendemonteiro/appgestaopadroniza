@@ -111,6 +111,16 @@ function gerarRelatorioPDF() {
     <button onclick="startApp()" class="w-full bg-green-600 text-white px-4 py-2 rounded">Entrar</button>
   </div>
 </div>
+<div id="mainApp" class="hidden p-4">
+  <div class="flex space-x-2 mb-4">
+    <button class="tab-button active" onclick="showTab('calibracao')">Calibração</button>
+    <button class="tab-button" onclick="showTab('receitas')">Receitas</button>
+    <button class="tab-button" onclick="showTab('cmv')">Custos (CMV)</button>
+    <button class="tab-button" onclick="showTab('fixos')">Despesas Fixas</button>
+    <button class="tab-button" onclick="showTab('mo')">Mão de Obra</button>
+    <button class="tab-button" onclick="showTab('relatorio')">Relatório</button>
+  </div>
+</div>
 
 
     <div id="calibracao" class="tab-content active">
@@ -214,6 +224,8 @@ function startApp() {
   localStorage.setItem('settings', JSON.stringify({ companyName: name, companyCnpj: cnpj }));
   document.getElementById('intro').classList.add('hidden');
   document.getElementById('mainApp').classList.remove('hidden');
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.getElementById('calibracao').classList.add('active');
   loadTabs();
   if (typeof loadAllData === 'function') loadAllData();
 }

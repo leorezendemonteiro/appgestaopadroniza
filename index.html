@@ -178,9 +178,20 @@ function gerarRelatorioPDF() {
 
   
     <div id="fixos" class="tab-content">
-      <h2 class="text-xl font-bold mb-4">Despesas Fixas</h2>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-        <input id="tipoFixo" placeholder="Tipo (ex: Aluguel, Energia)" class="p-2 border rounded">
+  <h2 class="text-xl font-bold mb-4">Despesas Fixas</h2>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+    <select id="tipoFixo" class="p-2 border rounded">
+      <option value="Aluguel">Aluguel</option>
+      <option value="IPTU">IPTU</option>
+      <option value="Água">Água</option>
+      <option value="Energia Elétrica">Energia Elétrica</option>
+      <option value="Internet/Telefone">Internet/Telefone</option>
+      <option value="Mensalidade Software">Mensalidade Software</option>
+      <option value="Contabilidade">Contabilidade</option>
+      <option value="Marketing">Marketing</option>
+      <option value="Parcela Financiamento">Parcela Financiamento</option>
+      <option value="Pró-labore">Pró-labore</option>
+    </select>
         <input id="valorFixo" type="number" placeholder="Valor (R$)" class="p-2 border rounded">
         <input id="dataFixo" type="date" class="p-2 border rounded">
       </div>
@@ -189,9 +200,19 @@ function gerarRelatorioPDF() {
     </div>
 
     <div id="mo" class="tab-content">
-      <h2 class="text-xl font-bold mb-4">Mão de Obra</h2>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-        <input id="tipoMO" placeholder="Tipo (ex: Salário, INSS)" class="p-2 border rounded">
+  <h2 class="text-xl font-bold mb-4">Mão de Obra</h2>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+    <select id="tipoMO" class="p-2 border rounded">
+      <option value="Salários">Salários</option>
+      <option value="Férias">Férias</option>
+      <option value="Verbas Rescisórias">Verbas Rescisórias</option>
+      <option value="INSS">INSS</option>
+      <option value="FGTS">FGTS</option>
+      <option value="Vale Transporte">Vale Transporte</option>
+      <option value="Vale Alimentação">Vale Alimentação</option>
+      <option value="Exames Periódicos">Exames Periódicos</option>
+      <option value="Uniformes">Uniformes</option>
+    </select>
         <input id="valorMO" type="number" placeholder="Valor (R$)" class="p-2 border rounded">
         <input id="dataMO" type="date" class="p-2 border rounded">
       </div>
@@ -200,7 +221,14 @@ function gerarRelatorioPDF() {
     </div>
 
     <div id="relatorio" class="tab-content">
-      <h2 class="text-xl font-bold mb-4">Relatório</h2>
+  <h2 class="text-xl font-bold mb-4">Relatório</h2>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+    <select id="tipoRelatorio" class="p-2 border rounded">
+      <option value="mensal">Mensal</option>
+      <option value="anual">Anual</option>
+    </select>
+    <input id="periodoRelatorio" type="month" class="p-2 border rounded">
+  </div>
       <p class="mb-4">Em breve você poderá gerar um relatório em PDF com todos os lançamentos e análise de lucro.</p>
       <button onclick="gerarRelatorioPDF()" class="bg-red-600 text-white px-4 py-2 rounded">Gerar Relatório PDF</button>
     </div>

@@ -5,23 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gestão DRE - App Web Local</title>
   <script src="https://cdn.tailwindcss.com"></script>
-<script>
-function startApp() {
-  const name = document.getElementById('introCompanyName').value;
-  const cnpj = document.getElementById('introCompanyCnpj').value;
-
-  if (!name || !cnpj) {
-    alert('Por favor, preencha todos os campos.');
-    return;
-  }
-
-  localStorage.setItem('settings', JSON.stringify({ companyName: name, companyCnpj: cnpj }));
-  document.getElementById('intro').classList.add('hidden');
-  document.getElementById('mainApp').classList.remove('hidden');
-  loadTabs();
-  if (typeof loadAllData === 'function') loadAllData();
-}
-</script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     body { font-family: sans-serif; }
@@ -52,14 +35,24 @@ function startApp() {
   </div>
 
   <div id="tabsContainer">
-    <!-- Abas serão geradas pelo JavaScript -->
-  </div>
-</div>
+    <div id="calibracao" class="tab-content active">
+      <h2 class="text-xl font-bold mb-4">Calibração</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <input id="companyName" placeholder="Razão Social" class="p-2 border rounded">
+        <input id="companyCnpj" placeholder="CNPJ" class="p-2 border rounded">
+        <select id="taxRegime" class="p-2 border rounded">
+          <option value="Simples Nacional">Simples Nacional</option>
+          <option value="Lucro Presumido">Lucro Presumido</option>
+          <option value="Lucro Real">Lucro Real</option>
+        </select>
+        <input id="taxRate" type="number" step="0.01" placeholder="Alíquota Efetiva (%)" class="p-2 border rounded">
+        <input id="taxCredit" type="number" step="0.01" placeholder="Taxa Cartão Crédito (%)" class="p-2 border rounded">
+        <input id="taxDebit" type="number" step="0.01" placeholder="Taxa Cartão Débito (%)" class="p-2 border rounded">
+        <input id="taxDelivery" type="number" step="0.01" placeholder="Taxa Delivery/iFood (%)" class="p-2 border rounded">
+      </div>
+      <button onclick="saveSettings()" class="bg-green-600 text-white px-4 py-2 rounded">Salvar Calibração</button>
+    </div>
 
-<script>
-function loadTabs() {
-  const container = document.getElementById('tabsContainer');
-  container.innerHTML = container.innerHTML.replace(/<div id=\"receitas\"[\s\S]*?<\/div>\n/, `
     <div id="receitas" class="tab-content">
       <h2 class="text-xl font-bold mb-4">Receitas</h2>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
@@ -76,7 +69,118 @@ function loadTabs() {
       <button onclick="addReceita()" class="bg-blue-600 text-white px-4 py-2 rounded">Adicionar Receita</button>
       <ul id="listaReceitas" class="mt-4"></ul>
     </div>
-  `);
+
+    <div id="cmv" class="tab-content">
+      <h2 class="text-xl font-bold mb-4">Custos Variáveis (CMV)</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        <select id="tipoCmv" class="p-2 border rounded">
+          <option value="Alimentos">Alimentos</option>
+          <option value="Bebidas">Bebidas</option>
+          <option value="Limpeza e Higiene">Limpeza e Higiene</option>
+          <option value="Gás">Gás</option>
+          <option value="Embalagens">Embalagens</option>
+          <option value="Papelaria">Papelaria</option>
+        </select>
+        <input id="valorCmv" type="number" placeholder="Valor (R$)" class="p-2 border rounded">
+        <input id="dataCmv" type="date" class="p-2 border rounded">
+      </div>
+      <button onclick="addCMV()" class="bg-blue-600 text-white px-4 py-2 rounded">Adicionar Custo</button>
+      <ul id="listaCmv" class="mt-4"></ul>
+    </div>
+  </div>
+</div>
+
+<script>
+function showTab(tabId) {
+  document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+  document.getElementById(tabId).classList.add('active');
+  document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+  const clicked = [...document.querySelectorAll('.tab-button')].find(b => b.textContent.trim() === tabId.charAt(0).toUpperCase() + tabId.slice(1).replace('-', ' '));
+  if (clicked) clicked.classList.add('active');
+}
+function startApp() {
+  const name = document.getElementById('introCompanyName').value;
+  const cnpj = document.getElementById('introCompanyCnpj').value;
+  if (!name || !cnpj) {
+    alert('Por favor, preencha todos os campos.');
+    return;
+  }
+  localStorage.setItem('settings', JSON.stringify({ companyName: name, companyCnpj: cnpj }));
+  document.getElementById('intro').classList.add('hidden');
+  document.getElementById('mainApp').classList.remove('hidden');
+  loadTabs();
+  if (typeof loadAllData === 'function') loadAllData();
+}
+function loadTabs() {
+  loadSettings();
+  loadReceitas?.();
+  loadCMV?.();
+}
+function saveSettings() {
+  const settings = {
+    companyName: document.getElementById('companyName').value,
+    companyCnpj: document.getElementById('companyCnpj').value,
+    taxRegime: document.getElementById('taxRegime').value,
+    taxRate: parseFloat(document.getElementById('taxRate').value) || 0,
+    taxCredit: parseFloat(document.getElementById('taxCredit').value) || 0,
+    taxDebit: parseFloat(document.getElementById('taxDebit').value) || 0,
+    taxDelivery: parseFloat(document.getElementById('taxDelivery').value) || 0
+  };
+  localStorage.setItem('settings', JSON.stringify(settings));
+  alert('Calibração salva com sucesso!');
+}
+function loadSettings() {
+  const data = JSON.parse(localStorage.getItem('settings'));
+  if (!data) return;
+  document.getElementById('companyName').value = data.companyName || '';
+  document.getElementById('companyCnpj').value = data.companyCnpj || '';
+  document.getElementById('taxRegime').value = data.taxRegime || 'Simples Nacional';
+  document.getElementById('taxRate').value = data.taxRate || '';
+  document.getElementById('taxCredit').value = data.taxCredit || '';
+  document.getElementById('taxDebit').value = data.taxDebit || '';
+  document.getElementById('taxDelivery').value = data.taxDelivery || '';
+}
+function addReceita() {
+  const receitas = JSON.parse(localStorage.getItem('receitas') || '[]');
+  receitas.push({
+    tipo: document.getElementById('tipoReceita').value,
+    valor: parseFloat(document.getElementById('valorReceita').value) || 0,
+    data: document.getElementById('dataReceita').value
+  });
+  localStorage.setItem('receitas', JSON.stringify(receitas));
+  document.getElementById('valorReceita').value = '';
+  loadReceitas();
+}
+function loadReceitas() {
+  const lista = document.getElementById('listaReceitas');
+  lista.innerHTML = '';
+  const receitas = JSON.parse(localStorage.getItem('receitas') || '[]');
+  receitas.forEach((r, i) => {
+    const li = document.createElement('li');
+    li.textContent = `${r.tipo} - R$ ${r.valor.toFixed(2)} - ${r.data}`;
+    lista.appendChild(li);
+  });
+}
+function addCMV() {
+  const cmv = JSON.parse(localStorage.getItem('cmv') || '[]');
+  cmv.push({
+    tipo: document.getElementById('tipoCmv').value,
+    valor: parseFloat(document.getElementById('valorCmv').value) || 0,
+    data: document.getElementById('dataCmv').value
+  });
+  localStorage.setItem('cmv', JSON.stringify(cmv));
+  document.getElementById('valorCmv').value = '';
+  loadCMV();
+}
+function loadCMV() {
+  const lista = document.getElementById('listaCmv');
+  lista.innerHTML = '';
+  const cmv = JSON.parse(localStorage.getItem('cmv') || '[]');
+  cmv.forEach((r, i) => {
+    const li = document.createElement('li');
+    li.textContent = `${r.tipo} - R$ ${r.valor.toFixed(2)} - ${r.data}`;
+    lista.appendChild(li);
+  });
 }
 </script>
 </body>

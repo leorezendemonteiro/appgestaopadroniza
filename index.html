@@ -1,134 +1,179 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>App de Gestão DRE - Offline</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestão DRE - App Web Local</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
-    body { font-family: 'Inter', sans-serif; }
-    .tab-button.active { border-color: #3b82f6; background-color: #eff6ff; color: #2563eb; }
+    body { font-family: sans-serif; }
+    .tab-button.active { background-color: #e0f2fe; font-weight: bold; border-bottom: 2px solid #0284c7; }
     .tab-content { display: none; }
     .tab-content.active { display: block; }
-    .dre-item { display: flex; justify-content: space-between; padding: 0.75rem; border-bottom: 1px solid #e5e7eb; }
-    .dre-item.total { font-weight: 700; background-color: #f9fafb; }
-    .dre-item.net-profit { font-weight: 700; background-color: #d1fae5; color: #065f46; }
-    .dre-item.net-loss { font-weight: 700; background-color: #fee2e2; color: #991b1b; }
-    .indicator-item { background-color: #f9fafb; padding: 1rem; border-radius: 0.5rem; }
   </style>
 </head>
-<body class="bg-gray-100">
-  <div class="container mx-auto p-6">
+<body class="bg-gray-100 p-4">
+  <div class="max-w-5xl mx-auto">
     <h1 class="text-2xl font-bold mb-4">Painel de Gestão DRE (Offline)</h1>
-    <nav id="tabs-container" class="flex gap-2 mb-6">
-      <button class="tab-button px-4 py-2 border-b-2 active" data-tab="calibracao">Calibração</button>
-      <button class="tab-button px-4 py-2 border-b-2" data-tab="receitas">Receitas</button>
-      <button class="tab-button px-4 py-2 border-b-2" data-tab="custos">Custos</button>
-      <button class="tab-button px-4 py-2 border-b-2" data-tab="despesas">Despesas</button>
-      <button class="tab-button px-4 py-2 border-b-2" data-tab="maodeobra">Mão de Obra</button>
-    </nav>
-
-    <div id="tabs-content-container">
-      <div id="tab-calibracao" class="tab-content active">
-        <form id="settings-form" class="grid gap-4">
-          <input type="text" id="companyName" placeholder="Razão Social" class="p-2 border rounded">
-          <input type="text" id="companyCnpj" placeholder="CNPJ" class="p-2 border rounded">
-          <select id="taxRegime" class="p-2 border rounded">
-            <option value="simples">Simples Nacional</option>
-            <option value="presumido">Lucro Presumido</option>
-            <option value="real">Lucro Real</option>
-          </select>
-          <input type="number" id="taxRate" step="0.01" placeholder="Alíquota Efetiva (%)" class="p-2 border rounded">
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
-            <input type="number" id="debitFee" step="0.01" placeholder="Taxa Débito (%)" class="p-2 border rounded">
-            <input type="number" id="creditFee" step="0.01" placeholder="Taxa Crédito (%)" class="p-2 border rounded">
-            <input type="number" id="deliveryAppFee" step="0.01" placeholder="Taxa App Delivery (%)" class="p-2 border rounded">
-          </div>
-          <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded">Salvar</button>
-        </form>
-      </div>
-
-      <div id="tab-receitas" class="tab-content">
-        <form id="form-receitas" class="grid gap-4" data-main="RECEITA_BRUTA">
-          <select name="subCategory" class="p-2 border rounded">
-            <option value="Crédito">Crédito</option>
-            <option value="Débito">Débito</option>
-            <option value="Pix">Pix</option>
-            <option value="Dinheiro">Dinheiro</option>
-            <option value="iFood">iFood</option>
-          </select>
-          <input name="description" placeholder="Descrição (opcional)" class="p-2 border rounded">
-          <input name="amount" type="number" step="0.01" placeholder="Valor (R$)" class="p-2 border rounded">
-          <input name="date" type="date" class="p-2 border rounded">
-          <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Adicionar Receita</button>
-        </form>
-      </div>
-
-      <div id="tab-custos" class="tab-content">
-        <form id="form-custos" class="grid gap-4" data-main="CUSTOS_VARIAVEIS">
-          <input name="subCategory" placeholder="Tipo de Custo" class="p-2 border rounded">
-          <input name="provider" placeholder="Fornecedor" class="p-2 border rounded">
-          <input name="invoice" placeholder="Nº da NF (opcional)" class="p-2 border rounded">
-          <input name="amount" type="number" step="0.01" placeholder="Valor (R$)" class="p-2 border rounded">
-          <input name="date" type="date" class="p-2 border rounded">
-          <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Adicionar Custo</button>
-        </form>
-      </div>
-
-      <div id="tab-despesas" class="tab-content">
-        <form id="form-despesas" class="grid gap-4" data-main="DESPESAS_FIXAS">
-          <input name="subCategory" placeholder="Tipo de Despesa" class="p-2 border rounded">
-          <input name="description" placeholder="Descrição (opcional)" class="p-2 border rounded">
-          <input name="amount" type="number" step="0.01" placeholder="Valor (R$)" class="p-2 border rounded">
-          <input name="date" type="date" class="p-2 border rounded">
-          <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Adicionar Despesa</button>
-        </form>
-      </div>
-
-      <div id="tab-maodeobra" class="tab-content">
-        <form id="form-maodeobra" class="grid gap-4" data-main="MAO_DE_OBRA">
-          <input name="subCategory" placeholder="Tipo de Custo com Pessoal" class="p-2 border rounded">
-          <input name="description" placeholder="Descrição (opcional)" class="p-2 border rounded">
-          <input name="amount" type="number" step="0.01" placeholder="Valor (R$)" class="p-2 border rounded">
-          <input name="date" type="date" class="p-2 border rounded">
-          <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Adicionar Mão de Obra</button>
-        </form>
-      </div>
+    <div id="tabs" class="flex space-x-2 border-b mb-4">
+      <button class="tab-button px-4 py-2 active" data-tab="calibracao">Calibração</button>
+      <button class="tab-button px-4 py-2" data-tab="receitas">Receitas</button>
+      <button class="tab-button px-4 py-2" data-tab="custos">Custos Variáveis</button>
+      <button class="tab-button px-4 py-2" data-tab="despesas">Despesas Fixas</button>
+      <button class="tab-button px-4 py-2" data-tab="maodeobra">Mão de Obra</button>
     </div>
 
-    <hr class="my-8">
+    <div id="tab-calibracao" class="tab-content active space-y-4">
+      <input id="companyName" placeholder="Razão Social" class="w-full p-2 border rounded">
+      <input id="companyCnpj" placeholder="CNPJ" class="w-full p-2 border rounded">
+      <select id="taxRegime" class="w-full p-2 border rounded">
+        <option value="simples">Simples Nacional</option>
+        <option value="presumido">Lucro Presumido</option>
+        <option value="real">Lucro Real</option>
+      </select>
+      <input id="taxRate" type="number" placeholder="Alíquota Efetiva (%)" class="w-full p-2 border rounded">
+      <button onclick="saveSettings()" class="bg-green-600 text-white px-4 py-2 rounded">Salvar Calibração</button>
+    </div>
 
-    <div class="grid gap-4">
-      <div class="flex items-center gap-2">
-        <select id="view-mode" class="p-2 border rounded">
-          <option value="monthly">Mensal</option>
-          <option value="yearly">Anual</option>
+    <div id="tab-receitas" class="tab-content">
+      <form onsubmit="addEntry(event, 'RECEITA_BRUTA')" class="grid grid-cols-1 gap-2">
+        <select name="subCategory" class="p-2 border rounded">
+          <option value="Crédito">Crédito</option>
+          <option value="Débito">Débito</option>
+          <option value="Pix">Pix</option>
+          <option value="Dinheiro">Dinheiro</option>
+          <option value="iFood">iFood</option>
         </select>
-        <input type="month" id="month-filter" class="p-2 border rounded">
-      </div>
+        <input name="description" placeholder="Descrição" class="p-2 border rounded">
+        <input name="amount" type="number" step="0.01" placeholder="Valor" class="p-2 border rounded">
+        <input name="date" type="date" class="p-2 border rounded">
+        <button class="bg-blue-600 text-white px-4 py-2 rounded">Adicionar Receita</button>
+      </form>
+    </div>
 
-      <div>
-        <h2 class="text-lg font-semibold mb-2">DRE</h2>
-        <div id="dre-container" class="space-y-1 text-sm bg-white rounded p-4 shadow"></div>
-      </div>
+    <div id="tab-custos" class="tab-content">
+      <form onsubmit="addEntry(event, 'CUSTOS_VARIAVEIS')" class="grid grid-cols-1 gap-2">
+        <input name="subCategory" placeholder="Tipo de Custo" class="p-2 border rounded">
+        <input name="description" placeholder="Descrição" class="p-2 border rounded">
+        <input name="amount" type="number" step="0.01" placeholder="Valor" class="p-2 border rounded">
+        <input name="date" type="date" class="p-2 border rounded">
+        <button class="bg-blue-600 text-white px-4 py-2 rounded">Adicionar Custo</button>
+      </form>
+    </div>
 
-      <div>
-        <h2 class="text-lg font-semibold mb-2">Indicadores (%)</h2>
-        <div id="indicators-container" class="space-y-2 text-sm bg-white rounded p-4 shadow"></div>
-        <button id="generate-pdf-btn" class="mt-4 bg-red-600 text-white px-4 py-2 rounded">Gerar Relatório PDF</button>
-      </div>
+    <div id="tab-despesas" class="tab-content">
+      <form onsubmit="addEntry(event, 'DESPESAS_FIXAS')" class="grid grid-cols-1 gap-2">
+        <input name="subCategory" placeholder="Tipo de Despesa" class="p-2 border rounded">
+        <input name="description" placeholder="Descrição" class="p-2 border rounded">
+        <input name="amount" type="number" step="0.01" placeholder="Valor" class="p-2 border rounded">
+        <input name="date" type="date" class="p-2 border rounded">
+        <button class="bg-blue-600 text-white px-4 py-2 rounded">Adicionar Despesa</button>
+      </form>
+    </div>
 
-      <div>
-        <h2 class="text-lg font-semibold mb-2">Lançamentos</h2>
-        <table class="w-full text-sm bg-white rounded shadow">
-          <thead><tr class="bg-gray-200"><th class="p-2">Descrição</th><th>Valor</th><th>Ação</th></tr></thead>
-          <tbody id="transactions-list"></tbody>
-        </table>
-      </div>
+    <div id="tab-maodeobra" class="tab-content">
+      <form onsubmit="addEntry(event, 'MAO_DE_OBRA')" class="grid grid-cols-1 gap-2">
+        <input name="subCategory" placeholder="Tipo de Custo com Pessoal" class="p-2 border rounded">
+        <input name="description" placeholder="Descrição" class="p-2 border rounded">
+        <input name="amount" type="number" step="0.01" placeholder="Valor" class="p-2 border rounded">
+        <input name="date" type="date" class="p-2 border rounded">
+        <button class="bg-blue-600 text-white px-4 py-2 rounded">Adicionar Mão de Obra</button>
+      </form>
+    </div>
+
+    <hr class="my-6">
+    <div class="flex items-center gap-4">
+      <input type="month" id="monthFilter" class="p-2 border rounded">
+      <button onclick="generatePDF()" class="bg-red-600 text-white px-4 py-2 rounded">Gerar PDF</button>
+    </div>
+
+    <div class="mt-4">
+      <h2 class="text-lg font-semibold">DRE</h2>
+      <div id="dre"></div>
     </div>
   </div>
-  <script src="script.js"></script>
+
+  <script>
+    const tabs = document.querySelectorAll('.tab-button');
+    const contents = document.querySelectorAll('.tab-content');
+    tabs.forEach(btn => {
+      btn.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        contents.forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+      });
+    });
+
+    document.getElementById('monthFilter').value = new Date().toISOString().slice(0, 7);
+
+    function saveSettings() {
+      const s = {
+        companyName: document.getElementById('companyName').value,
+        companyCnpj: document.getElementById('companyCnpj').value,
+        taxRegime: document.getElementById('taxRegime').value,
+        taxRate: parseFloat(document.getElementById('taxRate').value || 0)
+      };
+      localStorage.setItem('settings', JSON.stringify(s));
+      alert('Calibração salva!');
+    }
+
+    function addEntry(e, category) {
+      e.preventDefault();
+      const form = e.target;
+      const data = Object.fromEntries(new FormData(form).entries());
+      data.amount = parseFloat(data.amount);
+      data.main = category;
+      const current = JSON.parse(localStorage.getItem('transactions') || '[]');
+      current.push(data);
+      localStorage.setItem('transactions', JSON.stringify(current));
+      form.reset();
+      updateDRE();
+    }
+
+    function updateDRE() {
+      const data = JSON.parse(localStorage.getItem('transactions') || '[]');
+      const month = document.getElementById('monthFilter').value;
+      const settings = JSON.parse(localStorage.getItem('settings') || '{}');
+      const filtered = data.filter(t => t.date?.startsWith(month));
+      const groups = { RECEITA_BRUTA: 0, CUSTOS_VARIAVEIS: 0, DESPESAS_FIXAS: 0, MAO_DE_OBRA: 0 };
+      filtered.forEach(t => groups[t.main] += t.amount);
+      const impostos = groups.RECEITA_BRUTA * ((settings.taxRate || 0) / 100);
+      const lucroBruto = groups.RECEITA_BRUTA - groups.CUSTOS_VARIAVEIS;
+      const lucroLiquido = lucroBruto - groups.DESPESAS_FIXAS - groups.MAO_DE_OBRA - impostos;
+
+      document.getElementById('dre').innerHTML = `
+        <div>(+) Receita Bruta: R$ ${groups.RECEITA_BRUTA.toFixed(2)}</div>
+        <div>(-) Custos Variáveis: R$ ${groups.CUSTOS_VARIAVEIS.toFixed(2)}</div>
+        <div>(-) Despesas Fixas: R$ ${groups.DESPESAS_FIXAS.toFixed(2)}</div>
+        <div>(-) Mão de Obra: R$ ${groups.MAO_DE_OBRA.toFixed(2)}</div>
+        <div>(-) Impostos: R$ ${impostos.toFixed(2)}</div>
+        <div class="font-bold">(=) Lucro Líquido: R$ ${lucroLiquido.toFixed(2)}</div>`;
+    }
+
+    function generatePDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      const settings = JSON.parse(localStorage.getItem('settings') || '{}');
+      const month = document.getElementById('monthFilter').value;
+      const data = JSON.parse(localStorage.getItem('transactions') || '[]');
+      const filtered = data.filter(t => t.date?.startsWith(month));
+
+      let y = 10;
+      doc.setFontSize(12);
+      doc.text(`Relatório DRE - ${settings.companyName || 'Empresa'}`, 10, y); y += 6;
+      doc.text(`CNPJ: ${settings.companyCnpj || '-'}`, 10, y); y += 6;
+      doc.text(`Período: ${month}`, 10, y); y += 8;
+      filtered.forEach(t => {
+        doc.text(`${t.date} - ${t.subCategory || t.description || '-'}: R$ ${t.amount.toFixed(2)}`, 10, y);
+        y += 6;
+      });
+      doc.save('relatorio_dre.pdf');
+    }
+
+    document.getElementById('monthFilter').addEventListener('change', updateDRE);
+    window.onload = updateDRE;
+  </script>
 </body>
 </html>

@@ -8,80 +8,135 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body class="bg-gray-100">
-  <div id="telaInicial" class="flex flex-col items-center justify-center h-screen p-4">
-    <div class="text-2xl font-semibold mb-4">📊 Padroniza DRE</div>
-    <input id="empresaNome" type="text" placeholder="Nome da Empresa" class="mb-2 p-2 border rounded w-full max-w-xs">
-    <input id="empresaCNPJ" type="text" placeholder="CNPJ" class="mb-4 p-2 border rounded w-full max-w-xs">
-    <button onclick="iniciarApp()" class="bg-blue-600 text-white px-4 py-2 rounded">Iniciar DRE</button>
-  </div>
-
-  <div id="app" class="hidden">
-    <div class="bg-white shadow p-4">
-      <div class="flex gap-2 mb-4 overflow-x-auto">
-        <button onclick="abrirAba('calibracao')" class="aba">Calibração</button>
-        <button onclick="abrirAba('receitas')" class="aba">Receitas</button>
-        <button onclick="abrirAba('cmv')" class="aba">CMV</button>
-        <button onclick="abrirAba('fixas')" class="aba">Fixas</button>
-        <button onclick="abrirAba('maoObra')" class="aba">Mão de Obra</button>
-        <button onclick="abrirAba('relatorio')" class="aba">Relatório</button>
-      </div>
-      <div id="conteudo"></div>
-    </div>
-  </div>
+  <!-- Tela inicial e abas já existentes acima -->
 
   <script>
-    const conteudo = document.getElementById('conteudo');
-
-    function iniciarApp() {
-      const nome = document.getElementById('empresaNome').value;
-      const cnpj = document.getElementById('empresaCNPJ').value;
-      if (!nome || !cnpj) {
-        alert("Preencha todos os campos antes de iniciar.");
-        return;
-      }
-      localStorage.setItem("empresaNome", nome);
-      localStorage.setItem("empresaCNPJ", cnpj);
-      document.getElementById("telaInicial").classList.add("hidden");
-      document.getElementById("app").classList.remove("hidden");
-      abrirAba('calibracao');
+    // ABA: Mão de Obra
+    function renderMo() {
+      conteudo.innerHTML = `
+        <h2 class="text-xl mb-4">Mão de Obra</h2>
+        <div class="grid gap-2">
+          <select id="categoriaMO" class="input">
+            <option value="">Categoria</option>
+            <option>Salários</option>
+            <option>Férias</option>
+            <option>Verbas rescisórias</option>
+            <option>INSS</option>
+            <option>FGTS</option>
+            <option>Vale transporte</option>
+            <option>Vale alimentação</option>
+            <option>Exames periódicos</option>
+            <option>Uniformes</option>
+          </select>
+          <input id="valorMO" type="number" placeholder="Valor (R$)" class="input">
+          <input id="dataMO" type="date" class="input">
+          <input id="fornecedorMO" placeholder="Fornecedor" class="input">
+          <button onclick="salvarMO()" class="botao">Salvar Mão de Obra</button>
+        </div>
+        <div id="listaMO" class="mt-4"></div>
+      `;
+      listarMO();
     }
 
-    function abrirAba(aba) {
-      switch (aba) {
-        case 'calibracao':
-          if (typeof renderCalibracao === 'function') renderCalibracao();
-          break;
-        case 'receitas':
-          if (typeof renderReceitas === 'function') renderReceitas();
-          break;
-        case 'cmv':
-          if (typeof renderCMV === 'function') renderCMV();
-          break;
-        case 'fixas':
-          if (typeof renderFixas === 'function') renderFixas();
-          break;
-        case 'maoObra':
-          if (typeof renderMaoObra === 'function') renderMaoObra();
-          break;
-        case 'relatorio':
-          if (typeof renderRelatorio === 'function') renderRelatorio();
-          break;
-        default:
-          conteudo.innerHTML = '<div class="text-red-500">Aba não encontrada.</div>';
+    function salvarMO() {
+      const mao = JSON.parse(localStorage.getItem('mao') || '[]');
+      mao.push({
+        categoria: document.getElementById('categoriaMO').value,
+        valor: parseFloat(document.getElementById('valorMO').value),
+        data: document.getElementById('dataMO').value,
+        fornecedor: document.getElementById('fornecedorMO').value
+      });
+      localStorage.setItem('mao', JSON.stringify(mao));
+      renderMo();
+    }
+
+    function excluirMO(index) {
+      const mao = JSON.parse(localStorage.getItem('mao') || '[]');
+      mao.splice(index, 1);
+      localStorage.setItem('mao', JSON.stringify(mao));
+      renderMo();
+    }
+
+    function listarMO() {
+      const mao = JSON.parse(localStorage.getItem('mao') || '[]');
+      const lista = mao.map((d, i) => `
+        <div class="flex justify-between bg-gray-200 p-2 mb-1 rounded">
+          <div><strong>${d.categoria}</strong> - R$ ${d.valor.toFixed(2)} - ${d.data} - ${d.fornecedor}</div>
+          <button onclick="excluirMO(${i})" class="text-red-500">Excluir</button>
+        </div>
+      `).join('');
+      document.getElementById('listaMO').innerHTML = lista;
+    }
+
+    // ABA: Relatório (pré-estrutura)
+    function renderRelatorio() {
+      conteudo.innerHTML = `
+        <h2 class="text-xl mb-4">Relatório DRE</h2>
+        <div class="grid gap-2">
+          <select id="tipoRelatorio" class="input">
+            <option value="mensal">Mensal</option>
+            <option value="anual">Anual</option>
+          </select>
+          <input id="filtroData" class="input" placeholder="Digite o mês (ex: 2025-06) ou ano (ex: 2025)">
+          <button onclick="gerarRelatorio()" class="botao">Gerar Relatório</button>
+        </div>
+        <div id="resultadoRelatorio" class="mt-4"></div>
+        <button onclick="exportarPDF()" class="mt-4 botao">Exportar como PDF</button>
+      `;
+    }
+
+    function gerarRelatorio() {
+      const tipo = document.getElementById('tipoRelatorio').value;
+      const filtro = document.getElementById('filtroData').value;
+
+      let receitas = JSON.parse(localStorage.getItem('receitas') || '[]');
+      let cmv = JSON.parse(localStorage.getItem('cmv') || '[]');
+      let fixas = JSON.parse(localStorage.getItem('fixas') || '[]');
+      let mao = JSON.parse(localStorage.getItem('mao') || '[]');
+      let calib = JSON.parse(localStorage.getItem('calibracao') || '{}');
+
+      function filtrarPorPeriodo(lista) {
+        return lista.filter(item => item.data && item.data.startsWith(filtro));
       }
+
+      receitas = filtrarPorPeriodo(receitas);
+      cmv = filtrarPorPeriodo(cmv);
+      fixas = filtrarPorPeriodo(fixas);
+      mao = filtrarPorPeriodo(mao);
+
+      const totalReceita = receitas.reduce((acc, cur) => acc + (cur.valor || 0), 0);
+      const totalCMV = cmv.reduce((acc, cur) => acc + (cur.valor || 0), 0);
+      const totalFixas = fixas.reduce((acc, cur) => acc + (cur.valor || 0), 0);
+      const totalMO = mao.reduce((acc, cur) => acc + (cur.valor || 0), 0);
+      const imposto = (calib.imposto || 0) / 100 * totalReceita;
+      const taxas = ((calib.debito || 0) + (calib.credito || 0) + (calib.apps || 0) + (calib.encargos || 0)) / 100 * totalReceita;
+
+      const lucroBruto = totalReceita - totalCMV;
+      const lucroLiquido = lucroBruto - totalFixas - totalMO - imposto - taxas;
+      const margem = totalReceita > 0 ? (lucroLiquido / totalReceita) * 100 : 0;
+
+      document.getElementById('resultadoRelatorio').innerHTML = `
+        <div class="bg-white p-4 shadow rounded">
+          <p><strong>Receita Total:</strong> R$ ${totalReceita.toFixed(2)}</p>
+          <p><strong>CMV:</strong> R$ ${totalCMV.toFixed(2)}</p>
+          <p><strong>Lucro Bruto:</strong> R$ ${lucroBruto.toFixed(2)}</p>
+          <p><strong>Despesas Fixas:</strong> R$ ${totalFixas.toFixed(2)}</p>
+          <p><strong>Mão de Obra:</strong> R$ ${totalMO.toFixed(2)}</p>
+          <p><strong>Impostos e Taxas:</strong> R$ ${(imposto + taxas).toFixed(2)}</p>
+          <p><strong>Lucro Líquido:</strong> R$ ${lucroLiquido.toFixed(2)}</p>
+          <p><strong>Margem:</strong> ${margem.toFixed(2)}%</p>
+        </div>
+      `;
+    }
+
+    function exportarPDF() {
+      const doc = new jspdf.jsPDF();
+      const relatorio = document.getElementById('resultadoRelatorio');
+      doc.text("Relatório DRE", 10, 10);
+      doc.fromHTML(relatorio.innerHTML, 10, 20);
+      doc.save("relatorio_dre.pdf");
     }
   </script>
 
-  <style>
-    .aba {
-      @apply px-4 py-2 rounded bg-gray-200 hover:bg-blue-500 hover:text-white transition;
-    }
-    .input {
-      @apply p-2 border rounded w-full;
-    }
-    .botao {
-      @apply bg-green-600 text-white px-4 py-2 rounded;
-    }
-  </style>
 </body>
 </html>

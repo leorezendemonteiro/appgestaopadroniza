@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gestão DRE - CORRETAGESTAO01</title>
+  <title>Gestão DRE - CORRETAGESTAO02</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 p-4">
@@ -16,14 +16,15 @@
       <button onclick="startApp()" class="w-full bg-green-600 text-white px-4 py-2 rounded">Entrar</button>
     </div>
   </div>
+
   <div class="flex flex-wrap gap-2 mb-4">
-  <button class="tab-button bg-blue-200 px-4 py-2 rounded" onclick="showTab('calibracao')">Calibração</button>
-  <button class="tab-button bg-blue-200 px-4 py-2 rounded" onclick="showTab('receitas')">Receitas</button>
-  <button class="tab-button bg-blue-200 px-4 py-2 rounded" onclick="showTab('cmv')">CMV</button>
-  <button class="tab-button bg-blue-200 px-4 py-2 rounded" onclick="showTab('fixos')">Fixos</button>
-  <button class="tab-button bg-blue-200 px-4 py-2 rounded" onclick="showTab('mo')">Mão de Obra</button>
-  <button class="tab-button bg-blue-200 px-4 py-2 rounded" onclick="showTab('relatorio')">Relatório</button>
-</div>
+    <button class="tab-button bg-blue-200 px-4 py-2 rounded" onclick="showTab('calibracao')">Calibração</button>
+    <button class="tab-button bg-blue-200 px-4 py-2 rounded" onclick="showTab('receitas')">Receitas</button>
+    <button class="tab-button bg-blue-200 px-4 py-2 rounded" onclick="showTab('cmv')">CMV</button>
+    <button class="tab-button bg-blue-200 px-4 py-2 rounded" onclick="showTab('fixos')">Fixos</button>
+    <button class="tab-button bg-blue-200 px-4 py-2 rounded" onclick="showTab('mo')">Mão de Obra</button>
+    <button class="tab-button bg-blue-200 px-4 py-2 rounded" onclick="showTab('relatorio')">Relatório</button>
+  </div>
 
   <div id="calibracao" class="tab-content">
     <h2 class="text-xl font-bold mb-2">Calibração</h2>
@@ -42,88 +43,8 @@
     <button onclick="saveSettings()" class="bg-green-600 text-white px-4 py-2 rounded">Salvar Calibração</button>
   </div>
 
-  <div id="receitas" class="tab-content hidden">
-    <h2 class="text-xl font-bold mb-2">Receitas</h2>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-2 mb-4">
-      <select id="receitaDescricao" class="p-2 border rounded">
-        <option value="Cartão de Crédito">Cartão de Crédito</option>
-        <option value="Cartão de Débito">Cartão de Débito</option>
-        <option value="Pix">Pix</option>
-        <option value="Dinheiro">Dinheiro</option>
-        <option value="Delivery/iFood">Delivery/iFood</option>
-      </select>
-      <input id="receitaObs" placeholder="Observação (opcional)" class="p-2 border rounded">
-      <input id="receitaValor" type="number" placeholder="Valor (R$)" class="p-2 border rounded">
-      <input id="receitaData" type="date" class="p-2 border rounded">
-    </div>
-    <button class="bg-blue-600 text-white px-4 py-2 rounded">Salvar Receita</button>
-  </div>
-
-  <div id="cmv" class="tab-content hidden">
-    <h2 class="text-xl font-bold mb-2">Custos Variáveis (CMV)</h2>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-2 mb-4">
-      <select id="cmvDescricao" class="p-2 border rounded">
-        <option value="Consumo alimentar">Consumo alimentar</option>
-        <option value="Bebidas e similares">Bebidas e similares</option>
-        <option value="Produtos de Limpeza e higiene">Produtos de Limpeza e higiene</option>
-        <option value="Papelaria e Escritório">Papelaria e Escritório</option>
-        <option value="Gás">Gás</option>
-        <option value="Outros">Outros</option>
-      </select>
-      <input id="cmvObs" placeholder="Observação (opcional)" class="p-2 border rounded">
-      <input id="cmvValor" type="number" placeholder="Valor (R$)" class="p-2 border rounded">
-      <input id="cmvData" type="date" class="p-2 border rounded">
-    </div>
-    <button class="bg-blue-600 text-white px-4 py-2 rounded">Salvar Custo</button>
-  </div>
-
-  <div id="fixos" class="tab-content hidden">
-    <h2 class="text-xl font-bold mb-2">Despesas Fixas</h2>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-2 mb-4">
-      <select id="fixoDescricao" class="p-2 border rounded">
-        <option value="Aluguel">Aluguel</option>
-        <option value="IPTU">IPTU</option>
-        <option value="Água">Água</option>
-        <option value="Energia Elétrica">Energia Elétrica</option>
-        <option value="Internet/Telefone">Internet/Telefone</option>
-        <option value="Software">Software</option>
-        <option value="Contabilidade">Contabilidade</option>
-        <option value="Parcelas Financiamentos">Parcelas Financiamentos</option>
-        <option value="Manutenção">Manutenção</option>
-        <option value="Cesta Bancária/Juros Rotativo">Cesta Bancária/Juros Rotativo</option>
-        <option value="Prolabore">Prolabore</option>
-        <option value="Outros">Outros</option>
-      </select>
-      <input id="fixoObs" placeholder="Observação (opcional)" class="p-2 border rounded">
-      <input id="fixoValor" type="number" placeholder="Valor (R$)" class="p-2 border rounded">
-      <input id="fixoData" type="date" class="p-2 border rounded">
-    </div>
-    <button class="bg-blue-600 text-white px-4 py-2 rounded">Salvar Despesa</button>
-  </div>
-
-  <div id="mo" class="tab-content hidden">
-    <h2 class="text-xl font-bold mb-2">Mão de Obra</h2>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-2 mb-4">
-      <select id="moDescricao" class="p-2 border rounded">
-        <option value="Salários">Salários</option>
-        <option value="Férias">Férias</option>
-        <option value="Verbas Rescisórias">Verbas Rescisórias</option>
-        <option value="INSS">INSS</option>
-        <option value="FGTS">FGTS</option>
-        <option value="Vale Transporte">Vale Transporte</option>
-        <option value="Vale Alimentação">Vale Alimentação</option>
-        <option value="Uniformes">Uniformes</option>
-        <option value="Exames periódicos">Exames periódicos</option>
-        <option value="Custo Freelancer">Custo Freelancer</option>
-      </select>
-      <input id="moObs" placeholder="Observação (opcional)" class="p-2 border rounded">
-      <input id="moValor" type="number" placeholder="Valor (R$)" class="p-2 border rounded">
-      <input id="moData" type="date" class="p-2 border rounded">
-    </div>
-    <button class="bg-blue-600 text-white px-4 py-2 rounded">Salvar Custo</button>
-  </div>
-
   <script>
+    const defaultTabs = ['calibracao', 'receitas', 'cmv', 'fixos', 'mo', 'relatorio'];
     function startApp() {
       const name = document.getElementById('introCompanyName').value;
       const cnpj = document.getElementById('introCompanyCnpj').value;
@@ -132,14 +53,21 @@
         document.getElementById('intro').classList.add('hidden');
         document.getElementById('companyName').value = name;
         document.getElementById('companyCnpj').value = cnpj;
+        showTab('calibracao');
       } else {
         alert('Preencha todos os campos para iniciar.');
       }
     }
+
     function showTab(tabId) {
-      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-      document.getElementById(tabId).classList.remove('hidden');
+      defaultTabs.forEach(tab => {
+        const el = document.getElementById(tab);
+        if (el) el.classList.add('hidden');
+      });
+      const active = document.getElementById(tabId);
+      if (active) active.classList.remove('hidden');
     }
+
     function saveSettings() {
       const settings = {
         companyName: document.getElementById('companyName').value,
@@ -153,104 +81,21 @@
       localStorage.setItem('settings', JSON.stringify(settings));
       alert('Configurações salvas!');
     }
-  </script>
 
-  <!-- Botão e Interface de Relatório -->
-  <div id="relatorio" class="tab-content hidden">
-    <h2 class="text-xl font-bold mb-4">Relatório DRE</h2>
-    <div class="flex flex-wrap items-center gap-4 mb-4">
-      <select id="relatorioTipo" class="p-2 border rounded">
-        <option value="mensal">Relatório Mensal</option>
-        <option value="anual">Relatório Anual</option>
-      </select>
-      <input id="relatorioData" type="month" class="p-2 border rounded">
-      <button onclick="gerarRelatorioPDF()" class="bg-red-600 text-white px-4 py-2 rounded">Gerar PDF</button>
-    </div>
-  </div>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script>
-    async function gerarRelatorioPDF() {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
-      const settings = JSON.parse(localStorage.getItem('settings') || '{}');
-
-      const data = new Date(document.getElementById('relatorioData').value + '-01');
-      const mes = data.toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
-
-      let receitas = JSON.parse(localStorage.getItem('receitas') || '[]');
-      let cmv = JSON.parse(localStorage.getItem('cmv') || '[]');
-      let fixos = JSON.parse(localStorage.getItem('fixos') || '[]');
-      let mo = JSON.parse(localStorage.getItem('mo') || '[]');
-
-      function filtrarPorMes(arr) {
-        return arr.filter(item => new Date(item.data).getMonth() === data.getMonth() && new Date(item.data).getFullYear() === data.getFullYear());
+    window.onload = () => {
+      const saved = localStorage.getItem('settings');
+      if (saved) {
+        const s = JSON.parse(saved);
+        document.getElementById('intro').classList.add('hidden');
+        document.getElementById('companyName').value = s.companyName || '';
+        document.getElementById('companyCnpj').value = s.companyCnpj || '';
+        document.getElementById('taxRegime').value = s.taxRegime || 'Simples Nacional';
+        document.getElementById('taxRate').value = s.taxRate || '';
+        document.getElementById('taxCredit').value = s.taxCredit || '';
+        document.getElementById('taxDebit').value = s.taxDebit || '';
+        document.getElementById('taxDelivery').value = s.taxDelivery || '';
+        showTab('calibracao');
       }
-      receitas = filtrarPorMes(receitas);
-      cmv = filtrarPorMes(cmv);
-      fixos = filtrarPorMes(fixos);
-      mo = filtrarPorMes(mo);
-
-      let y = 15;
-      const writeLine = (text, x = 14, fontSize = 10, bold = false) => {
-        doc.setFontSize(fontSize);
-        doc.setFont(undefined, bold ? 'bold' : 'normal');
-        doc.text(text, x, y);
-        y += fontSize + 1;
-      };
-
-      writeLine(`Relatório DRE - ${settings.companyName || 'Empresa'} (${mes})`, 14, 14, true);
-
-      const categorias = [
-        { nome: 'Receitas', dados: receitas },
-        { nome: 'CMV', dados: cmv },
-        { nome: 'Despesas Fixas', dados: fixos },
-        { nome: 'Mão de Obra', dados: mo }
-      ];
-
-      const totais = {};
-      let receitaTotal = 0;
-
-      categorias.forEach(cat => {
-        if (cat.dados.length > 0) {
-          writeLine(`
-${cat.nome}`, 14, 12, true);
-          cat.dados.forEach(lan => {
-            const linha = `${lan.descricao} (${lan.obs || 'sem observação'}) - ${lan.data} - R$ ${Number(lan.valor).toFixed(2)}`;
-            writeLine(linha);
-          });
-          const soma = cat.dados.reduce((sum, l) => sum + Number(l.valor), 0);
-          totais[cat.nome] = soma;
-          if (cat.nome === 'Receitas') receitaTotal = soma;
-          writeLine(`Total ${cat.nome}: R$ ${soma.toFixed(2)}`, 14, 10, true);
-        }
-      });
-
-      // Impostos e taxas
-      const imposto = receitaTotal * (settings.taxRate || 0) / 100;
-      const taxaCredito = receitaTotal * (settings.taxCredit || 0) / 100;
-      const taxaDebito = receitaTotal * (settings.taxDebit || 0) / 100;
-      const taxaDelivery = receitaTotal * (settings.taxDelivery || 0) / 100;
-      const totalImpostos = imposto + taxaCredito + taxaDebito + taxaDelivery;
-
-      writeLine(`
-Impostos e Taxas`, 14, 12, true);
-      writeLine(`Imposto (${settings.taxRate || 0}%): R$ ${imposto.toFixed(2)}`);
-      writeLine(`Crédito (${settings.taxCredit || 0}%): R$ ${taxaCredito.toFixed(2)}`);
-      writeLine(`Débito (${settings.taxDebit || 0}%): R$ ${taxaDebito.toFixed(2)}`);
-      writeLine(`Delivery (${settings.taxDelivery || 0}%): R$ ${taxaDelivery.toFixed(2)}`);
-      writeLine(`Total Impostos/Taxas: R$ ${totalImpostos.toFixed(2)}`, 14, 10, true);
-
-      const totalCustos = (totais['CMV'] || 0) + (totais['Despesas Fixas'] || 0) + (totais['Mão de Obra'] || 0) + totalImpostos;
-      const lucro = receitaTotal - totalCustos;
-
-      writeLine(`
-Resumo Financeiro`, 14, 12, true);
-      writeLine(`Total Receitas: R$ ${receitaTotal.toFixed(2)}`);
-      writeLine(`Total Despesas + Impostos: R$ ${totalCustos.toFixed(2)}`);
-      writeLine(`Lucro Líquido: R$ ${lucro.toFixed(2)} (${((lucro / receitaTotal) * 100 || 0).toFixed(2)}%)`, 14, 11, true);
-
-      doc.save(`Relatorio_DRE_${mes}.pdf`);
     }
   </script>
 </body>

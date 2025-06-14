@@ -13,6 +13,7 @@
     .aba:hover { background-color: #2563eb; color: white; }
     table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
     th, td { border: 1px solid #ccc; padding: 0.5rem; text-align: left; }
+    .scroll-container { max-height: 300px; overflow-y: auto; }
   </style>
 </head>
 <body class="bg-gray-100">
@@ -69,93 +70,101 @@
         if (aba === "relatorio") renderRelatorio();
       };
 
-      function renderFixas() {
-        conteudo.innerHTML = `<h2 class="text-xl font-bold mb-4">Despesas Fixas</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <input id="descricaoFixa" class="input" placeholder="Descrição" />
-          <input id="valorFixa" class="input" type="number" placeholder="Valor (R$)" />
-          <input id="dataFixa" class="input" type="date" />
-        </div>
-        <button onclick="salvarFixa()" class="mt-4 botao">Salvar Fixa</button>
-        <div id="listaFixas" class="mt-6"></div>`;
-        renderListaFixas();
+      function renderCalibracao() {
+        conteudo.innerHTML = \`
+          <h2 class="text-xl font-bold mb-4">Calibração de Impostos e Taxas</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <input type="number" id="imposto" class="input" placeholder="Imposto sobre faturamento (%)" value="\${dados.calibracao.imposto || ''}" />
+            <input type="number" id="debito" class="input" placeholder="Taxa de Débito (%)" value="\${dados.calibracao.debito || ''}" />
+            <input type="number" id="credito" class="input" placeholder="Taxa de Crédito (%)" value="\${dados.calibracao.credito || ''}" />
+            <input type="number" id="apps" class="input" placeholder="Comissão de Apps (%)" value="\${dados.calibracao.apps || ''}" />
+            <input type="number" id="encargos" class="input" placeholder="Encargos diversos" value="\${dados.calibracao.encargos || ''}" />
+          </div>
+          <button onclick="salvarCalibracao()" class="mt-4 botao">Salvar</button>
+        \`;
       }
 
-      window.salvarFixa = function () {
-        const nova = {
-          descricao: document.getElementById("descricaoFixa").value,
-          valor: parseFloat(document.getElementById("valorFixa").value || 0),
-          data: document.getElementById("dataFixa").value
+      window.salvarCalibracao = function () {
+        const calibracao = {
+          imposto: document.getElementById("imposto").value,
+          debito: document.getElementById("debito").value,
+          credito: document.getElementById("credito").value,
+          apps: document.getElementById("apps").value,
+          encargos: document.getElementById("encargos").value
         };
-        dados.fixas.push(nova);
-        localStorage.setItem("fixas", JSON.stringify(dados.fixas));
-        abrirAba("fixas");
+        localStorage.setItem("calibracao", JSON.stringify(calibracao));
+        alert("Calibração salva com sucesso!");
+      };
+
+      function renderReceitas() {
+        conteudo.innerHTML = \`
+          <h2 class="text-xl font-bold mb-4">Lançamento de Receitas</h2>
+          <input id="novaReceita" type="number" class="input" placeholder="Valor da Receita" />
+          <button onclick="adicionarReceita()" class="mt-2 botao">Adicionar Receita</button>
+          <div class="scroll-container">
+            <table><thead><tr><th>Valor</th></tr></thead><tbody id="listaReceitas"></tbody></table>
+          </div>
+        \`;
+        atualizarTabela("receitas", "listaReceitas");
       }
 
-      function renderListaFixas() {
-        let html = `<table><thead><tr><th>Descrição</th><th>Valor</th><th>Data</th><th>Ação</th></tr></thead><tbody>`;
-        dados.fixas.forEach((item, i) => {
-          html += `<tr><td>${item.descricao}</td><td>R$ ${item.valor.toFixed(2)}</td><td>${item.data}</td><td><button onclick="excluirFixa(${i})" class="text-red-500">Excluir</button></td></tr>`;
-        });
-        html += `</tbody></table>`;
-        document.getElementById("listaFixas").innerHTML = html;
+      window.adicionarReceita = function () {
+        const valor = parseFloat(document.getElementById("novaReceita").value);
+        if (!valor) return;
+        dados.receitas.push(valor);
+        localStorage.setItem("receitas", JSON.stringify(dados.receitas));
+        atualizarTabela("receitas", "listaReceitas");
       }
 
-      window.excluirFixa = function (index) {
-        dados.fixas.splice(index, 1);
-        localStorage.setItem("fixas", JSON.stringify(dados.fixas));
-        abrirAba("fixas");
+      function renderCMV() {
+        conteudo.innerHTML = \`
+          <h2 class="text-xl font-bold mb-4">CMV (Despesas Variáveis)</h2>
+          <input id="novoCMV" type="number" class="input" placeholder="Valor do CMV" />
+          <button onclick="adicionarCMV()" class="mt-2 botao">Adicionar Despesa CMV</button>
+          <div class="scroll-container">
+            <table><thead><tr><th>Valor</th></tr></thead><tbody id="listaCMV"></tbody></table>
+          </div>
+        \`;
+        atualizarTabela("cmv", "listaCMV");
       }
 
-      function renderMaoObra() {
-        conteudo.innerHTML = `<h2 class="text-xl font-bold mb-4">Mão de Obra</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <input id="funcionario" class="input" placeholder="Funcionário" />
-          <input id="salario" class="input" type="number" placeholder="Salário (R$)" />
-          <input id="dataPagamento" class="input" type="date" />
-        </div>
-        <button onclick="salvarMaoObra()" class="mt-4 botao">Salvar</button>
-        <div id="listaMaoObra" class="mt-6"></div>`;
-        renderListaMaoObra();
+      window.adicionarCMV = function () {
+        const valor = parseFloat(document.getElementById("novoCMV").value);
+        if (!valor) return;
+        dados.cmv.push(valor);
+        localStorage.setItem("cmv", JSON.stringify(dados.cmv));
+        atualizarTabela("cmv", "listaCMV");
       }
 
-      window.salvarMaoObra = function () {
-        const nova = {
-          funcionario: document.getElementById("funcionario").value,
-          salario: parseFloat(document.getElementById("salario").value || 0),
-          data: document.getElementById("dataPagamento").value
-        };
-        dados.maoObra.push(nova);
-        localStorage.setItem("maoObra", JSON.stringify(dados.maoObra));
-        abrirAba("maoObra");
-      }
-
-      function renderListaMaoObra() {
-        let html = `<table><thead><tr><th>Funcionário</th><th>Salário</th><th>Data</th><th>Ação</th></tr></thead><tbody>`;
-        dados.maoObra.forEach((item, i) => {
-          html += `<tr><td>${item.funcionario}</td><td>R$ ${item.salario.toFixed(2)}</td><td>${item.data}</td><td><button onclick="excluirMaoObra(${i})" class="text-red-500">Excluir</button></td></tr>`;
-        });
-        html += `</tbody></table>`;
-        document.getElementById("listaMaoObra").innerHTML = html;
-      }
-
-      window.excluirMaoObra = function (index) {
-        dados.maoObra.splice(index, 1);
-        localStorage.setItem("maoObra", JSON.stringify(dados.maoObra));
-        abrirAba("maoObra");
+      function atualizarTabela(tipo, elementoId) {
+        const tbody = document.getElementById(elementoId);
+        if (!tbody) return;
+        tbody.innerHTML = dados[tipo].map(r => \`<tr><td>R$ \${parseFloat(r).toFixed(2)}</td></tr>\`).join('');
       }
 
       function renderRelatorio() {
-        conteudo.innerHTML = `<h2 class="text-xl font-bold mb-4">Relatório DRE</h2>
-        <button onclick="gerarPDF()" class="botao">Gerar PDF</button>`;
+        conteudo.innerHTML = \`
+          <h2 class="text-xl font-bold mb-4">Relatório DRE</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <select id="tipoRelatorio" class="input">
+              <option value="mensal">Mensal</option>
+              <option value="anual">Anual</option>
+            </select>
+            <input type="month" id="periodoRelatorio" class="input" />
+          </div>
+          <button onclick="gerarPDF()" class="mt-4 botao">Gerar PDF</button>
+        \`;
       }
 
       window.gerarPDF = function () {
+        const tipo = document.getElementById("tipoRelatorio").value;
+        const periodo = document.getElementById("periodoRelatorio").value;
         const doc = new jspdf.jsPDF();
-        doc.text("Relatório DRE", 20, 20);
-        doc.text("Empresa: " + localStorage.getItem("empresaNome"), 20, 30);
-        doc.text("CNPJ: " + localStorage.getItem("empresaCNPJ"), 20, 40);
-        doc.save("relatorio-dre.pdf");
+        doc.text("Relatório DRE - " + tipo.toUpperCase(), 20, 20);
+        doc.text("Período: " + periodo, 20, 30);
+        doc.text("Empresa: " + localStorage.getItem("empresaNome"), 20, 40);
+        doc.text("CNPJ: " + localStorage.getItem("empresaCNPJ"), 20, 50);
+        doc.save("relatorio-dre-" + tipo + ".pdf");
       }
     });
   </script>

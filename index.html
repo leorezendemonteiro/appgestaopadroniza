@@ -9,7 +9,7 @@
 </head>
 <body class="bg-gray-100">
   <div id="telaInicial" class="flex flex-col items-center justify-center h-screen p-4">
-    <img src="logo_placeholder.png" alt="Logo Padroniza" class="w-32 h-32 mb-4">
+    <div class="text-2xl font-semibold mb-4">📊 Padroniza DRE</div>
     <input id="empresaNome" type="text" placeholder="Nome da Empresa" class="mb-2 p-2 border rounded w-full max-w-xs">
     <input id="empresaCNPJ" type="text" placeholder="CNPJ" class="mb-4 p-2 border rounded w-full max-w-xs">
     <button onclick="iniciarApp()" class="bg-blue-600 text-white px-4 py-2 rounded">Iniciar DRE</button>
@@ -30,79 +30,45 @@
   </div>
 
   <script>
-    // ... funções anteriores mantidas ...
+    const conteudo = document.getElementById('conteudo');
 
-    function renderRelatorio() {
-      conteudo.innerHTML = `
-        <h2 class="text-xl mb-4">Relatório DRE</h2>
-        <div class="grid gap-2">
-          <select id="tipoRelatorio" class="input">
-            <option value="mensal">Mensal</option>
-            <option value="anual">Anual</option>
-          </select>
-          <input id="periodoRelatorio" class="input" type="text" placeholder="Informe o mês (ex: 2025-06) ou ano (ex: 2025)">
-          <button onclick="gerarRelatorio()" class="botao">Gerar Relatório</button>
-        </div>
-        <div id="resultadoRelatorio" class="mt-4"></div>
-        <button onclick="exportarPDF()" class="botao mt-4">Exportar como PDF</button>
-      `;
-    }
-
-    function gerarRelatorio() {
-      const tipo = document.getElementById('tipoRelatorio').value;
-      const periodo = document.getElementById('periodoRelatorio').value;
-
-      function filtrarPorPeriodo(lista) {
-        return lista.filter(item => item.data && item.data.startsWith(periodo));
+    function iniciarApp() {
+      const nome = document.getElementById('empresaNome').value;
+      const cnpj = document.getElementById('empresaCNPJ').value;
+      if (!nome || !cnpj) {
+        alert("Preencha todos os campos antes de iniciar.");
+        return;
       }
-
-      const receitas = filtrarPorPeriodo(carregarLista('receitas'));
-      const cmv = filtrarPorPeriodo(carregarLista('cmv'));
-      const fixas = filtrarPorPeriodo(carregarLista('fixas'));
-      const maoObra = filtrarPorPeriodo(carregarLista('maoObra'));
-      const calib = JSON.parse(localStorage.getItem('calibracao') || '{}');
-
-      const receitaTotal = receitas.reduce((acc, r) => acc + r.valor, 0);
-      const cmvTotal = cmv.reduce((acc, r) => acc + r.valor, 0);
-      const fixasTotal = fixas.reduce((acc, r) => acc + r.valor, 0);
-      const maoTotal = maoObra.reduce((acc, r) => acc + r.valor, 0);
-      const impostos = (calib.impFat || 0) / 100 * receitaTotal;
-      const taxas = (calib.taxaDeb || 0) / 100 * receitaTotal + (calib.taxaCred || 0) / 100 * receitaTotal + (calib.comissaoApp || 0) / 100 * receitaTotal + (calib.comissao99 || 0) / 100 * receitaTotal;
-      const encargos = parseFloat(calib.encargos || 0);
-
-      const lucroBruto = receitaTotal - cmvTotal;
-      const lucroLiquido = lucroBruto - fixasTotal - maoTotal - impostos - taxas - encargos;
-      const margem = receitaTotal > 0 ? (lucroLiquido / receitaTotal) * 100 : 0;
-
-      document.getElementById('resultadoRelatorio').innerHTML = `
-        <div class="grid gap-1">
-          <div><strong>Receita Total:</strong> R$ ${receitaTotal.toFixed(2)}</div>
-          <div><strong>CMV:</strong> R$ ${cmvTotal.toFixed(2)}</div>
-          <div><strong>Lucro Bruto:</strong> R$ ${lucroBruto.toFixed(2)}</div>
-          <div><strong>Despesas Fixas:</strong> R$ ${fixasTotal.toFixed(2)}</div>
-          <div><strong>Mão de Obra:</strong> R$ ${maoTotal.toFixed(2)}</div>
-          <div><strong>Impostos:</strong> R$ ${impostos.toFixed(2)}</div>
-          <div><strong>Taxas:</strong> R$ ${taxas.toFixed(2)}</div>
-          <div><strong>Encargos:</strong> R$ ${encargos.toFixed(2)}</div>
-          <div><strong>Lucro Líquido:</strong> R$ ${lucroLiquido.toFixed(2)}</div>
-          <div><strong>Margem de Lucro:</strong> ${margem.toFixed(2)}%</div>
-        </div>`;
+      localStorage.setItem("empresaNome", nome);
+      localStorage.setItem("empresaCNPJ", cnpj);
+      document.getElementById("telaInicial").classList.add("hidden");
+      document.getElementById("app").classList.remove("hidden");
+      abrirAba('calibracao');
     }
 
-    function exportarPDF() {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
-      const nome = localStorage.getItem('empresaNome') || '';
-      const cnpj = localStorage.getItem('empresaCNPJ') || '';
-      const data = new Date().toLocaleDateString();
-      const relatorio = document.getElementById('resultadoRelatorio').innerText;
-
-      doc.text(`Relatório DRE`, 10, 10);
-      doc.text(`Empresa: ${nome}`, 10, 20);
-      doc.text(`CNPJ: ${cnpj}`, 10, 30);
-      doc.text(`Data: ${data}`, 10, 40);
-      doc.text(relatorio, 10, 50);
-      doc.save('Relatorio-DRE.pdf');
+    function abrirAba(aba) {
+      switch (aba) {
+        case 'calibracao':
+          if (typeof renderCalibracao === 'function') renderCalibracao();
+          break;
+        case 'receitas':
+          if (typeof renderReceitas === 'function') renderReceitas();
+          break;
+        case 'cmv':
+          if (typeof renderCMV === 'function') renderCMV();
+          break;
+        case 'fixas':
+          if (typeof renderFixas === 'function') renderFixas();
+          break;
+        case 'maoObra':
+          if (typeof renderMaoObra === 'function') renderMaoObra();
+          break;
+        case 'relatorio':
+          if (typeof renderRelatorio === 'function') renderRelatorio();
+          break;
+        default:
+          conteudo.innerHTML = '<div class="text-red-500">Aba não encontrada.</div>';
+      }
     }
   </script>
 

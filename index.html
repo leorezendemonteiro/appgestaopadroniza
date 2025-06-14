@@ -153,5 +153,104 @@
       alert('Configurações salvas!');
     }
   </script>
+
+  <!-- Botão e Interface de Relatório -->
+  <div id="relatorio" class="tab-content hidden">
+    <h2 class="text-xl font-bold mb-4">Relatório DRE</h2>
+    <div class="flex flex-wrap items-center gap-4 mb-4">
+      <select id="relatorioTipo" class="p-2 border rounded">
+        <option value="mensal">Relatório Mensal</option>
+        <option value="anual">Relatório Anual</option>
+      </select>
+      <input id="relatorioData" type="month" class="p-2 border rounded">
+      <button onclick="gerarRelatorioPDF()" class="bg-red-600 text-white px-4 py-2 rounded">Gerar PDF</button>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script>
+    async function gerarRelatorioPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      const settings = JSON.parse(localStorage.getItem('settings') || '{}');
+
+      const data = new Date(document.getElementById('relatorioData').value + '-01');
+      const mes = data.toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
+
+      let receitas = JSON.parse(localStorage.getItem('receitas') || '[]');
+      let cmv = JSON.parse(localStorage.getItem('cmv') || '[]');
+      let fixos = JSON.parse(localStorage.getItem('fixos') || '[]');
+      let mo = JSON.parse(localStorage.getItem('mo') || '[]');
+
+      function filtrarPorMes(arr) {
+        return arr.filter(item => new Date(item.data).getMonth() === data.getMonth() && new Date(item.data).getFullYear() === data.getFullYear());
+      }
+      receitas = filtrarPorMes(receitas);
+      cmv = filtrarPorMes(cmv);
+      fixos = filtrarPorMes(fixos);
+      mo = filtrarPorMes(mo);
+
+      let y = 15;
+      const writeLine = (text, x = 14, fontSize = 10, bold = false) => {
+        doc.setFontSize(fontSize);
+        doc.setFont(undefined, bold ? 'bold' : 'normal');
+        doc.text(text, x, y);
+        y += fontSize + 1;
+      };
+
+      writeLine(`Relatório DRE - ${settings.companyName || 'Empresa'} (${mes})`, 14, 14, true);
+
+      const categorias = [
+        { nome: 'Receitas', dados: receitas },
+        { nome: 'CMV', dados: cmv },
+        { nome: 'Despesas Fixas', dados: fixos },
+        { nome: 'Mão de Obra', dados: mo }
+      ];
+
+      const totais = {};
+      let receitaTotal = 0;
+
+      categorias.forEach(cat => {
+        if (cat.dados.length > 0) {
+          writeLine(`
+${cat.nome}`, 14, 12, true);
+          cat.dados.forEach(lan => {
+            const linha = `${lan.descricao} (${lan.obs || 'sem observação'}) - ${lan.data} - R$ ${Number(lan.valor).toFixed(2)}`;
+            writeLine(linha);
+          });
+          const soma = cat.dados.reduce((sum, l) => sum + Number(l.valor), 0);
+          totais[cat.nome] = soma;
+          if (cat.nome === 'Receitas') receitaTotal = soma;
+          writeLine(`Total ${cat.nome}: R$ ${soma.toFixed(2)}`, 14, 10, true);
+        }
+      });
+
+      // Impostos e taxas
+      const imposto = receitaTotal * (settings.taxRate || 0) / 100;
+      const taxaCredito = receitaTotal * (settings.taxCredit || 0) / 100;
+      const taxaDebito = receitaTotal * (settings.taxDebit || 0) / 100;
+      const taxaDelivery = receitaTotal * (settings.taxDelivery || 0) / 100;
+      const totalImpostos = imposto + taxaCredito + taxaDebito + taxaDelivery;
+
+      writeLine(`
+Impostos e Taxas`, 14, 12, true);
+      writeLine(`Imposto (${settings.taxRate || 0}%): R$ ${imposto.toFixed(2)}`);
+      writeLine(`Crédito (${settings.taxCredit || 0}%): R$ ${taxaCredito.toFixed(2)}`);
+      writeLine(`Débito (${settings.taxDebit || 0}%): R$ ${taxaDebito.toFixed(2)}`);
+      writeLine(`Delivery (${settings.taxDelivery || 0}%): R$ ${taxaDelivery.toFixed(2)}`);
+      writeLine(`Total Impostos/Taxas: R$ ${totalImpostos.toFixed(2)}`, 14, 10, true);
+
+      const totalCustos = (totais['CMV'] || 0) + (totais['Despesas Fixas'] || 0) + (totais['Mão de Obra'] || 0) + totalImpostos;
+      const lucro = receitaTotal - totalCustos;
+
+      writeLine(`
+Resumo Financeiro`, 14, 12, true);
+      writeLine(`Total Receitas: R$ ${receitaTotal.toFixed(2)}`);
+      writeLine(`Total Despesas + Impostos: R$ ${totalCustos.toFixed(2)}`);
+      writeLine(`Lucro Líquido: R$ ${lucro.toFixed(2)} (${((lucro / receitaTotal) * 100 || 0).toFixed(2)}%)`, 14, 11, true);
+
+      doc.save(`Relatorio_DRE_${mes}.pdf`);
+    }
+  </script>
 </body>
 </html>

@@ -1,154 +1,828 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CORRETAGESTAO02</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <style>
-    .input { padding: 0.5rem; border: 1px solid #ccc; border-radius: 0.25rem; width: 100%; }
-    .botao { background-color: #16a34a; color: white; padding: 0.5rem 1rem; border-radius: 0.25rem; width: 100%; }
-    .aba { padding: 0.5rem 1rem; border-radius: 0.25rem; background-color: #e5e7eb; transition: 0.3s; white-space: nowrap; }
-    .aba:hover { background-color: #2563eb; color: white; }
-    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-    th, td { border: 1px solid #ccc; padding: 0.5rem; text-align: left; }
-    .scroll-container { max-height: 300px; overflow-y: auto; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CORRETAGESTAO02 - DRE Simplificado</title>
+    <!-- TailwindCSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- jsPDF and html2canvas for PDF Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        /* Estilo para a aba ativa */
+        .tab-active {
+            border-color: #4f46e5;
+            background-color: #4f46e5;
+            color: #ffffff;
+        }
+        /* Esconde as abas inativas */
+        .tab-content {
+            display: none;
+        }
+        /* Mostra a aba ativa */
+        .tab-content-active {
+            display: block;
+        }
+        /* Estilos para impressão do PDF */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #report-to-print, #report-to-print * {
+                visibility: visible;
+            }
+            #report-to-print {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+        }
+    </style>
 </head>
-<body class="bg-gray-100">
-  <div id="telaInicial" class="flex flex-col items-center justify-center h-screen p-4">
-    <h1 class="text-2xl font-bold mb-4">📊 Padroniza DRE</h1>
-    <form id="formInicio" class="w-full max-w-xs">
-      <input id="empresaNome" type="text" placeholder="Nome da Empresa" class="mb-2 input" />
-      <input id="empresaCNPJ" type="text" placeholder="CNPJ" class="mb-4 input" />
-      <button type="submit" class="botao">Iniciar DRE</button>
-    </form>
-  </div>
+<body class="bg-slate-100 text-slate-800 font-sans">
 
-  <div id="app" class="hidden p-4">
-    <div class="flex gap-2 mb-4 overflow-x-auto">
-      <button onclick="abrirAba('calibracao')" class="aba">Calibração</button>
-      <button onclick="abrirAba('receitas')" class="aba">Receitas</button>
-      <button onclick="abrirAba('cmv')" class="aba">CMV</button>
-      <button onclick="abrirAba('fixas')" class="aba">Fixas</button>
-      <button onclick="abrirAba('maoObra')" class="aba">Mão de Obra</button>
-      <button onclick="abrirAba('relatorio')" class="aba">Relatório</button>
+    <!-- =========== TELA DE BOAS-VINDAS =========== -->
+    <div id="welcome-screen" class="min-h-screen flex items-center justify-center p-4">
+        <div class="w-full max-w-md bg-white p-8 rounded-xl shadow-lg text-center">
+            <img src="https://placehold.co/250x80/e2e8f0/475569?text=Logo+Padroniza" alt="Logo Padroniza" class="mx-auto mb-8">
+            <h1 class="text-2xl font-bold mb-6 text-slate-700">Bem-vindo ao DRE Simplificado</h1>
+            <form id="company-form" class="space-y-4">
+                <input type="text" id="company-name" name="name" placeholder="Nome da sua empresa" class="w-full p-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                <input type="text" id="company-cnpj" name="cnpj" placeholder="CNPJ" class="w-full p-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                <button type="submit" class="w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700 transition-colors duration-300">
+                    Iniciar DRE
+                </button>
+            </form>
+        </div>
     </div>
-    <div id="conteudo"></div>
-  </div>
 
-  <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      const conteudo = document.getElementById("conteudo");
-      const form = document.getElementById("formInicio");
+    <!-- =========== INTERFACE PRINCIPAL DO APP =========== -->
+    <div id="main-app" class="hidden">
+        <header class="bg-white shadow-md p-4 flex justify-between items-center">
+             <div class="flex items-center space-x-3">
+                <img src="https://placehold.co/150x50/e2e8f0/475569?text=Logo+Padroniza" alt="Logo Padroniza" id="header-logo">
+                <div>
+                    <h1 id="header-company-name" class="text-lg font-bold text-slate-800">Nome da Empresa</h1>
+                    <p id="header-company-cnpj" class="text-sm text-slate-500">CNPJ</p>
+                </div>
+            </div>
+            <button id="logout-button" class="bg-red-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-600 transition-colors text-sm">Sair</button>
+        </header>
 
-      form.addEventListener("submit", function (e) {
-        e.preventDefault();
-        const nome = document.getElementById("empresaNome").value.trim();
-        const cnpj = document.getElementById("empresaCNPJ").value.trim();
-        if (!nome || !cnpj) return alert("Preencha todos os campos.");
-        localStorage.setItem("empresaNome", nome);
-        localStorage.setItem("empresaCNPJ", cnpj);
-        document.getElementById("telaInicial").classList.add("hidden");
-        document.getElementById("app").classList.remove("hidden");
-        abrirAba("calibracao");
-      });
+        <!-- Navegação das Abas -->
+        <nav class="bg-white border-b border-slate-200">
+            <div class="max-w-7xl mx-auto px-4">
+                <div class="flex space-x-1 sm:space-x-2 overflow-x-auto -mb-px">
+                    <button data-tab="calibracao" class="tab-button tab-active whitespace-nowrap py-4 px-3 sm:px-4 border-b-2 font-medium text-sm">Calibração</button>
+                    <button data-tab="receitas" class="tab-button whitespace-nowrap py-4 px-3 sm:px-4 border-b-2 font-medium text-sm">Receitas</button>
+                    <button data-tab="despesas-variaveis" class="tab-button whitespace-nowrap py-4 px-3 sm:px-4 border-b-2 font-medium text-sm">Desp. Variáveis</button>
+                    <button data-tab="despesas-fixas" class="tab-button whitespace-nowrap py-4 px-3 sm:px-4 border-b-2 font-medium text-sm">Desp. Fixas</button>
+                    <button data-tab="mao-de-obra" class="tab-button whitespace-nowrap py-4 px-3 sm:px-4 border-b-2 font-medium text-sm">Mão de Obra</button>
+                    <button data-tab="relatorio" class="tab-button whitespace-nowrap py-4 px-3 sm:px-4 border-b-2 font-medium text-sm">Relatório</button>
+                </div>
+            </div>
+        </nav>
 
-      const dados = {
-        calibracao: JSON.parse(localStorage.getItem("calibracao")) || {},
-        receitas: JSON.parse(localStorage.getItem("receitas")) || [],
-        cmv: JSON.parse(localStorage.getItem("cmv")) || [],
-        fixas: JSON.parse(localStorage.getItem("fixas")) || [],
-        maoObra: JSON.parse(localStorage.getItem("maoObra")) || []
-      };
+        <main class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+            
+            <!-- Conteúdo da Aba Calibração -->
+            <div id="tab-calibracao" class="tab-content tab-content-active">
+                <div class="bg-white p-6 rounded-xl shadow-lg">
+                    <h2 class="text-xl font-bold mb-4">Calibração de Taxas e Impostos</h2>
+                    <form id="calibration-form" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div class="space-y-1">
+                            <label for="imposto-faturamento" class="text-sm font-medium">Imposto Faturamento (%)</label>
+                            <input type="number" id="imposto-faturamento" name="imposto_faturamento" class="w-full p-2 border rounded-lg" step="0.01" placeholder="Ex: 4.5">
+                        </div>
+                        <div class="space-y-1">
+                            <label for="taxa-debito" class="text-sm font-medium">Taxa de Débito (%)</label>
+                            <input type="number" id="taxa-debito" name="taxa_debito" class="w-full p-2 border rounded-lg" step="0.01" placeholder="Ex: 1.99">
+                        </div>
+                        <div class="space-y-1">
+                            <label for="taxa-credito" class="text-sm font-medium">Taxa de Crédito (%)</label>
+                            <input type="number" id="taxa-credito" name="taxa_credito" class="w-full p-2 border rounded-lg" step="0.01" placeholder="Ex: 3.49">
+                        </div>
+                        <div class="space-y-1">
+                            <label for="comissao-ifood" class="text-sm font-medium">Comissão iFood (%)</label>
+                            <input type="number" id="comissao-ifood" name="comissao_ifood" class="w-full p-2 border rounded-lg" step="0.01" placeholder="Ex: 12">
+                        </div>
+                        <div class="space-y-1">
+                            <label for="comissao-99" class="text-sm font-medium">Comissão 99 (%)</label>
+                            <input type="number" id="comissao-99" name="comissao_99" class="w-full p-2 border rounded-lg" step="0.01" placeholder="Ex: 10">
+                        </div>
+                         <div class="space-y-1">
+                            <label for="encargos-diversos" class="text-sm font-medium">Encargos Diversos (%)</label>
+                            <input type="number" id="encargos-diversos" name="encargos_diversos" class="w-full p-2 border rounded-lg" step="0.01" placeholder="Ex: 1.5">
+                        </div>
+                        <div class="md:col-span-2 lg:col-span-3">
+                            <button type="submit" class="w-full mt-4 bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700 transition-colors">Salvar Calibração</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
 
-      window.abrirAba = function (aba) {
-        if (aba === "calibracao") renderCalibracao();
-        if (aba === "receitas") renderReceitas();
-        if (aba === "cmv") renderCMV();
-        if (aba === "fixas") renderFixas();
-        if (aba === "maoObra") renderMaoObra();
-        if (aba === "relatorio") renderRelatorio();
-      };
+            <!-- Conteúdo da Aba Receitas -->
+            <div id="tab-receitas" class="tab-content">
+                <div class="bg-white p-6 rounded-xl shadow-lg">
+                    <h2 class="text-xl font-bold mb-4">Adicionar Nova Receita</h2>
+                    <form id="receitas-form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="md:col-span-2">
+                             <label for="receita-descricao" class="text-sm font-medium">Descrição</label>
+                             <input type="text" id="receita-descricao" name="descricao" placeholder="Ex: Vendas do dia" class="w-full p-2 border rounded-lg">
+                        </div>
+                        <div>
+                             <label for="receita-tipo" class="text-sm font-medium">Tipo de Pagamento</label>
+                             <select id="receita-tipo" name="tipo" class="w-full p-2 border rounded-lg bg-white" required>
+                                <option value="Crédito">Crédito</option>
+                                <option value="Débito">Débito</option>
+                                <option value="Pix">Pix</option>
+                                <option value="Dinheiro">Dinheiro</option>
+                                <option value="iFood">iFood</option>
+                                <option value="99">99</option>
+                             </select>
+                        </div>
+                        <div>
+                            <label for="receita-valor" class="text-sm font-medium">Valor (R$)</label>
+                            <input type="number" id="receita-valor" name="valor" placeholder="150.00" class="w-full p-2 border rounded-lg" step="0.01" required>
+                        </div>
+                        <div class="md:col-span-2">
+                             <label for="receita-data" class="text-sm font-medium">Data</label>
+                             <input type="date" id="receita-data" name="data" class="w-full p-2 border rounded-lg" required>
+                        </div>
+                        <div class="md:col-span-2">
+                             <button type="submit" class="w-full mt-2 bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700">Salvar Receita</button>
+                        </div>
+                    </form>
+                </div>
+                <div id="receitas-list" class="mt-6 bg-white p-6 rounded-xl shadow-lg">
+                    <h3 class="text-lg font-bold mb-4">Receitas Salvas</h3>
+                    <div class="overflow-x-auto">
+                        <!-- Lista de receitas será inserida aqui -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Conteúdo da Aba Despesas Variáveis -->
+            <div id="tab-despesas-variaveis" class="tab-content">
+                 <div class="bg-white p-6 rounded-xl shadow-lg">
+                    <h2 class="text-xl font-bold mb-4">Adicionar Despesa Variável (CMV)</h2>
+                    <form id="despesas-variaveis-form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                         <div>
+                            <label for="dv-categoria" class="text-sm font-medium">Categoria</label>
+                            <select id="dv-categoria" name="categoria" class="w-full p-2 border rounded-lg bg-white" required>
+                                <option>Alimentar</option>
+                                <option>Produtos de limpeza e higiene</option>
+                                <option>Embalagens e descartáveis</option>
+                                <option>Gás</option>
+                                <option>Bebidas e similares</option>
+                                <option>Outros</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="dv-descricao" class="text-sm font-medium">Descrição</label>
+                            <input type="text" id="dv-descricao" name="descricao" placeholder="Ex: Compra de carnes" class="w-full p-2 border rounded-lg">
+                        </div>
+                         <div>
+                            <label for="dv-valor" class="text-sm font-medium">Valor (R$)</label>
+                            <input type="number" id="dv-valor" name="valor" placeholder="350.00" class="w-full p-2 border rounded-lg" step="0.01" required>
+                        </div>
+                        <div>
+                            <label for="dv-data" class="text-sm font-medium">Data</label>
+                            <input type="date" id="dv-data" name="data" class="w-full p-2 border rounded-lg" required>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label for="dv-fornecedor" class="text-sm font-medium">Fornecedor</label>
+                            <input type="text" id="dv-fornecedor" name="fornecedor" placeholder="Ex: Casa de Carnes ABC" class="w-full p-2 border rounded-lg">
+                        </div>
+                        <div class="md:col-span-2">
+                            <button type="submit" class="w-full mt-2 bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700">Salvar Despesa Variável</button>
+                        </div>
+                    </form>
+                </div>
+                <div id="despesas-variaveis-list" class="mt-6 bg-white p-6 rounded-xl shadow-lg">
+                    <h3 class="text-lg font-bold mb-4">Despesas Variáveis Salvas</h3>
+                     <div class="overflow-x-auto">
+                        <!-- Lista será inserida aqui -->
+                    </div>
+                </div>
+            </div>
 
-      function renderCalibracao() {
-        conteudo.innerHTML = `
-          <h2 class="text-xl font-bold mb-4">Calibração de Impostos e Taxas</h2>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input type="number" id="imposto" class="input" placeholder="Imposto sobre faturamento (%)" value="${dados.calibracao.imposto || ''}" />
-            <input type="number" id="debito" class="input" placeholder="Taxa de Débito (%)" value="${dados.calibracao.debito || ''}" />
-            <input type="number" id="credito" class="input" placeholder="Taxa de Crédito (%)" value="${dados.calibracao.credito || ''}" />
-            <input type="number" id="apps" class="input" placeholder="Comissão de Apps (%)" value="${dados.calibracao.apps || ''}" />
-            <input type="number" id="encargos" class="input" placeholder="Encargos diversos" value="${dados.calibracao.encargos || ''}" />
-          </div>
-          <button onclick="salvarCalibracao()" class="mt-4 botao">Salvar</button>
-        `;
-      }
+            <!-- Conteúdo da Aba Despesas Fixas -->
+            <div id="tab-despesas-fixas" class="tab-content">
+                <div class="bg-white p-6 rounded-xl shadow-lg">
+                    <h2 class="text-xl font-bold mb-4">Adicionar Despesa Fixa</h2>
+                    <form id="despesas-fixas-form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="df-categoria" class="text-sm font-medium">Categoria</label>
+                            <select id="df-categoria" name="categoria" class="w-full p-2 border rounded-lg bg-white" required>
+                                <option>Aluguel</option>
+                                <option>IPTU</option>
+                                <option>Água</option>
+                                <option>Energia elétrica</option>
+                                <option>Internet/telefone</option>
+                                <option>Mensalidade de software</option>
+                                <option>Contabilidade</option>
+                                <option>Marketing</option>
+                                <option>Parcela de financiamento</option>
+                                <option>Prólabore</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="df-valor" class="text-sm font-medium">Valor (R$)</label>
+                            <input type="number" id="df-valor" name="valor" placeholder="1500.00" class="w-full p-2 border rounded-lg" step="0.01" required>
+                        </div>
+                        <div>
+                            <label for="df-data" class="text-sm font-medium">Data</label>
+                            <input type="date" id="df-data" name="data" class="w-full p-2 border rounded-lg" required>
+                        </div>
+                        <div>
+                            <label for="df-fornecedor" class="text-sm font-medium">Fornecedor</label>
+                            <input type="text" id="df-fornecedor" name="fornecedor" placeholder="Ex: Imobiliária Central" class="w-full p-2 border rounded-lg">
+                        </div>
+                        <div class="md:col-span-2">
+                            <button type="submit" class="w-full mt-2 bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700">Salvar Despesa Fixa</button>
+                        </div>
+                    </form>
+                </div>
+                <div id="despesas-fixas-list" class="mt-6 bg-white p-6 rounded-xl shadow-lg">
+                    <h3 class="text-lg font-bold mb-4">Despesas Fixas Salvas</h3>
+                     <div class="overflow-x-auto">
+                        <!-- Lista será inserida aqui -->
+                    </div>
+                </div>
+            </div>
 
-      window.salvarCalibracao = function () {
-        const calibracao = {
-          imposto: document.getElementById("imposto").value,
-          debito: document.getElementById("debito").value,
-          credito: document.getElementById("credito").value,
-          apps: document.getElementById("apps").value,
-          encargos: document.getElementById("encargos").value
+            <!-- Conteúdo da Aba Mão de Obra -->
+            <div id="tab-mao-de-obra" class="tab-content">
+                <div class="bg-white p-6 rounded-xl shadow-lg">
+                    <h2 class="text-xl font-bold mb-4">Adicionar Custo de Mão de Obra</h2>
+                    <form id="mao-de-obra-form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="mo-categoria" class="text-sm font-medium">Categoria</label>
+                            <select id="mo-categoria" name="categoria" class="w-full p-2 border rounded-lg bg-white" required>
+                                <option>Salários</option>
+                                <option>Férias</option>
+                                <option>Verbas rescisórias</option>
+                                <option>INSS</option>
+                                <option>FGTS</option>
+                                <option>Vale transporte</option>
+                                <option>Vale alimentação</option>
+                                <option>Exames periódicos</option>
+                                <option>Uniformes</option>
+                            </select>
+                        </div>
+                        <div>
+                             <label for="mo-valor" class="text-sm font-medium">Valor (R$)</label>
+                             <input type="number" id="mo-valor" name="valor" placeholder="2500.00" class="w-full p-2 border rounded-lg" step="0.01" required>
+                        </div>
+                        <div>
+                             <label for="mo-data" class="text-sm font-medium">Data</label>
+                             <input type="date" id="mo-data" name="data" class="w-full p-2 border rounded-lg" required>
+                        </div>
+                        <div>
+                            <label for="mo-fornecedor" class="text-sm font-medium">Fornecedor / Funcionário</label>
+                            <input type="text" id="mo-fornecedor" name="fornecedor" placeholder="Ex: Nome do Funcionário" class="w-full p-2 border rounded-lg">
+                        </div>
+                        <div class="md:col-span-2">
+                            <button type="submit" class="w-full mt-2 bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700">Salvar Mão de Obra</button>
+                        </div>
+                    </form>
+                </div>
+                <div id="mao-de-obra-list" class="mt-6 bg-white p-6 rounded-xl shadow-lg">
+                    <h3 class="text-lg font-bold mb-4">Custos de Mão de Obra Salvos</h3>
+                     <div class="overflow-x-auto">
+                        <!-- Lista será inserida aqui -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Conteúdo da Aba Relatório -->
+            <div id="tab-relatorio" class="tab-content">
+                <div class="bg-white p-6 rounded-xl shadow-lg">
+                    <h2 class="text-xl font-bold mb-4">Gerar Relatório DRE</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                        <div>
+                            <label for="report-type" class="text-sm font-medium">Tipo</label>
+                            <select id="report-type" class="w-full p-2 border rounded-lg bg-white">
+                                <option value="monthly">Mensal</option>
+                                <option value="yearly">Anual</option>
+                            </select>
+                        </div>
+                        <div id="month-selector-div">
+                            <label for="report-month" class="text-sm font-medium">Mês</label>
+                            <input type="month" id="report-month" class="w-full p-2 border rounded-lg">
+                        </div>
+                        <div id="year-selector-div" class="hidden">
+                             <label for="report-year" class="text-sm font-medium">Ano</label>
+                             <input type="number" id="report-year" placeholder="2024" class="w-full p-2 border rounded-lg">
+                        </div>
+                         <div>
+                             <button id="generate-report-btn" class="w-full bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-indigo-700">Gerar Relatório</button>
+                         </div>
+                    </div>
+                </div>
+
+                <div id="report-output" class="mt-6 bg-white p-6 rounded-xl shadow-lg hidden">
+                    <div id="report-to-print">
+                        <div class="flex justify-between items-start mb-6 border-b pb-4">
+                            <div>
+                                <h3 id="report-company-name" class="text-2xl font-bold">Nome da Empresa</h3>
+                                <p id="report-company-cnpj" class="text-slate-600">CNPJ</p>
+                            </div>
+                            <div class="text-right">
+                                <h4 class="font-bold">Relatório DRE</h4>
+                                <p id="report-period" class="text-slate-600">Período</p>
+                                <p id="report-date" class="text-sm text-slate-500">Gerado em: DD/MM/AAAA</p>
+                            </div>
+                        </div>
+                        <div class="space-y-3">
+                            <div class="flex justify-between p-2 rounded-lg bg-slate-50"><span>(+) Receita Bruta Total</span> <span id="report-receita-total" class="font-bold">R$ 0,00</span></div>
+                            <div class="flex justify-between p-2 rounded-lg bg-slate-50"><span>(-) Custo da Mercadoria Vendida (CMV)</span> <span id="report-cmv" class="font-bold text-red-600">R$ 0,00</span></div>
+                            <div class="flex justify-between p-3 rounded-lg bg-slate-200 text-lg"><strong>(=) Lucro Bruto</strong> <strong id="report-lucro-bruto" class="font-bold">R$ 0,00</strong></div>
+                            <div class="flex justify-between p-2 rounded-lg bg-slate-50"><span>(-) Despesas Fixas</span> <span id="report-despesas-fixas" class="font-bold text-red-600">R$ 0,00</span></div>
+                            <div class="flex justify-between p-2 rounded-lg bg-slate-50"><span>(-) Mão de Obra</span> <span id="report-mao-de-obra" class="font-bold text-red-600">R$ 0,00</span></div>
+                             <div class="flex justify-between p-2 rounded-lg bg-slate-50"><span>(-) Impostos e Taxas</span> <span id="report-impostos-taxas" class="font-bold text-red-600">R$ 0,00</span></div>
+                            <div class="flex justify-between p-4 rounded-lg bg-blue-100 text-xl"><strong>(=) Lucro Líquido</strong> <strong id="report-lucro-liquido" class="font-bold text-blue-800">R$ 0,00</strong></div>
+                            <div class="flex justify-between p-3 rounded-lg bg-green-100 text-lg"><strong>Margem de Lucro</strong> <strong id="report-margem" class="font-bold text-green-800">0.00%</strong></div>
+                        </div>
+                    </div>
+                    <button id="export-pdf-btn" class="w-full mt-6 bg-green-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-green-700">Exportar como PDF</button>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Modal de confirmação -->
+    <div id="confirmation-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-white p-6 rounded-lg shadow-xl text-center">
+            <p id="modal-text" class="mb-4">Tem certeza que deseja excluir este item?</p>
+            <button id="confirm-delete-btn" class="bg-red-600 text-white px-4 py-2 rounded-lg mr-2">Confirmar</button>
+            <button id="cancel-delete-btn" class="bg-slate-300 text-slate-800 px-4 py-2 rounded-lg">Cancelar</button>
+        </div>
+    </div>
+
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // ===================================================================
+        // 1. VARIÁVEIS GLOBAIS E CONSTANTES
+        // ===================================================================
+        const appState = {
+            companyInfo: null,
+            calibration: {},
+            receitas: [],
+            despesasVariaveis: [],
+            despesasFixas: [],
+            maoDeObra: [],
         };
-        localStorage.setItem("calibracao", JSON.stringify(calibracao));
-        alert("Calibração salva com sucesso!");
-      };
 
-      function renderReceitas() {
-        conteudo.innerHTML = `
-          <h2 class="text-xl font-bold mb-4">Lançamento de Receitas</h2>
-          <input id="novaReceita" type="number" class="input" placeholder="Valor da Receita" />
-          <button onclick="adicionarReceita()" class="mt-2 botao">Adicionar Receita</button>
-          <div class="scroll-container">
-            <table><thead><tr><th>Valor</th></tr></thead><tbody id="listaReceitas"></tbody></table>
-          </div>
-        `;
-        atualizarTabela("receitas", "listaReceitas");
-      }
+        const STORAGE_KEYS = {
+            COMPANY: 'corretagestao02_empresa',
+            CALIBRATION: 'corretagestao02_calibracao',
+            RECEITAS: 'corretagestao02_receitas',
+            DV: 'corretagestao02_despesasVariaveis',
+            DF: 'corretagestao02_despesasFixas',
+            MO: 'corretagestao02_maoDeObra',
+        };
 
-      window.adicionarReceita = function () {
-        const valor = parseFloat(document.getElementById("novaReceita").value);
-        if (!valor) return;
-        dados.receitas.push(valor);
-        localStorage.setItem("receitas", JSON.stringify(dados.receitas));
-        atualizarTabela("receitas", "listaReceitas");
-      }
+        // Elementos da DOM
+        const welcomeScreen = document.getElementById('welcome-screen');
+        const mainApp = document.getElementById('main-app');
+        const companyForm = document.getElementById('company-form');
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabContents = document.querySelectorAll('.tab-content');
+        const logoutButton = document.getElementById('logout-button');
 
-      function atualizarTabela(tipo, elementoId) {
-        const tbody = document.getElementById(elementoId);
-        if (!tbody) return;
-        tbody.innerHTML = dados[tipo].map(r => `<tr><td>R$ ${parseFloat(r).toFixed(2)}</td></tr>`).join('');
-      }
+        // ===================================================================
+        // 2. FUNÇÕES DE INICIALIZAÇÃO E ESTADO
+        // ===================================================================
 
-      function renderRelatorio() {
-        conteudo.innerHTML = `
-          <h2 class="text-xl font-bold mb-4">Relatório DRE</h2>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <select id="tipoRelatorio" class="input">
-              <option value="mensal">Mensal</option>
-              <option value="anual">Anual</option>
-            </select>
-            <input type="month" id="periodoRelatorio" class="input" />
-          </div>
-          <button onclick="gerarPDF()" class="mt-4 botao">Gerar PDF</button>
-        `;
-      }
+        // Carrega todos os dados do localStorage
+        function loadState() {
+            appState.companyInfo = JSON.parse(localStorage.getItem(STORAGE_KEYS.COMPANY));
+            appState.calibration = JSON.parse(localStorage.getItem(STORAGE_KEYS.CALIBRATION)) || {};
+            appState.receitas = JSON.parse(localStorage.getItem(STORAGE_KEYS.RECEITAS)) || [];
+            appState.despesasVariaveis = JSON.parse(localStorage.getItem(STORAGE_KEYS.DV)) || [];
+            appState.despesasFixas = JSON.parse(localStorage.getItem(STORAGE_KEYS.DF)) || [];
+            appState.maoDeObra = JSON.parse(localStorage.getItem(STORAGE_KEYS.MO)) || [];
+        }
+        
+        // Salva uma parte específica do estado no localStorage
+        function saveState(key, data) {
+            localStorage.setItem(key, JSON.stringify(data));
+        }
+        
+        // Função principal de inicialização
+        function init() {
+            loadState();
 
-      window.gerarPDF = function () {
-        const tipo = document.getElementById("tipoRelatorio").value;
-        const periodo = document.getElementById("periodoRelatorio").value;
-        const doc = new jspdf.jsPDF();
-        doc.text("Relatório DRE - " + tipo.toUpperCase(), 20, 20);
-        doc.text("Período: " + periodo, 20, 30);
-        doc.text("Empresa: " + localStorage.getItem("empresaNome"), 20, 40);
-        doc.text("CNPJ: " + localStorage.getItem("empresaCNPJ"), 20, 50);
-        doc.save("relatorio-dre-" + tipo + ".pdf");
-      }
+            if (appState.companyInfo && appState.companyInfo.name && appState.companyInfo.cnpj) {
+                showMainApp();
+            } else {
+                showWelcomeScreen();
+            }
+            
+            // Renderiza as listas e preenche formulários
+            renderAllLists();
+            populateCalibrationForm();
+            setupReportSelectors();
+
+            // Adiciona todos os Event Listeners
+            addEventListeners();
+        }
+
+        // ===================================================================
+        // 3. FUNÇÕES DE RENDERIZAÇÃO E UI
+        // ===================================================================
+
+        function showWelcomeScreen() {
+            welcomeScreen.style.display = 'flex';
+            mainApp.style.display = 'none';
+        }
+
+        function showMainApp() {
+            document.getElementById('header-company-name').textContent = appState.companyInfo.name;
+            document.getElementById('header-company-cnpj').textContent = `CNPJ: ${appState.companyInfo.cnpj}`;
+            welcomeScreen.style.display = 'none';
+            mainApp.style.display = 'block';
+        }
+
+        function switchTab(tabName) {
+            tabContents.forEach(content => {
+                content.classList.remove('tab-content-active');
+            });
+            tabButtons.forEach(button => {
+                button.classList.remove('tab-active');
+            });
+
+            document.getElementById(`tab-${tabName}`).classList.add('tab-content-active');
+            document.querySelector(`[data-tab="${tabName}"]`).classList.add('tab-active');
+        }
+
+        // Função genérica para renderizar listas
+        function renderList(containerId, items, columns) {
+            const container = document.querySelector(`#${containerId} > div`);
+            if (!container) return;
+
+            if (items.length === 0) {
+                container.innerHTML = `<p class="text-slate-500 text-center py-4">Nenhum item adicionado ainda.</p>`;
+                return;
+            }
+
+            const table = document.createElement('table');
+            table.className = 'min-w-full divide-y divide-slate-200';
+            
+            const thead = document.createElement('thead');
+            thead.className = 'bg-slate-50';
+            thead.innerHTML = `
+                <tr>
+                    ${columns.map(col => `<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">${col.header}</th>`).join('')}
+                    <th scope="col" class="relative px-6 py-3"><span class="sr-only">Ações</span></th>
+                </tr>
+            `;
+            table.appendChild(thead);
+
+            const tbody = document.createElement('tbody');
+            tbody.className = 'bg-white divide-y divide-slate-200';
+            
+            items.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    ${columns.map(col => `<td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">${col.render(item)}</td>`).join('')}
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button class="delete-btn text-red-600 hover:text-red-900" data-id="${item.id}" data-type="${containerId.replace('-list', '')}">Excluir</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+            table.appendChild(tbody);
+
+            container.innerHTML = '';
+            container.appendChild(table);
+        }
+
+        function formatCurrency(value) {
+            if (value === null || value === undefined || isNaN(parseFloat(value))) {
+                return 'R$ 0,00';
+            }
+            return parseFloat(value).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            // Adicionado tratamento para evitar erro com new Date() e timezones
+            const dateParts = dateString.split('-');
+            if(dateParts.length !== 3) return dateString; // Retorna o original se não for YYYY-MM-DD
+            const [year, month, day] = dateParts;
+            return `${day}/${month}/${year}`;
+        }
+
+        function renderAllLists() {
+            renderList('receitas-list', appState.receitas, [
+                { header: 'Data', render: item => formatDate(item.data) },
+                { header: 'Descrição', render: item => item.descricao || 'N/A' },
+                { header: 'Tipo', render: item => item.tipo },
+                { header: 'Valor', render: item => formatCurrency(item.valor) },
+            ]);
+            renderList('despesas-variaveis-list', appState.despesasVariaveis, [
+                { header: 'Data', render: item => formatDate(item.data) },
+                { header: 'Categoria', render: item => item.categoria },
+                { header: 'Descrição', render: item => item.descricao || 'N/A' },
+                { header: 'Fornecedor', render: item => item.fornecedor || 'N/A' },
+                { header: 'Valor', render: item => formatCurrency(item.valor) },
+            ]);
+            renderList('despesas-fixas-list', appState.despesasFixas, [
+                { header: 'Data', render: item => formatDate(item.data) },
+                { header: 'Categoria', render: item => item.categoria },
+                { header: 'Fornecedor', render: item => item.fornecedor || 'N/A' },
+                { header: 'Valor', render: item => formatCurrency(item.valor) },
+            ]);
+            renderList('mao-de-obra-list', appState.maoDeObra, [
+                { header: 'Data', render: item => formatDate(item.data) },
+                { header: 'Categoria', render: item => item.categoria },
+                { header: 'Fornecedor/Func.', render: item => item.fornecedor || 'N/A' },
+                { header: 'Valor', render: item => formatCurrency(item.valor) },
+            ]);
+        }
+        
+        function populateCalibrationForm() {
+            const form = document.getElementById('calibration-form');
+            for (const key in appState.calibration) {
+                if (form.elements[key]) {
+                    form.elements[key].value = appState.calibration[key];
+                }
+            }
+        }
+        
+        function setupReportSelectors() {
+            const today = new Date();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const year = today.getFullYear();
+            
+            document.getElementById('report-month').value = `${year}-${month}`;
+            document.getElementById('report-year').value = year;
+        }
+
+        // ===================================================================
+        // 4. FUNÇÕES DE MANIPULAÇÃO DE DADOS (ADD/DELETE)
+        // ===================================================================
+
+        function handleFormSubmit(event, formId, stateKey, stateArray) {
+            event.preventDefault();
+            const form = document.getElementById(formId);
+            const formData = new FormData(form);
+            const newItem = { id: Date.now() };
+
+            for (let [key, value] of formData.entries()) {
+                 newItem[key] = value;
+            }
+            
+            stateArray.push(newItem);
+            saveState(stateKey, stateArray);
+            renderAllLists();
+            form.reset();
+        }
+
+        function showConfirmationModal(text, onConfirm) {
+            const modal = document.getElementById('confirmation-modal');
+            document.getElementById('modal-text').textContent = text;
+            modal.classList.remove('hidden');
+
+            const confirmBtn = document.getElementById('confirm-delete-btn');
+            const cancelBtn = document.getElementById('cancel-delete-btn');
+
+            const confirmHandler = () => {
+                onConfirm();
+                hideModal();
+                cleanup();
+            };
+
+            const cancelHandler = () => {
+                hideModal();
+                cleanup();
+            };
+            
+            const hideModal = () => modal.classList.add('hidden');
+            const cleanup = () => {
+                confirmBtn.removeEventListener('click', confirmHandler);
+                cancelBtn.removeEventListener('click', cancelHandler);
+            };
+
+            confirmBtn.addEventListener('click', confirmHandler);
+            cancelBtn.addEventListener('click', cancelHandler);
+        }
+
+        function handleDelete(id, type) {
+            const onConfirm = () => {
+                let stateKey;
+                switch (type) {
+                    case 'receitas':
+                        appState.receitas = appState.receitas.filter(item => item.id !== parseInt(id));
+                        stateKey = STORAGE_KEYS.RECEITAS;
+                        saveState(stateKey, appState.receitas);
+                        break;
+                    case 'despesas-variaveis':
+                        appState.despesasVariaveis = appState.despesasVariaveis.filter(item => item.id !== parseInt(id));
+                        stateKey = STORAGE_KEYS.DV;
+                        saveState(stateKey, appState.despesasVariaveis);
+                        break;
+                    case 'despesas-fixas':
+                        appState.despesasFixas = appState.despesasFixas.filter(item => item.id !== parseInt(id));
+                        stateKey = STORAGE_KEYS.DF;
+                        saveState(stateKey, appState.despesasFixas);
+                        break;
+                    case 'mao-de-obra':
+                        appState.maoDeObra = appState.maoDeObra.filter(item => item.id !== parseInt(id));
+                        stateKey = STORAGE_KEYS.MO;
+                        saveState(stateKey, appState.maoDeObra);
+                        break;
+                    default:
+                        console.error('Tipo de exclusão desconhecido:', type);
+                        return;
+                }
+                renderAllLists();
+            };
+
+            showConfirmationModal('Tem certeza que deseja excluir este item?', onConfirm);
+        }
+
+        // ===================================================================
+        // 5. LÓGICA DO RELATÓRIO
+        // ===================================================================
+        function generateReport() {
+            const type = document.getElementById('report-type').value;
+            let startDate, endDate, periodText;
+            
+            // Adicionado para evitar erro com fuso horário
+            const toUTCDate = (dateString) => {
+                const date = new Date(dateString);
+                return new Date(date.valueOf() + date.getTimezoneOffset() * 60 * 1000);
+            }
+
+            if (type === 'monthly') {
+                const monthValue = document.getElementById('report-month').value;
+                if (!monthValue) { alert("Por favor, selecione um mês."); return; }
+                const [year, month] = monthValue.split('-');
+                startDate = new Date(year, month - 1, 1);
+                endDate = new Date(year, month, 0, 23, 59, 59);
+                periodText = `${month}/${year}`;
+            } else { // yearly
+                const year = document.getElementById('report-year').value;
+                 if (!year) { alert("Por favor, selecione um ano."); return; }
+                startDate = new Date(year, 0, 1);
+                endDate = new Date(year, 11, 31, 23, 59, 59);
+                periodText = `Anual ${year}`;
+            }
+
+            const filterByDate = (item) => {
+                const itemDate = toUTCDate(item.data);
+                return itemDate >= startDate && itemDate <= endDate;
+            };
+
+            const receitasFiltradas = appState.receitas.filter(filterByDate);
+            const dvFiltrados = appState.despesasVariaveis.filter(filterByDate);
+            const dfFiltrados = appState.despesasFixas.filter(filterByDate);
+            const moFiltrados = appState.maoDeObra.filter(filterByDate);
+            
+            const totalReceitas = receitasFiltradas.reduce((sum, item) => sum + parseFloat(item.valor || 0), 0);
+            const totalCMV = dvFiltrados.reduce((sum, item) => sum + parseFloat(item.valor || 0), 0);
+            const totalDF = dfFiltrados.reduce((sum, item) => sum + parseFloat(item.valor || 0), 0);
+            const totalMO = moFiltrados.reduce((sum, item) => sum + parseFloat(item.valor || 0), 0);
+            const lucroBruto = totalReceitas - totalCMV;
+
+            // Cálculo de Impostos e Taxas
+            const cal = appState.calibration;
+            let totalImpostosTaxas = (totalReceitas * (parseFloat(cal.imposto_faturamento) || 0)) / 100;
+            totalImpostosTaxas += (totalReceitas * (parseFloat(cal.encargos_diversos) || 0)) / 100;
+            
+            const receitasPorTipo = receitasFiltradas.reduce((acc, item) => {
+                acc[item.tipo] = (acc[item.tipo] || 0) + parseFloat(item.valor || 0);
+                return acc;
+            }, {});
+
+            totalImpostosTaxas += (receitasPorTipo['Crédito'] || 0) * (parseFloat(cal.taxa_credito) || 0) / 100;
+            totalImpostosTaxas += (receitasPorTipo['Débito'] || 0) * (parseFloat(cal.taxa_debito) || 0) / 100;
+            totalImpostosTaxas += (receitasPorTipo['iFood'] || 0) * (parseFloat(cal.comissao_ifood) || 0) / 100;
+            totalImpostosTaxas += (receitasPorTipo['99'] || 0) * (parseFloat(cal.comissao_99) || 0) / 100;
+
+            const lucroLiquido = lucroBruto - totalDF - totalMO - totalImpostosTaxas;
+            const margem = totalReceitas > 0 ? (lucroLiquido / totalReceitas) * 100 : 0;
+            
+            // Atualizar UI
+            document.getElementById('report-receita-total').textContent = formatCurrency(totalReceitas);
+            document.getElementById('report-cmv').textContent = formatCurrency(totalCMV);
+            document.getElementById('report-lucro-bruto').textContent = formatCurrency(lucroBruto);
+            document.getElementById('report-despesas-fixas').textContent = formatCurrency(totalDF);
+            document.getElementById('report-mao-de-obra').textContent = formatCurrency(totalMO);
+            document.getElementById('report-impostos-taxas').textContent = formatCurrency(totalImpostosTaxas);
+            document.getElementById('report-lucro-liquido').textContent = formatCurrency(lucroLiquido);
+            document.getElementById('report-margem').textContent = margem.toFixed(2) + '%';
+            
+            document.getElementById('report-company-name').textContent = appState.companyInfo.name;
+            document.getElementById('report-company-cnpj').textContent = `CNPJ: ${appState.companyInfo.cnpj}`;
+            document.getElementById('report-period').textContent = `Período: ${periodText}`;
+            document.getElementById('report-date').textContent = `Gerado em: ${new Date().toLocaleDateString('pt-BR')}`;
+            
+            document.getElementById('report-output').classList.remove('hidden');
+        }
+
+        async function exportPDF() {
+            const reportElement = document.getElementById('report-to-print');
+            const { jsPDF } = window.jspdf;
+
+            const canvas = await html2canvas(reportElement, { scale: 2, useCORS: true });
+            
+            const imgData = canvas.toDataURL('image/png');
+            const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+            
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const imgProps= pdf.getImageProperties(imgData);
+            const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+            
+            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+            pdf.save(`DRE_${appState.companyInfo.name.replace(/ /g, '_')}_${new Date().toISOString().slice(0, 10)}.pdf`);
+        }
+        
+        // ===================================================================
+        // 6. EVENT LISTENERS
+        // ===================================================================
+
+        function addEventListeners() {
+            // Tela de Boas-vindas
+            companyForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const name = document.getElementById('company-name').value;
+                const cnpj = document.getElementById('company-cnpj').value;
+                if(name && cnpj) {
+                    appState.companyInfo = { name, cnpj };
+                    saveState(STORAGE_KEYS.COMPANY, appState.companyInfo);
+                    showMainApp();
+                }
+            });
+
+            // Logout
+            logoutButton.addEventListener('click', () => {
+                showConfirmationModal('Tem certeza que deseja sair?', () => {
+                     localStorage.removeItem(STORAGE_KEYS.COMPANY);
+                     window.location.reload();
+                });
+            });
+
+            // Navegação por Abas
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    switchTab(button.dataset.tab);
+                });
+            });
+
+            // Formulário de Calibração
+            document.getElementById('calibration-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const form = e.target;
+                const formData = new FormData(form);
+                const newCalibration = {};
+                for (let [key, value] of formData.entries()) {
+                    newCalibration[key] = value;
+                }
+                appState.calibration = newCalibration;
+                saveState(STORAGE_KEYS.CALIBRATION, appState.calibration);
+                alert('Calibração salva com sucesso!');
+            });
+            
+            // Formulários de Adição
+            document.getElementById('receitas-form').addEventListener('submit', (e) => handleFormSubmit(e, 'receitas-form', STORAGE_KEYS.RECEITAS, appState.receitas));
+            document.getElementById('despesas-variaveis-form').addEventListener('submit', (e) => handleFormSubmit(e, 'despesas-variaveis-form', STORAGE_KEYS.DV, appState.despesasVariaveis));
+            document.getElementById('despesas-fixas-form').addEventListener('submit', (e) => handleFormSubmit(e, 'despesas-fixas-form', STORAGE_KEYS.DF, appState.despesasFixas));
+            document.getElementById('mao-de-obra-form').addEventListener('submit', (e) => handleFormSubmit(e, 'mao-de-obra-form', STORAGE_KEYS.MO, appState.maoDeObra));
+            
+            // Deleção de itens (usando event delegation)
+            mainApp.addEventListener('click', (e) => {
+                if (e.target.classList.contains('delete-btn')) {
+                    const id = e.target.dataset.id;
+                    const type = e.target.dataset.type;
+                    handleDelete(id, type);
+                }
+            });
+
+            // Lógica do Relatório
+            document.getElementById('report-type').addEventListener('change', (e) => {
+                const isMonthly = e.target.value === 'monthly';
+                document.getElementById('month-selector-div').style.display = isMonthly ? 'block' : 'none';
+                document.getElementById('year-selector-div').style.display = isMonthly ? 'none' : 'block';
+            });
+            
+            document.getElementById('generate-report-btn').addEventListener('click', generateReport);
+            document.getElementById('export-pdf-btn').addEventListener('click', exportPDF);
+        }
+
+        // ===================================================================
+        // 7. PONTO DE ENTRADA DA APLICAÇÃO
+        // ===================================================================
+        init();
     });
-  </script>
+    </script>
 </body>
 </html>

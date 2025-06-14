@@ -3,36 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gestão DRE - CORRETAGESTAO02</title>
+  <title>Gestão DRE - CORRETAGESTAO01</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body class="bg-gray-100 p-4">
-  <div id="intro" class="w-full h-screen bg-cover bg-center flex flex-col justify-center items-center text-white" style="background-image: url('https://images.unsplash.com/photo-1581093588401-12f3e59f7a3e?auto=format&fit=crop&w=1470&q=80');">
-    <img src="https://i.postimg.cc/vBvK9KGz/ges.jpg" alt="Logo Padroniza" class="w-32 h-32 mb-6">
-    <div class="bg-white p-6 rounded shadow text-gray-900 w-80">
-      <h1 class="text-xl font-bold mb-4 text-center">Iniciar Gestão DRE</h1>
-      <input id="introCompanyName" placeholder="Razão Social" class="w-full mb-2 p-2 border rounded">
-      <input id="introCompanyCnpj" placeholder="CNPJ" class="w-full mb-4 p-2 border rounded">
-      <button onclick="startApp()" class="w-full bg-green-600 text-white px-4 py-2 rounded">Entrar</button>
-    </div>
-  </div>
-  <div id="mainApp" class="hidden">
   <div class="flex flex-wrap gap-2 mb-4">
     <button class="tab-button bg-blue-200 px-4 py-2 rounded" onclick="showTab('calibracao')">Calibração</button>
     <button class="tab-button bg-blue-200 px-4 py-2 rounded" onclick="showTab('receitas')">Receitas</button>
     <button class="tab-button bg-blue-200 px-4 py-2 rounded" onclick="showTab('cmv')">CMV</button>
     <button class="tab-button bg-blue-200 px-4 py-2 rounded" onclick="showTab('fixos')">Fixos</button>
     <button class="tab-button bg-blue-200 px-4 py-2 rounded" onclick="showTab('mo')">Mão de Obra</button>
-    <button class="tab-button bg-blue-200 px-4 py-2 rounded" onclick="showTab('relatorio')">Relatório</button>
   </div>
 
   <div id="calibracao" class="tab-content">
     <h2 class="text-xl font-bold mb-2">Calibração</h2>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-2 mb-4">
-      <input id="companyName" class="p-2 border rounded" placeholder="Razão Social">
-      <input id="companyCnpj" class="p-2 border rounded" placeholder="CNPJ">
+      <input id="companyName" placeholder="Razão Social" class="p-2 border rounded">
+      <input id="companyCnpj" placeholder="CNPJ" class="p-2 border rounded">
       <select id="taxRegime" class="p-2 border rounded">
         <option value="Simples Nacional">Simples Nacional</option>
         <option value="Lucro Presumido">Lucro Presumido</option>
@@ -45,175 +32,105 @@
     <button onclick="saveSettings()" class="bg-green-600 text-white px-4 py-2 rounded">Salvar Calibração</button>
   </div>
 
-<!-- ABA RECEITAS -->
-
-    <input id="receitaObs" placeholder="Observação (opcional)" class="p-2 border rounded">
-    <input id="receitaValor" type="number" placeholder="Valor (R$)" class="p-2 border rounded">
-    <input id="receitaData" type="date" class="p-2 border rounded">
-  </div>
-  <button onclick="salvarReceita()" class="bg-blue-600 text-white px-4 py-2 rounded">Salvar Receita</button>
-</div>
-
-<!-- ABA CMV -->
-
-    <input id="cmvObs" placeholder="Observação (opcional)" class="p-2 border rounded"> placeholder="Descrição" class="p-2 border rounded">
-    <input id="cmvValor" type="number" placeholder="Valor (R$)" class="p-2 border rounded">
-    <input id="cmvData" type="date" class="p-2 border rounded">
-  </div>
-  <button onclick="salvarCMV()" class="bg-blue-600 text-white px-4 py-2 rounded">Salvar Custo</button>
-</div>
-
-<!-- ABA FIXOS -->
-
-    <input id="fixoObs" placeholder="Observação (opcional)" class="p-2 border rounded"> placeholder="Descrição" class="p-2 border rounded">
-    <input id="fixoValor" type="number" placeholder="Valor (R$)" class="p-2 border rounded">
-    <input id="fixoData" type="date" class="p-2 border rounded">
-  </div>
-  <button onclick="salvarFixo()" class="bg-blue-600 text-white px-4 py-2 rounded">Salvar Despesa</button>
-</div>
-
-<!-- ABA MÃO DE OBRA -->
-
-    <input id="moObs" placeholder="Observação (opcional)" class="p-2 border rounded"> placeholder="Descrição" class="p-2 border rounded">
-    <input id="moValor" type="number" placeholder="Valor (R$)" class="p-2 border rounded">
-    <input id="moData" type="date" class="p-2 border rounded">
-  </div>
-  <button onclick="salvarMO()" class="bg-blue-600 text-white px-4 py-2 rounded">Salvar Custo</button>
-</div>
-
-<div id="relatorio" class="tab-content hidden">
-    <h2 class="text-xl font-bold mb-2">Relatório</h2>
-    <div class="flex gap-4 mb-4">
-      <select id="tipoRelatorio" class="p-2 border rounded">
-        <option value="mensal">Mensal</option>
-        <option value="anual">Anual</option>
+  <div id="receitas" class="tab-content hidden">
+    <h2 class="text-xl font-bold mb-2">Receitas</h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-2 mb-4">
+      <select id="receitaDescricao" class="p-2 border rounded">
+        <option value="Cartão de Crédito">Cartão de Crédito</option>
+        <option value="Cartão de Débito">Cartão de Débito</option>
+        <option value="Pix">Pix</option>
+        <option value="Dinheiro">Dinheiro</option>
+        <option value="Delivery/iFood">Delivery/iFood</option>
       </select>
-      <input id="periodoRelatorio" type="month" class="p-2 border rounded">
-      <button onclick="gerarRelatorioPDF()" class="bg-blue-600 text-white px-4 py-2 rounded">PDF Completo</button>
-      <button onclick="gerarResumoDRE()" class="bg-purple-600 text-white px-4 py-2 rounded">PDF Resumido</button>
+      <input id="receitaObs" placeholder="Observação (opcional)" class="p-2 border rounded">
+      <input id="receitaValor" type="number" placeholder="Valor (R$)" class="p-2 border rounded">
+      <input id="receitaData" type="date" class="p-2 border rounded">
     </div>
-    <canvas id="graficoDRE" height="120"></canvas>
+    <button class="bg-blue-600 text-white px-4 py-2 rounded">Salvar Receita</button>
   </div>
 
-<script>
-function startApp() {
-  const name = document.getElementById('introCompanyName').value;
-  const cnpj = document.getElementById('introCompanyCnpj').value;
-  if (name && cnpj) {
-    localStorage.setItem('settings', JSON.stringify({ companyName: name, companyCnpj: cnpj }));
-    document.getElementById('intro').classList.add('hidden');
-    document.getElementById('mainApp').classList.remove('hidden');
-    document.getElementById('companyName').value = name;
-    document.getElementById('companyCnpj').value = cnpj;
-  } else {
-    alert('Preencha todos os campos para iniciar.');
-  }
-}
-function showTab(tabId) {
-  document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-  document.getElementById(tabId).classList.remove('hidden');
-}
-function saveSettings() {
-  const settings = {
-    companyName: document.getElementById('companyName').value,
-    companyCnpj: document.getElementById('companyCnpj').value,
-    taxRegime: document.getElementById('taxRegime').value,
-    taxRate: parseFloat(document.getElementById('taxRate').value) || 0,
-    taxCredit: parseFloat(document.getElementById('taxCredit').value) || 0,
-    taxDebit: parseFloat(document.getElementById('taxDebit').value) || 0,
-    taxDelivery: parseFloat(document.getElementById('taxDelivery').value) || 0
-  };
-  localStorage.setItem('settings', JSON.stringify(settings));
-  alert('Configurações salvas!');
-}
-function formatarReal(valor) {
-  return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-}
-function calcularTotais() {
-  const settings = JSON.parse(localStorage.getItem('settings') || '{}');
-  const tipo = document.getElementById('tipoRelatorio').value;
-  const periodo = document.getElementById('periodoRelatorio').value;
-  const ano = periodo.split('-')[0];
-  const mes = periodo.split('-')[1];
+  <div id="cmv" class="tab-content hidden">
+    <h2 class="text-xl font-bold mb-2">Custos Variáveis (CMV)</h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-2 mb-4">
+      <select id="cmvDescricao" class="p-2 border rounded">
+        <option value="Consumo alimentar">Consumo alimentar</option>
+        <option value="Bebidas e similares">Bebidas e similares</option>
+        <option value="Produtos de Limpeza e higiene">Produtos de Limpeza e higiene</option>
+        <option value="Papelaria e Escritório">Papelaria e Escritório</option>
+        <option value="Gás">Gás</option>
+        <option value="Outros">Outros</option>
+      </select>
+      <input id="cmvObs" placeholder="Observação (opcional)" class="p-2 border rounded">
+      <input id="cmvValor" type="number" placeholder="Valor (R$)" class="p-2 border rounded">
+      <input id="cmvData" type="date" class="p-2 border rounded">
+    </div>
+    <button class="bg-blue-600 text-white px-4 py-2 rounded">Salvar Custo</button>
+  </div>
 
-  function filtrar(lista) {
-    return lista.filter(item => {
-      const d = new Date(item.data);
-      return tipo === 'anual' ? d.getFullYear() == ano : (d.getMonth() + 1 == mes && d.getFullYear() == ano);
-    });
-  }
-  const receitas = filtrar(JSON.parse(localStorage.getItem('receitas') || '[]'));
-  const cmv = filtrar(JSON.parse(localStorage.getItem('cmv') || '[]'));
-  const fixos = filtrar(JSON.parse(localStorage.getItem('fixos') || '[]'));
-  const mo = filtrar(JSON.parse(localStorage.getItem('mo') || '[]'));
+  <div id="fixos" class="tab-content hidden">
+    <h2 class="text-xl font-bold mb-2">Despesas Fixas</h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-2 mb-4">
+      <select id="fixoDescricao" class="p-2 border rounded">
+        <option value="Aluguel">Aluguel</option>
+        <option value="IPTU">IPTU</option>
+        <option value="Água">Água</option>
+        <option value="Energia Elétrica">Energia Elétrica</option>
+        <option value="Internet/Telefone">Internet/Telefone</option>
+        <option value="Software">Software</option>
+        <option value="Contabilidade">Contabilidade</option>
+        <option value="Parcelas Financiamentos">Parcelas Financiamentos</option>
+        <option value="Manutenção">Manutenção</option>
+        <option value="Cesta Bancária/Juros Rotativo">Cesta Bancária/Juros Rotativo</option>
+        <option value="Prolabore">Prolabore</option>
+        <option value="Outros">Outros</option>
+      </select>
+      <input id="fixoObs" placeholder="Observação (opcional)" class="p-2 border rounded">
+      <input id="fixoValor" type="number" placeholder="Valor (R$)" class="p-2 border rounded">
+      <input id="fixoData" type="date" class="p-2 border rounded">
+    </div>
+    <button class="bg-blue-600 text-white px-4 py-2 rounded">Salvar Despesa</button>
+  </div>
 
-  const totalReceitas = receitas.reduce((t, r) => t + r.valor, 0);
-  const totalCMV = cmv.reduce((t, r) => t + r.valor, 0);
-  const totalFixos = fixos.reduce((t, r) => t + r.valor, 0);
-  const totalMO = mo.reduce((t, r) => t + r.valor, 0);
-  const impostos = (settings.taxRate || 0) / 100 * totalReceitas;
-  const lucroBruto = totalReceitas - totalCMV;
-  const lucroLiquido = lucroBruto - totalFixos - totalMO - impostos;
+  <div id="mo" class="tab-content hidden">
+    <h2 class="text-xl font-bold mb-2">Mão de Obra</h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-2 mb-4">
+      <select id="moDescricao" class="p-2 border rounded">
+        <option value="Salários">Salários</option>
+        <option value="Férias">Férias</option>
+        <option value="Verbas Rescisórias">Verbas Rescisórias</option>
+        <option value="INSS">INSS</option>
+        <option value="FGTS">FGTS</option>
+        <option value="Vale Transporte">Vale Transporte</option>
+        <option value="Vale Alimentação">Vale Alimentação</option>
+        <option value="Uniformes">Uniformes</option>
+        <option value="Exames periódicos">Exames periódicos</option>
+        <option value="Custo Freelancer">Custo Freelancer</option>
+      </select>
+      <input id="moObs" placeholder="Observação (opcional)" class="p-2 border rounded">
+      <input id="moValor" type="number" placeholder="Valor (R$)" class="p-2 border rounded">
+      <input id="moData" type="date" class="p-2 border rounded">
+    </div>
+    <button class="bg-blue-600 text-white px-4 py-2 rounded">Salvar Custo</button>
+  </div>
 
-  return { totalReceitas, totalCMV, totalFixos, totalMO, impostos, lucroLiquido };
-}
-function atualizarGrafico() {
-  const ctx = document.getElementById('graficoDRE').getContext('2d');
-  const { totalReceitas, totalCMV, totalFixos, totalMO, impostos, lucroLiquido } = calcularTotais();
-  const data = [
-    (totalCMV / totalReceitas) * 100,
-    (totalFixos / totalReceitas) * 100,
-    (totalMO / totalReceitas) * 100,
-    (impostos / totalReceitas) * 100,
-    (lucroLiquido / totalReceitas) * 100
-  ];
-  if (window.chartInstance) window.chartInstance.destroy();
-  window.chartInstance = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: ['CMV', 'Fixos', 'Mão de Obra', 'Impostos', 'Lucro Líquido'],
-      datasets: [{
-        label: '% sobre Receita',
-        data,
-        backgroundColor: ['#f87171', '#facc15', '#60a5fa', '#34d399', '#a78bfa']
-      }]
-    },
-    options: {
-      scales: {
-        y: { beginAtZero: true, max: 100 }
-      }
+  <script>
+    function showTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.getElementById(tabId).classList.remove('hidden');
     }
-  });
-}
-function gerarRelatorioPDF() {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
-  const { totalReceitas, totalCMV, totalFixos, totalMO, impostos, lucroLiquido } = calcularTotais();
-  doc.text('Relatório Completo DRE', 14, 20);
-  doc.setFontSize(10);
-  doc.text(`Receita Bruta: ${formatarReal(totalReceitas)}`, 14, 30);
-  doc.text(`CMV: ${formatarReal(totalCMV)}`, 14, 38);
-  doc.text(`Fixos: ${formatarReal(totalFixos)}`, 14, 46);
-  doc.text(`Mão de Obra: ${formatarReal(totalMO)}`, 14, 54);
-  doc.text(`Impostos: ${formatarReal(impostos)}`, 14, 62);
-  doc.text(`Lucro Líquido: ${formatarReal(lucroLiquido)}`, 14, 70);
-  doc.save('relatorio-completo.pdf');
-}
-function gerarResumoDRE() {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
-  const { totalReceitas, totalCMV, totalFixos, totalMO, impostos, lucroLiquido } = calcularTotais();
-  doc.setFontSize(12);
-  doc.text('DRE Resumido', 14, 20);
-  doc.text(`Receita: ${formatarReal(totalReceitas)}`, 14, 30);
-  doc.text(`CMV: ${formatarReal(totalCMV)} (${((totalCMV / totalReceitas) * 100).toFixed(2)}%)`, 14, 38);
-  doc.text(`Fixos: ${formatarReal(totalFixos)} (${((totalFixos / totalReceitas) * 100).toFixed(2)}%)`, 14, 46);
-  doc.text(`Mão de Obra: ${formatarReal(totalMO)} (${((totalMO / totalReceitas) * 100).toFixed(2)}%)`, 14, 54);
-  doc.text(`Impostos: ${formatarReal(impostos)} (${((impostos / totalReceitas) * 100).toFixed(2)}%)`, 14, 62);
-  doc.text(`Lucro Líquido: ${formatarReal(lucroLiquido)} (${((lucroLiquido / totalReceitas) * 100).toFixed(2)}%)`, 14, 70);
-  doc.save('dre-resumido.pdf');
-}
-['tipoRelatorio','periodoRelatorio'].forEach(id => document.getElementById(id).addEventListener('change', atualizarGrafico));
-</script>
+    function saveSettings() {
+      const settings = {
+        companyName: document.getElementById('companyName').value,
+        companyCnpj: document.getElementById('companyCnpj').value,
+        taxRegime: document.getElementById('taxRegime').value,
+        taxRate: parseFloat(document.getElementById('taxRate').value) || 0,
+        taxCredit: parseFloat(document.getElementById('taxCredit').value) || 0,
+        taxDebit: parseFloat(document.getElementById('taxDebit').value) || 0,
+        taxDelivery: parseFloat(document.getElementById('taxDelivery').value) || 0
+      };
+      localStorage.setItem('settings', JSON.stringify(settings));
+      alert('Configurações salvas!');
+    }
+  </script>
 </body>
 </html>

@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gestão DRE - CORRETAGESTAO02</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body class="bg-gray-100 p-4">
   <div id="intro" class="w-full h-screen bg-gray-800 bg-opacity-80 absolute top-0 left-0 flex flex-col justify-center items-center text-white z-50">
@@ -41,6 +42,15 @@
       <input id="taxDelivery" class="p-2 border rounded" placeholder="Taxa Delivery (%)" type="number">
     </div>
     <button onclick="saveSettings()" class="bg-green-600 text-white px-4 py-2 rounded">Salvar Calibração</button>
+  </div>
+
+  <div id="relatorio" class="tab-content hidden">
+    <h2 class="text-xl font-bold mb-2">Relatórios</h2>
+    <select id="reportType" class="p-2 border rounded mb-4">
+      <option value="mensal">Relatório Mensal</option>
+      <option value="anual">Relatório Anual</option>
+    </select>
+    <button onclick="gerarRelatorioPDF()" class="bg-green-700 text-white px-4 py-2 rounded">Gerar PDF</button>
   </div>
 
   <script>
@@ -80,6 +90,14 @@
       };
       localStorage.setItem('settings', JSON.stringify(settings));
       alert('Configurações salvas!');
+    }
+
+    function gerarRelatorioPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      doc.text("Relatório Financeiro - Simples", 10, 10);
+      doc.text("Em breve: dados de lançamentos, somatórios, impostos e lucro", 10, 20);
+      doc.save("relatorio_mensal.pdf");
     }
 
     window.onload = () => {

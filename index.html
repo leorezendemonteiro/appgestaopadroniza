@@ -24,20 +24,42 @@
         .tab-content-active {
             display: block;
         }
-        /* Estilos para impressão do PDF */
-        @media print {
-            body * {
-                visibility: hidden;
-            }
-            #report-to-print, #report-to-print * {
-                visibility: visible;
-            }
-            #report-to-print {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-            }
+        /* Estilos para a área de impressão do PDF */
+        #pdf-detailed-content {
+            font-family: Arial, sans-serif;
+            color: #333;
+        }
+        .pdf-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 2px solid #ccc;
+            padding-bottom: 1rem;
+            margin-bottom: 1rem;
+        }
+        .pdf-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+            font-size: 9pt;
+        }
+        .pdf-table th, .pdf-table td {
+            border: 1px solid #ddd;
+            padding: 6px;
+            text-align: left;
+        }
+        .pdf-table th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        .pdf-summary-table {
+            width: 100%;
+            margin-top: 1rem;
+            font-size: 10pt;
+        }
+         .pdf-summary-table td {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
         }
     </style>
 </head>
@@ -77,7 +99,7 @@
                 <div class="flex space-x-1 sm:space-x-2 overflow-x-auto -mb-px">
                     <button data-tab="calibracao" class="tab-button tab-active whitespace-nowrap py-4 px-3 sm:px-4 border-b-2 font-medium text-sm">Calibração</button>
                     <button data-tab="receitas" class="tab-button whitespace-nowrap py-4 px-3 sm:px-4 border-b-2 font-medium text-sm">Receitas</button>
-                    <button data-tab="despesas-variaveis" class="tab-button whitespace-nowrap py-4 px-3 sm:px-4 border-b-2 font-medium text-sm">Desp. Variáveis</button>
+                    <button data-tab="despesas-variaveis" class="tab-button whitespace-nowrap py-4 px-3 sm:px-4 border-b-2 font-medium text-sm">Consumo</button>
                     <button data-tab="despesas-fixas" class="tab-button whitespace-nowrap py-4 px-3 sm:px-4 border-b-2 font-medium text-sm">Desp. Fixas</button>
                     <button data-tab="mao-de-obra" class="tab-button whitespace-nowrap py-4 px-3 sm:px-4 border-b-2 font-medium text-sm">Mão de Obra</button>
                     <button data-tab="relatorio" class="tab-button whitespace-nowrap py-4 px-3 sm:px-4 border-b-2 font-medium text-sm">Relatório</button>
@@ -164,10 +186,10 @@
                 </div>
             </div>
             
-            <!-- Conteúdo da Aba Despesas Variáveis -->
+            <!-- Conteúdo da Aba Consumo (Despesas Variáveis) -->
             <div id="tab-despesas-variaveis" class="tab-content">
                  <div class="bg-white p-6 rounded-xl shadow-lg">
-                    <h2 class="text-xl font-bold mb-4">Adicionar Despesa Variável (CMV)</h2>
+                    <h2 class="text-xl font-bold mb-4">Adicionar Lançamento de Consumo</h2>
                     <form id="despesas-variaveis-form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                          <div>
                             <label for="dv-categoria" class="text-sm font-medium">Categoria</label>
@@ -197,12 +219,12 @@
                             <input type="text" id="dv-fornecedor" name="fornecedor" placeholder="Ex: Casa de Carnes ABC" class="w-full p-2 border rounded-lg">
                         </div>
                         <div class="md:col-span-2">
-                            <button type="submit" class="w-full mt-2 bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700">Salvar Despesa Variável</button>
+                            <button type="submit" class="w-full mt-2 bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700">Salvar Lançamento</button>
                         </div>
                     </form>
                 </div>
                 <div id="despesas-variaveis-list" class="mt-6 bg-white p-6 rounded-xl shadow-lg">
-                    <h3 class="text-lg font-bold mb-4">Despesas Variáveis Salvas</h3>
+                    <h3 class="text-lg font-bold mb-4">Lançamentos de Consumo Salvos</h3>
                      <div class="overflow-x-auto">
                         <!-- Lista será inserida aqui -->
                     </div>
@@ -324,36 +346,76 @@
                     </div>
                 </div>
 
+                <!-- Container para o relatório visível na tela -->
                 <div id="report-output" class="mt-6 bg-white p-6 rounded-xl shadow-lg hidden">
-                    <div id="report-to-print">
+                    <!-- Este será o resumo visível na tela -->
+                    <div id="report-summary-view">
                         <div class="flex justify-between items-start mb-6 border-b pb-4">
                             <div>
-                                <h3 id="report-company-name" class="text-2xl font-bold">Nome da Empresa</h3>
-                                <p id="report-company-cnpj" class="text-slate-600">CNPJ</p>
+                                <h3 id="report-company-name-view" class="text-2xl font-bold">Nome da Empresa</h3>
+                                <p id="report-company-cnpj-view" class="text-slate-600">CNPJ</p>
                             </div>
                             <div class="text-right">
                                 <h4 class="font-bold">Relatório DRE</h4>
-                                <p id="report-period" class="text-slate-600">Período</p>
-                                <p id="report-date" class="text-sm text-slate-500">Gerado em: DD/MM/AAAA</p>
+                                <p id="report-period-view" class="text-slate-600">Período</p>
+                                <p id="report-date-view" class="text-sm text-slate-500">Gerado em: DD/MM/AAAA</p>
                             </div>
                         </div>
                         <div class="space-y-3">
-                            <div class="flex justify-between p-2 rounded-lg bg-slate-50"><span>(+) Receita Bruta Total</span> <span id="report-receita-total" class="font-bold">R$ 0,00</span></div>
-                            <div class="flex justify-between p-2 rounded-lg bg-slate-50"><span>(-) Custo da Mercadoria Vendida (CMV)</span> <span id="report-cmv" class="font-bold text-red-600">R$ 0,00</span></div>
-                            <div class="flex justify-between p-3 rounded-lg bg-slate-200 text-lg"><strong>(=) Lucro Bruto</strong> <strong id="report-lucro-bruto" class="font-bold">R$ 0,00</strong></div>
-                            <div class="flex justify-between p-2 rounded-lg bg-slate-50"><span>(-) Despesas Fixas</span> <span id="report-despesas-fixas" class="font-bold text-red-600">R$ 0,00</span></div>
-                            <div class="flex justify-between p-2 rounded-lg bg-slate-50"><span>(-) Mão de Obra</span> <span id="report-mao-de-obra" class="font-bold text-red-600">R$ 0,00</span></div>
-                             <div class="flex justify-between p-2 rounded-lg bg-slate-50"><span>(-) Impostos e Taxas</span> <span id="report-impostos-taxas" class="font-bold text-red-600">R$ 0,00</span></div>
-                            <div class="flex justify-between p-4 rounded-lg bg-blue-100 text-xl"><strong>(=) Lucro Líquido</strong> <strong id="report-lucro-liquido" class="font-bold text-blue-800">R$ 0,00</strong></div>
-                            <div class="flex justify-between p-3 rounded-lg bg-green-100 text-lg"><strong>Margem de Lucro</strong> <strong id="report-margem" class="font-bold text-green-800">0.00%</strong></div>
+                            <div class="flex justify-between p-2 rounded-lg bg-slate-50">
+                                <span>(+) Receita Bruta Total</span> 
+                                <span id="report-receita-total" class="font-bold">R$ 0,00</span>
+                            </div>
+                            <div class="flex justify-between p-2 rounded-lg bg-slate-50">
+                                <span>(-) Consumo</span>
+                                <div>
+                                    <span id="report-consumo" class="font-bold text-red-600">R$ 0,00</span>
+                                    <span id="report-consumo-perc" class="text-sm text-slate-500 ml-2">(0.00%)</span>
+                                </div>
+                            </div>
+                            <div class="flex justify-between p-3 rounded-lg bg-slate-200 text-lg">
+                                <strong>(=) Lucro Bruto</strong> 
+                                <strong id="report-lucro-bruto" class="font-bold">R$ 0,00</strong>
+                            </div>
+                            <div class="flex justify-between p-2 rounded-lg bg-slate-50">
+                                <span>(-) Despesas Fixas</span> 
+                                <div>
+                                    <span id="report-despesas-fixas" class="font-bold text-red-600">R$ 0,00</span>
+                                    <span id="report-despesas-fixas-perc" class="text-sm text-slate-500 ml-2">(0.00%)</span>
+                                </div>
+                            </div>
+                            <div class="flex justify-between p-2 rounded-lg bg-slate-50">
+                                <span>(-) Mão de Obra</span> 
+                                <div>
+                                    <span id="report-mao-de-obra" class="font-bold text-red-600">R$ 0,00</span>
+                                    <span id="report-mao-de-obra-perc" class="text-sm text-slate-500 ml-2">(0.00%)</span>
+                                </div>
+                            </div>
+                             <div class="flex justify-between p-2 rounded-lg bg-slate-50">
+                                <span>(-) Impostos e Taxas</span> 
+                                <div>
+                                    <span id="report-impostos-taxas" class="font-bold text-red-600">R$ 0,00</span>
+                                    <span id="report-impostos-taxas-perc" class="text-sm text-slate-500 ml-2">(0.00%)</span>
+                                </div>
+                            </div>
+                            <div class="flex justify-between p-4 rounded-lg bg-blue-100 text-xl">
+                                <strong>(=) Lucro Líquido</strong> 
+                                <div>
+                                    <strong id="report-lucro-liquido" class="font-bold text-blue-800">R$ 0,00</strong>
+                                    <strong id="report-lucro-liquido-perc" class="text-sm text-blue-700 ml-2">(0.00%)</strong>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <button id="export-pdf-btn" class="w-full mt-6 bg-green-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-green-700">Exportar como PDF</button>
+                    <button id="export-pdf-btn" class="w-full mt-6 bg-green-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-green-700">Exportar Relatório Detalhado (PDF)</button>
                 </div>
             </div>
-
         </main>
     </div>
+
+    <!-- Container oculto para gerar o conteúdo detalhado do PDF -->
+    <div id="pdf-detailed-content" class="hidden" style="position: absolute; left: -9999px; width: 800px; background: white; padding: 20px;"></div>
+
 
     <!-- Modal de confirmação -->
     <div id="confirmation-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
@@ -399,8 +461,6 @@
         // ===================================================================
         // 2. FUNÇÕES DE INICIALIZAÇÃO E ESTADO
         // ===================================================================
-
-        // Carrega todos os dados do localStorage
         function loadState() {
             appState.companyInfo = JSON.parse(localStorage.getItem(STORAGE_KEYS.COMPANY));
             appState.calibration = JSON.parse(localStorage.getItem(STORAGE_KEYS.CALIBRATION)) || {};
@@ -410,34 +470,26 @@
             appState.maoDeObra = JSON.parse(localStorage.getItem(STORAGE_KEYS.MO)) || [];
         }
         
-        // Salva uma parte específica do estado no localStorage
         function saveState(key, data) {
             localStorage.setItem(key, JSON.stringify(data));
         }
         
-        // Função principal de inicialização
         function init() {
             loadState();
-
             if (appState.companyInfo && appState.companyInfo.name && appState.companyInfo.cnpj) {
                 showMainApp();
             } else {
                 showWelcomeScreen();
             }
-            
-            // Renderiza as listas e preenche formulários
             renderAllLists();
             populateCalibrationForm();
             setupReportSelectors();
-
-            // Adiciona todos os Event Listeners
             addEventListeners();
         }
 
         // ===================================================================
         // 3. FUNÇÕES DE RENDERIZAÇÃO E UI
         // ===================================================================
-
         function showWelcomeScreen() {
             welcomeScreen.style.display = 'flex';
             mainApp.style.display = 'none';
@@ -451,18 +503,12 @@
         }
 
         function switchTab(tabName) {
-            tabContents.forEach(content => {
-                content.classList.remove('tab-content-active');
-            });
-            tabButtons.forEach(button => {
-                button.classList.remove('tab-active');
-            });
-
+            tabContents.forEach(content => content.classList.remove('tab-content-active'));
+            tabButtons.forEach(button => button.classList.remove('tab-active'));
             document.getElementById(`tab-${tabName}`).classList.add('tab-content-active');
             document.querySelector(`[data-tab="${tabName}"]`).classList.add('tab-active');
         }
 
-        // Função genérica para renderizar listas
         function renderList(containerId, items, columns) {
             const container = document.querySelector(`#${containerId} > div`);
             if (!container) return;
@@ -513,11 +559,14 @@
 
         function formatDate(dateString) {
             if (!dateString) return 'N/A';
-            // Adicionado tratamento para evitar erro com new Date() e timezones
             const dateParts = dateString.split('-');
-            if(dateParts.length !== 3) return dateString; // Retorna o original se não for YYYY-MM-DD
+            if(dateParts.length !== 3) return dateString;
             const [year, month, day] = dateParts;
             return `${day}/${month}/${year}`;
+        }
+        
+        function formatPercentage(value) {
+            return `(${(value || 0).toFixed(2)}%)`;
         }
 
         function renderAllLists() {
@@ -594,17 +643,8 @@
             const confirmBtn = document.getElementById('confirm-delete-btn');
             const cancelBtn = document.getElementById('cancel-delete-btn');
 
-            const confirmHandler = () => {
-                onConfirm();
-                hideModal();
-                cleanup();
-            };
-
-            const cancelHandler = () => {
-                hideModal();
-                cleanup();
-            };
-            
+            const confirmHandler = () => { onConfirm(); hideModal(); cleanup(); };
+            const cancelHandler = () => { hideModal(); cleanup(); };
             const hideModal = () => modal.classList.add('hidden');
             const cleanup = () => {
                 confirmBtn.removeEventListener('click', confirmHandler);
@@ -619,44 +659,26 @@
             const onConfirm = () => {
                 let stateKey;
                 switch (type) {
-                    case 'receitas':
-                        appState.receitas = appState.receitas.filter(item => item.id !== parseInt(id));
-                        stateKey = STORAGE_KEYS.RECEITAS;
-                        saveState(stateKey, appState.receitas);
-                        break;
-                    case 'despesas-variaveis':
-                        appState.despesasVariaveis = appState.despesasVariaveis.filter(item => item.id !== parseInt(id));
-                        stateKey = STORAGE_KEYS.DV;
-                        saveState(stateKey, appState.despesasVariaveis);
-                        break;
-                    case 'despesas-fixas':
-                        appState.despesasFixas = appState.despesasFixas.filter(item => item.id !== parseInt(id));
-                        stateKey = STORAGE_KEYS.DF;
-                        saveState(stateKey, appState.despesasFixas);
-                        break;
-                    case 'mao-de-obra':
-                        appState.maoDeObra = appState.maoDeObra.filter(item => item.id !== parseInt(id));
-                        stateKey = STORAGE_KEYS.MO;
-                        saveState(stateKey, appState.maoDeObra);
-                        break;
-                    default:
-                        console.error('Tipo de exclusão desconhecido:', type);
-                        return;
+                    case 'receitas': appState.receitas = appState.receitas.filter(item => item.id !== parseInt(id)); stateKey = STORAGE_KEYS.RECEITAS; break;
+                    case 'despesas-variaveis': appState.despesasVariaveis = appState.despesasVariaveis.filter(item => item.id !== parseInt(id)); stateKey = STORAGE_KEYS.DV; break;
+                    case 'despesas-fixas': appState.despesasFixas = appState.despesasFixas.filter(item => item.id !== parseInt(id)); stateKey = STORAGE_KEYS.DF; break;
+                    case 'mao-de-obra': appState.maoDeObra = appState.maoDeObra.filter(item => item.id !== parseInt(id)); stateKey = STORAGE_KEYS.MO; break;
+                    default: console.error('Tipo de exclusão desconhecido:', type); return;
                 }
+                saveState(stateKey, appState[type.replace(/-/g, '_') === 'despesas_variaveis' ? 'despesasVariaveis' : type.replace(/-/g, '_')]);
                 renderAllLists();
             };
-
             showConfirmationModal('Tem certeza que deseja excluir este item?', onConfirm);
         }
 
         // ===================================================================
-        // 5. LÓGICA DO RELATÓRIO
+        // 5. LÓGICA DO RELATÓRIO E PDF
         // ===================================================================
+        
         function generateReport() {
             const type = document.getElementById('report-type').value;
             let startDate, endDate, periodText;
             
-            // Adicionado para evitar erro com fuso horário
             const toUTCDate = (dateString) => {
                 const date = new Date(dateString);
                 return new Date(date.valueOf() + date.getTimezoneOffset() * 60 * 1000);
@@ -683,131 +705,216 @@
             };
 
             const receitasFiltradas = appState.receitas.filter(filterByDate);
-            const dvFiltrados = appState.despesasVariaveis.filter(filterByDate);
+            const consumoFiltrado = appState.despesasVariaveis.filter(filterByDate);
             const dfFiltrados = appState.despesasFixas.filter(filterByDate);
             const moFiltrados = appState.maoDeObra.filter(filterByDate);
             
             const totalReceitas = receitasFiltradas.reduce((sum, item) => sum + parseFloat(item.valor || 0), 0);
-            const totalCMV = dvFiltrados.reduce((sum, item) => sum + parseFloat(item.valor || 0), 0);
+            const totalConsumo = consumoFiltrado.reduce((sum, item) => sum + parseFloat(item.valor || 0), 0);
             const totalDF = dfFiltrados.reduce((sum, item) => sum + parseFloat(item.valor || 0), 0);
             const totalMO = moFiltrados.reduce((sum, item) => sum + parseFloat(item.valor || 0), 0);
-            const lucroBruto = totalReceitas - totalCMV;
-
-            // Cálculo de Impostos e Taxas
+            
             const cal = appState.calibration;
-            let totalImpostosTaxas = (totalReceitas * (parseFloat(cal.imposto_faturamento) || 0)) / 100;
-            totalImpostosTaxas += (totalReceitas * (parseFloat(cal.encargos_diversos) || 0)) / 100;
-            
             const receitasPorTipo = receitasFiltradas.reduce((acc, item) => {
-                acc[item.tipo] = (acc[item.tipo] || 0) + parseFloat(item.valor || 0);
-                return acc;
+                acc[item.tipo] = (acc[item.tipo] || 0) + parseFloat(item.valor || 0); return acc;
             }, {});
-
-            totalImpostosTaxas += (receitasPorTipo['Crédito'] || 0) * (parseFloat(cal.taxa_credito) || 0) / 100;
-            totalImpostosTaxas += (receitasPorTipo['Débito'] || 0) * (parseFloat(cal.taxa_debito) || 0) / 100;
-            totalImpostosTaxas += (receitasPorTipo['iFood'] || 0) * (parseFloat(cal.comissao_ifood) || 0) / 100;
-            totalImpostosTaxas += (receitasPorTipo['99'] || 0) * (parseFloat(cal.comissao_99) || 0) / 100;
-
-            const lucroLiquido = lucroBruto - totalDF - totalMO - totalImpostosTaxas;
-            const margem = totalReceitas > 0 ? (lucroLiquido / totalReceitas) * 100 : 0;
             
-            // Atualizar UI
+            const impostoFaturamentoValor = (totalReceitas * (parseFloat(cal.imposto_faturamento) || 0)) / 100;
+            const encargosDiversosValor = (totalReceitas * (parseFloat(cal.encargos_diversos) || 0)) / 100;
+            const taxaDebitoValor = (receitasPorTipo['Débito'] || 0) * (parseFloat(cal.taxa_debito) || 0) / 100;
+            const taxaCreditoValor = (receitasPorTipo['Crédito'] || 0) * (parseFloat(cal.taxa_credito) || 0) / 100;
+            const comissaoIfoodValor = (receitasPorTipo['iFood'] || 0) * (parseFloat(cal.comissao_ifood) || 0) / 100;
+            const comissao99Valor = (receitasPorTipo['99'] || 0) * (parseFloat(cal.comissao_99) || 0) / 100;
+
+            const totalImpostosTaxas = impostoFaturamentoValor + encargosDiversosValor + taxaDebitoValor + taxaCreditoValor + comissaoIfoodValor + comissao99Valor;
+            const taxDetails = { impostoFaturamentoValor, encargosDiversosValor, taxaDebitoValor, taxaCreditoValor, comissaoIfoodValor, comissao99Valor };
+
+            const lucroBruto = totalReceitas - totalConsumo;
+            const lucroLiquido = lucroBruto - totalDF - totalMO - totalImpostosTaxas;
+            
+            const perc = (value) => totalReceitas > 0 ? (value / totalReceitas) * 100 : 0;
+            const consumoPerc = perc(totalConsumo);
+            const dfPerc = perc(totalDF);
+            const moPerc = perc(totalMO);
+            const impostosPerc = perc(totalImpostosTaxas);
+            const liquidoPerc = perc(lucroLiquido);
+            
+            // Atualizar UI visível
             document.getElementById('report-receita-total').textContent = formatCurrency(totalReceitas);
-            document.getElementById('report-cmv').textContent = formatCurrency(totalCMV);
+            document.getElementById('report-consumo').textContent = formatCurrency(totalConsumo);
+            document.getElementById('report-consumo-perc').textContent = formatPercentage(consumoPerc);
             document.getElementById('report-lucro-bruto').textContent = formatCurrency(lucroBruto);
             document.getElementById('report-despesas-fixas').textContent = formatCurrency(totalDF);
+            document.getElementById('report-despesas-fixas-perc').textContent = formatPercentage(dfPerc);
             document.getElementById('report-mao-de-obra').textContent = formatCurrency(totalMO);
+            document.getElementById('report-mao-de-obra-perc').textContent = formatPercentage(moPerc);
             document.getElementById('report-impostos-taxas').textContent = formatCurrency(totalImpostosTaxas);
+            document.getElementById('report-impostos-taxas-perc').textContent = formatPercentage(impostosPerc);
             document.getElementById('report-lucro-liquido').textContent = formatCurrency(lucroLiquido);
-            document.getElementById('report-margem').textContent = margem.toFixed(2) + '%';
+            document.getElementById('report-lucro-liquido-perc').textContent = formatPercentage(liquidoPerc);
             
-            document.getElementById('report-company-name').textContent = appState.companyInfo.name;
-            document.getElementById('report-company-cnpj').textContent = `CNPJ: ${appState.companyInfo.cnpj}`;
-            document.getElementById('report-period').textContent = `Período: ${periodText}`;
-            document.getElementById('report-date').textContent = `Gerado em: ${new Date().toLocaleDateString('pt-BR')}`;
+            document.getElementById('report-company-name-view').textContent = appState.companyInfo.name;
+            document.getElementById('report-company-cnpj-view').textContent = `CNPJ: ${appState.companyInfo.cnpj}`;
+            document.getElementById('report-period-view').textContent = `Período: ${periodText}`;
+            document.getElementById('report-date-view').textContent = `Gerado em: ${new Date().toLocaleDateString('pt-BR')}`;
             
+            // Gerar conteúdo detalhado para o PDF
+            generatePdfContent(periodText, { totalReceitas, totalConsumo, lucroBruto, totalDF, totalMO, totalImpostosTaxas, lucroLiquido }, { consumoPerc, dfPerc, moPerc, impostosPerc, liquidoPerc }, { receitasFiltradas, consumoFiltrado, dfFiltrados, moFiltrados }, taxDetails);
+
             document.getElementById('report-output').classList.remove('hidden');
         }
 
-        async function exportPDF() {
-            const reportElement = document.getElementById('report-to-print');
-            const { jsPDF } = window.jspdf;
+        function generatePdfContent(periodText, totals, percentages, lists, taxDetails) {
+            const { companyInfo, calibration } = appState;
+            const detailContainer = document.getElementById('pdf-detailed-content');
+            const perc = (value) => totals.totalReceitas > 0 ? (value / totals.totalReceitas * 100).toFixed(2) + '%' : '0.00%';
 
-            const canvas = await html2canvas(reportElement, { scale: 2, useCORS: true });
+            const createDetailTable = (title, items, columns) => {
+                if (items.length === 0) return '';
+                let rows = items.map(item => `
+                    <tr>
+                        ${columns.map(col => `<td>${col.render(item)}</td>`).join('')}
+                    </tr>
+                `).join('');
+                return `
+                    <h3 style="font-size: 12pt; font-weight: bold; margin-top: 20px; border-bottom: 1px solid #ccc; padding-bottom: 5px;">${title}</h3>
+                    <table class="pdf-table">
+                        <thead>
+                            <tr>${columns.map(c => `<th>${c.header}</th>`).join('')}</tr>
+                        </thead>
+                        <tbody>${rows}</tbody>
+                    </table>`;
+            };
+            
+            const createTaxDetailTable = () => {
+                 return `
+                    <h3 style="font-size: 12pt; font-weight: bold; margin-top: 20px; border-bottom: 1px solid #ccc; padding-bottom: 5px;">Detalhamento de Impostos e Taxas</h3>
+                    <table class="pdf-table">
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>Calibragem (%)</th>
+                                <th>Valor Calculado (R$)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Imposto sobre Faturamento</td><td>${calibration.imposto_faturamento || 0}%</td><td>${formatCurrency(taxDetails.impostoFaturamentoValor)}</td></tr>
+                            <tr><td>Taxa de Débito</td><td>${calibration.taxa_debito || 0}%</td><td>${formatCurrency(taxDetails.taxaDebitoValor)}</td></tr>
+                            <tr><td>Taxa de Crédito</td><td>${calibration.taxa_credito || 0}%</td><td>${formatCurrency(taxDetails.taxaCreditoValor)}</td></tr>
+                            <tr><td>Comissão iFood</td><td>${calibration.comissao_ifood || 0}%</td><td>${formatCurrency(taxDetails.comissaoIfoodValor)}</td></tr>
+                            <tr><td>Comissão 99</td><td>${calibration.comissao_99 || 0}%</td><td>${formatCurrency(taxDetails.comissao99Valor)}</td></tr>
+                            <tr><td>Encargos Diversos</td><td>${calibration.encargos_diversos || 0}%</td><td>${formatCurrency(taxDetails.encargosDiversosValor)}</td></tr>
+                            <tr style="font-weight: bold; background-color: #f2f2f2;"><td>Total</td><td></td><td>${formatCurrency(totals.totalImpostosTaxas)}</td></tr>
+                        </tbody>
+                    </table>
+                `;
+            };
+
+            const receitaCols = [ { header: 'Data', render: item => formatDate(item.data) }, { header: 'Descrição', render: item => item.descricao || 'N/A' }, { header: 'Tipo', render: item => item.tipo }, { header: 'Valor', render: item => formatCurrency(item.valor) }];
+            const despesaCols = [ { header: 'Data', render: item => formatDate(item.data) }, { header: 'Categoria', render: item => item.categoria }, { header: 'Descrição', render: item => item.descricao || 'N/A' }, { header: 'Fornecedor', render: item => item.fornecedor || 'N/A' }, { header: 'Valor', render: item => formatCurrency(item.valor) }, { header: 'Part. (%)', render: item => perc(item.valor) } ];
+            
+            detailContainer.innerHTML = `
+                <div class="pdf-header">
+                    <div>
+                        <h2 style="font-size: 16pt; font-weight: bold;">${companyInfo.name}</h2>
+                        <p>CNPJ: ${companyInfo.cnpj}</p>
+                    </div>
+                    <div style="text-align: right;">
+                        <h3 style="font-size: 12pt; font-weight: bold;">Demonstração do Resultado (DRE)</h3>
+                        <p>Período: ${periodText}</p>
+                        <p style="font-size: 8pt;">Gerado em: ${new Date().toLocaleDateString('pt-BR')}</p>
+                    </div>
+                </div>
+
+                <h3 style="font-size: 12pt; font-weight: bold; margin-top: 20px;">Resumo Financeiro</h3>
+                <table class="pdf-summary-table">
+                    <tbody>
+                        <tr><td>(+) Receita Bruta Total</td><td style="text-align: right; font-weight: bold;">${formatCurrency(totals.totalReceitas)}</td><td style="text-align: right; width: 80px;">100.00%</td></tr>
+                        <tr><td>(-) Consumo</td><td style="text-align: right; font-weight: bold;">${formatCurrency(totals.totalConsumo)}</td><td style="text-align: right;">${formatPercentage(percentages.consumoPerc)}</td></tr>
+                        <tr style="background-color: #f2f2f2;"><td>(=) Lucro Bruto</td><td style="text-align: right; font-weight: bold;">${formatCurrency(totals.lucroBruto)}</td><td></td></tr>
+                        <tr><td>(-) Despesas Fixas</td><td style="text-align: right; font-weight: bold;">${formatCurrency(totals.totalDF)}</td><td style="text-align: right;">${formatPercentage(percentages.dfPerc)}</td></tr>
+                        <tr><td>(-) Mão de Obra</td><td style="text-align: right; font-weight: bold;">${formatCurrency(totals.totalMO)}</td><td style="text-align: right;">${formatPercentage(percentages.moPerc)}</td></tr>
+                        <tr><td>(-) Impostos e Taxas</td><td style="text-align: right; font-weight: bold;">${formatCurrency(totals.totalImpostosTaxas)}</td><td style="text-align: right;">${formatPercentage(percentages.impostosPerc)}</td></tr>
+                        <tr style="background-color: #e6f7ff;"><td>(=) Lucro Líquido</td><td style="text-align: right; font-weight: bold; font-size: 11pt;">${formatCurrency(totals.lucroLiquido)}</td><td style="text-align: right; font-weight: bold;">${formatPercentage(percentages.liquidoPerc)}</td></tr>
+                    </tbody>
+                </table>
+                
+                ${createDetailTable('Detalhes das Receitas', lists.receitasFiltradas, receitaCols)}
+                ${createDetailTable('Detalhes de Consumo', lists.consumoFiltrado, despesaCols)}
+                ${createDetailTable('Detalhes das Despesas Fixas', lists.dfFiltrados, despesaCols)}
+                ${createDetailTable('Detalhes de Mão de Obra', lists.moFiltrados, despesaCols)}
+                ${createTaxDetailTable()}
+            `;
+        }
+
+        async function exportPDF() {
+            const reportElement = document.getElementById('pdf-detailed-content');
+            if (!reportElement) return;
+            reportElement.classList.remove('hidden');
+
+            const { jsPDF } = window.jspdf;
+            const canvas = await html2canvas(reportElement, { scale: 2, useCORS: true, windowWidth: reportElement.scrollWidth, windowHeight: reportElement.scrollHeight });
+            
+            reportElement.classList.add('hidden');
             
             const imgData = canvas.toDataURL('image/png');
             const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
             
-            const pdfWidth = pdf.internal.pageSize.getWidth();
-            const imgProps= pdf.getImageProperties(imgData);
-            const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+            const imgWidth = 210; // A4 width in mm
+            const pageHeight = 295; // A4 height in mm
+            const imgHeight = canvas.height * imgWidth / canvas.width;
+            let heightLeft = imgHeight;
+            let position = 0;
+
+            pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+            heightLeft -= pageHeight;
+
+            while (heightLeft >= 0) {
+              position = heightLeft - imgHeight;
+              pdf.addPage();
+              pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+              heightLeft -= pageHeight;
+            }
             
-            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-            pdf.save(`DRE_${appState.companyInfo.name.replace(/ /g, '_')}_${new Date().toISOString().slice(0, 10)}.pdf`);
+            pdf.save(`DRE_Detalhado_${appState.companyInfo.name.replace(/ /g, '_')}_${new Date().toISOString().slice(0, 10)}.pdf`);
         }
         
         // ===================================================================
         // 6. EVENT LISTENERS
         // ===================================================================
-
         function addEventListeners() {
-            // Tela de Boas-vindas
             companyForm.addEventListener('submit', (e) => {
                 e.preventDefault();
                 const name = document.getElementById('company-name').value;
                 const cnpj = document.getElementById('company-cnpj').value;
-                if(name && cnpj) {
-                    appState.companyInfo = { name, cnpj };
-                    saveState(STORAGE_KEYS.COMPANY, appState.companyInfo);
-                    showMainApp();
-                }
+                if(name && cnpj) { appState.companyInfo = { name, cnpj }; saveState(STORAGE_KEYS.COMPANY, appState.companyInfo); showMainApp(); }
             });
 
-            // Logout
             logoutButton.addEventListener('click', () => {
-                showConfirmationModal('Tem certeza que deseja sair?', () => {
-                     localStorage.removeItem(STORAGE_KEYS.COMPANY);
-                     window.location.reload();
-                });
+                showConfirmationModal('Tem certeza que deseja sair?', () => { localStorage.removeItem(STORAGE_KEYS.COMPANY); window.location.reload(); });
             });
 
-            // Navegação por Abas
-            tabButtons.forEach(button => {
-                button.addEventListener('click', () => {
-                    switchTab(button.dataset.tab);
-                });
-            });
+            tabButtons.forEach(button => button.addEventListener('click', () => switchTab(button.dataset.tab)));
 
-            // Formulário de Calibração
             document.getElementById('calibration-form').addEventListener('submit', (e) => {
                 e.preventDefault();
-                const form = e.target;
-                const formData = new FormData(form);
+                const formData = new FormData(e.target);
                 const newCalibration = {};
-                for (let [key, value] of formData.entries()) {
-                    newCalibration[key] = value;
-                }
+                for (let [key, value] of formData.entries()) { newCalibration[key] = value; }
                 appState.calibration = newCalibration;
                 saveState(STORAGE_KEYS.CALIBRATION, appState.calibration);
                 alert('Calibração salva com sucesso!');
             });
             
-            // Formulários de Adição
             document.getElementById('receitas-form').addEventListener('submit', (e) => handleFormSubmit(e, 'receitas-form', STORAGE_KEYS.RECEITAS, appState.receitas));
             document.getElementById('despesas-variaveis-form').addEventListener('submit', (e) => handleFormSubmit(e, 'despesas-variaveis-form', STORAGE_KEYS.DV, appState.despesasVariaveis));
             document.getElementById('despesas-fixas-form').addEventListener('submit', (e) => handleFormSubmit(e, 'despesas-fixas-form', STORAGE_KEYS.DF, appState.despesasFixas));
             document.getElementById('mao-de-obra-form').addEventListener('submit', (e) => handleFormSubmit(e, 'mao-de-obra-form', STORAGE_KEYS.MO, appState.maoDeObra));
             
-            // Deleção de itens (usando event delegation)
             mainApp.addEventListener('click', (e) => {
-                if (e.target.classList.contains('delete-btn')) {
-                    const id = e.target.dataset.id;
-                    const type = e.target.dataset.type;
-                    handleDelete(id, type);
-                }
+                if (e.target.classList.contains('delete-btn')) { handleDelete(e.target.dataset.id, e.target.dataset.type); }
             });
 
-            // Lógica do Relatório
             document.getElementById('report-type').addEventListener('change', (e) => {
                 const isMonthly = e.target.value === 'monthly';
                 document.getElementById('month-selector-div').style.display = isMonthly ? 'block' : 'none';

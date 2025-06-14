@@ -9,6 +9,16 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body class="bg-gray-100 p-4">
+  <div id="intro" class="w-full h-screen bg-cover bg-center flex flex-col justify-center items-center text-white" style="background-image: url('https://images.unsplash.com/photo-1581093588401-12f3e59f7a3e?auto=format&fit=crop&w=1470&q=80');">
+    <img src="https://i.postimg.cc/vBvK9KGz/ges.jpg" alt="Logo Padroniza" class="w-32 h-32 mb-6">
+    <div class="bg-white p-6 rounded shadow text-gray-900 w-80">
+      <h1 class="text-xl font-bold mb-4 text-center">Iniciar Gestão DRE</h1>
+      <input id="introCompanyName" placeholder="Razão Social" class="w-full mb-2 p-2 border rounded">
+      <input id="introCompanyCnpj" placeholder="CNPJ" class="w-full mb-4 p-2 border rounded">
+      <button onclick="startApp()" class="w-full bg-green-600 text-white px-4 py-2 rounded">Entrar</button>
+    </div>
+  </div>
+  <div id="mainApp" class="hidden">
   <div class="flex flex-wrap gap-2 mb-4">
     <button class="tab-button bg-blue-200 px-4 py-2 rounded" onclick="showTab('calibracao')">Calibração</button>
     <button class="tab-button bg-blue-200 px-4 py-2 rounded" onclick="showTab('receitas')">Receitas</button>
@@ -50,6 +60,19 @@
   </div>
 
 <script>
+function startApp() {
+  const name = document.getElementById('introCompanyName').value;
+  const cnpj = document.getElementById('introCompanyCnpj').value;
+  if (name && cnpj) {
+    localStorage.setItem('settings', JSON.stringify({ companyName: name, companyCnpj: cnpj }));
+    document.getElementById('intro').classList.add('hidden');
+    document.getElementById('mainApp').classList.remove('hidden');
+    document.getElementById('companyName').value = name;
+    document.getElementById('companyCnpj').value = cnpj;
+  } else {
+    alert('Preencha todos os campos para iniciar.');
+  }
+}
 function showTab(tabId) {
   document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
   document.getElementById(tabId).classList.remove('hidden');

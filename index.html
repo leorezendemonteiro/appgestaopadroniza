@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>CORRETAGESTAO02</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     .input {
       padding: 0.5rem;
@@ -36,7 +35,7 @@
 <body class="bg-gray-100">
   <div id="telaInicial" class="flex flex-col items-center justify-center h-screen p-4">
     <h1 class="text-2xl font-bold mb-4">📊 Padroniza DRE</h1>
-    <form onsubmit="iniciarApp(); return false;" class="w-full max-w-xs">
+    <form id="formInicio" class="w-full max-w-xs">
       <input id="empresaNome" type="text" placeholder="Nome da Empresa" class="mb-2 input" />
       <input id="empresaCNPJ" type="text" placeholder="CNPJ" class="mb-4 input" />
       <button type="submit" class="botao">Iniciar DRE</button>
@@ -56,8 +55,13 @@
   </div>
 
   <script>
-    window.onload = function () {
+    document.addEventListener("DOMContentLoaded", function () {
       const conteudo = document.getElementById("conteudo");
+
+      document.getElementById("formInicio").addEventListener("submit", function (e) {
+        e.preventDefault();
+        iniciarApp();
+      });
 
       window.iniciarApp = function () {
         const nome = document.getElementById("empresaNome").value;
@@ -229,7 +233,7 @@
       function renderRelatorio() {
         conteudo.innerHTML = '<div class="p-4">Relatório completo será implementado a seguir com PDF.</div>';
       }
-    };
+    });
   </script>
 </body>
 </html>

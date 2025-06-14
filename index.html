@@ -46,16 +46,8 @@
   </div>
 
 <!-- ABA RECEITAS -->
-<div id="receitas" class="tab-content hidden">
-  <h2 class="text-xl font-bold mb-2">Receitas</h2>
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-2 mb-4">
-    <select id="receitaDescricao" class="p-2 border rounded">
-      <option value="Cartão de Crédito">Cartão de Crédito</option>
-      <option value="Cartão de Débito">Cartão de Débito</option>
-      <option value="Pix">Pix</option>
-      <option value="Dinheiro">Dinheiro</option>
-      <option value="Delivery/iFood">Delivery/iFood</option>
-    </select> placeholder="Descrição" class="p-2 border rounded">
+
+    <input id="receitaObs" placeholder="Observação (opcional)" class="p-2 border rounded">
     <input id="receitaValor" type="number" placeholder="Valor (R$)" class="p-2 border rounded">
     <input id="receitaData" type="date" class="p-2 border rounded">
   </div>
@@ -63,17 +55,8 @@
 </div>
 
 <!-- ABA CMV -->
-<div id="cmv" class="tab-content hidden">
-  <h2 class="text-xl font-bold mb-2">Custos Variáveis (CMV)</h2>
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-2 mb-4">
-    <select id="cmvDescricao" class="p-2 border rounded">
-      <option value="Consumo alimentar">Consumo alimentar</option>
-      <option value="Bebidas e similares">Bebidas e similares</option>
-      <option value="Produtos de Limpeza e higiene">Produtos de Limpeza e higiene</option>
-      <option value="Papelaria e Escritório">Papelaria e Escritório</option>
-      <option value="Gás">Gás</option>
-      <option value="Outros">Outros</option>
-    </select> placeholder="Descrição" class="p-2 border rounded">
+
+    <input id="cmvObs" placeholder="Observação (opcional)" class="p-2 border rounded"> placeholder="Descrição" class="p-2 border rounded">
     <input id="cmvValor" type="number" placeholder="Valor (R$)" class="p-2 border rounded">
     <input id="cmvData" type="date" class="p-2 border rounded">
   </div>
@@ -81,23 +64,8 @@
 </div>
 
 <!-- ABA FIXOS -->
-<div id="fixos" class="tab-content hidden">
-  <h2 class="text-xl font-bold mb-2">Despesas Fixas</h2>
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-2 mb-4">
-    <select id="fixoDescricao" class="p-2 border rounded">
-      <option value="Aluguel">Aluguel</option>
-      <option value="IPTU">IPTU</option>
-      <option value="Água">Água</option>
-      <option value="Energia Elétrica">Energia Elétrica</option>
-      <option value="Internet/Telefone">Internet/Telefone</option>
-      <option value="Software">Software</option>
-      <option value="Contabilidade">Contabilidade</option>
-      <option value="Parcelas Financiamentos">Parcelas Financiamentos</option>
-      <option value="Manutenção">Manutenção</option>
-      <option value="Cesta Bancária/Juros Rotativo">Cesta Bancária/Juros Rotativo</option>
-      <option value="Prolabore">Prolabore</option>
-      <option value="Outros">Outros</option>
-    </select> placeholder="Descrição" class="p-2 border rounded">
+
+    <input id="fixoObs" placeholder="Observação (opcional)" class="p-2 border rounded"> placeholder="Descrição" class="p-2 border rounded">
     <input id="fixoValor" type="number" placeholder="Valor (R$)" class="p-2 border rounded">
     <input id="fixoData" type="date" class="p-2 border rounded">
   </div>
@@ -105,21 +73,8 @@
 </div>
 
 <!-- ABA MÃO DE OBRA -->
-<div id="mo" class="tab-content hidden">
-  <h2 class="text-xl font-bold mb-2">Mão de Obra</h2>
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-2 mb-4">
-    <select id="moDescricao" class="p-2 border rounded">
-      <option value="Salários">Salários</option>
-      <option value="Férias">Férias</option>
-      <option value="Verbas Rescisórias">Verbas Rescisórias</option>
-      <option value="INSS">INSS</option>
-      <option value="FGTS">FGTS</option>
-      <option value="Vale Transporte">Vale Transporte</option>
-      <option value="Vale Alimentação">Vale Alimentação</option>
-      <option value="Uniformes">Uniformes</option>
-      <option value="Exames periódicos">Exames periódicos</option>
-      <option value="Custo Freelancer">Custo Freelancer</option>
-    </select> placeholder="Descrição" class="p-2 border rounded">
+
+    <input id="moObs" placeholder="Observação (opcional)" class="p-2 border rounded"> placeholder="Descrição" class="p-2 border rounded">
     <input id="moValor" type="number" placeholder="Valor (R$)" class="p-2 border rounded">
     <input id="moData" type="date" class="p-2 border rounded">
   </div>

@@ -69,53 +69,93 @@
         if (aba === "relatorio") renderRelatorio();
       };
 
-      function renderCalibracao() {
-        conteudo.innerHTML = `
-          <h2 class="text-xl font-bold mb-2">Calibração de Taxas</h2>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input id="imp" class="input" placeholder="Imposto sobre faturamento (%)" value="${dados.calibracao.imp || ''}" />
-            <input id="deb" class="input" placeholder="Taxa de débito (%)" value="${dados.calibracao.deb || ''}" />
-            <input id="cred" class="input" placeholder="Taxa de crédito (%)" value="${dados.calibracao.cred || ''}" />
-            <input id="ifood" class="input" placeholder="Comissão de apps/ifood (%)" value="${dados.calibracao.ifood || ''}" />
-            <input id="app99" class="input" placeholder="Comissão de apps/99 (%)" value="${dados.calibracao.app99 || ''}" />
-            <input id="encargos" class="input" placeholder="Encargos diversos" value="${dados.calibracao.encargos || ''}" />
-          </div>
-          <button onclick="salvarCalibracao()" class="mt-4 botao">Salvar Calibração</button>
-        `;
-      }
-
-      window.salvarCalibracao = function () {
-        const nova = {
-          imp: document.getElementById("imp").value,
-          deb: document.getElementById("deb").value,
-          cred: document.getElementById("cred").value,
-          ifood: document.getElementById("ifood").value,
-          app99: document.getElementById("app99").value,
-          encargos: document.getElementById("encargos").value
-        };
-        localStorage.setItem("calibracao", JSON.stringify(nova));
-        alert("Calibração salva com sucesso!");
-        abrirAba("calibracao");
-      };
-
-      function renderReceitas() {
-        conteudo.innerHTML = `<div class="p-4">[Receitas funcional]</div>`;
-      }
-
-      function renderCMV() {
-        conteudo.innerHTML = `<div class="p-4">[CMV funcional]</div>`;
-      }
-
       function renderFixas() {
-        conteudo.innerHTML = `<div class="p-4">[Fixas funcional]</div>`;
+        conteudo.innerHTML = `<h2 class="text-xl font-bold mb-4">Despesas Fixas</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <input id="descricaoFixa" class="input" placeholder="Descrição" />
+          <input id="valorFixa" class="input" type="number" placeholder="Valor (R$)" />
+          <input id="dataFixa" class="input" type="date" />
+        </div>
+        <button onclick="salvarFixa()" class="mt-4 botao">Salvar Fixa</button>
+        <div id="listaFixas" class="mt-6"></div>`;
+        renderListaFixas();
+      }
+
+      window.salvarFixa = function () {
+        const nova = {
+          descricao: document.getElementById("descricaoFixa").value,
+          valor: parseFloat(document.getElementById("valorFixa").value || 0),
+          data: document.getElementById("dataFixa").value
+        };
+        dados.fixas.push(nova);
+        localStorage.setItem("fixas", JSON.stringify(dados.fixas));
+        abrirAba("fixas");
+      }
+
+      function renderListaFixas() {
+        let html = `<table><thead><tr><th>Descrição</th><th>Valor</th><th>Data</th><th>Ação</th></tr></thead><tbody>`;
+        dados.fixas.forEach((item, i) => {
+          html += `<tr><td>${item.descricao}</td><td>R$ ${item.valor.toFixed(2)}</td><td>${item.data}</td><td><button onclick="excluirFixa(${i})" class="text-red-500">Excluir</button></td></tr>`;
+        });
+        html += `</tbody></table>`;
+        document.getElementById("listaFixas").innerHTML = html;
+      }
+
+      window.excluirFixa = function (index) {
+        dados.fixas.splice(index, 1);
+        localStorage.setItem("fixas", JSON.stringify(dados.fixas));
+        abrirAba("fixas");
       }
 
       function renderMaoObra() {
-        conteudo.innerHTML = `<div class="p-4">[Mão de Obra funcional]</div>`;
+        conteudo.innerHTML = `<h2 class="text-xl font-bold mb-4">Mão de Obra</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <input id="funcionario" class="input" placeholder="Funcionário" />
+          <input id="salario" class="input" type="number" placeholder="Salário (R$)" />
+          <input id="dataPagamento" class="input" type="date" />
+        </div>
+        <button onclick="salvarMaoObra()" class="mt-4 botao">Salvar</button>
+        <div id="listaMaoObra" class="mt-6"></div>`;
+        renderListaMaoObra();
+      }
+
+      window.salvarMaoObra = function () {
+        const nova = {
+          funcionario: document.getElementById("funcionario").value,
+          salario: parseFloat(document.getElementById("salario").value || 0),
+          data: document.getElementById("dataPagamento").value
+        };
+        dados.maoObra.push(nova);
+        localStorage.setItem("maoObra", JSON.stringify(dados.maoObra));
+        abrirAba("maoObra");
+      }
+
+      function renderListaMaoObra() {
+        let html = `<table><thead><tr><th>Funcionário</th><th>Salário</th><th>Data</th><th>Ação</th></tr></thead><tbody>`;
+        dados.maoObra.forEach((item, i) => {
+          html += `<tr><td>${item.funcionario}</td><td>R$ ${item.salario.toFixed(2)}</td><td>${item.data}</td><td><button onclick="excluirMaoObra(${i})" class="text-red-500">Excluir</button></td></tr>`;
+        });
+        html += `</tbody></table>`;
+        document.getElementById("listaMaoObra").innerHTML = html;
+      }
+
+      window.excluirMaoObra = function (index) {
+        dados.maoObra.splice(index, 1);
+        localStorage.setItem("maoObra", JSON.stringify(dados.maoObra));
+        abrirAba("maoObra");
       }
 
       function renderRelatorio() {
-        conteudo.innerHTML = `<div class="p-4">[Relatório funcional com PDF]</div>`;
+        conteudo.innerHTML = `<h2 class="text-xl font-bold mb-4">Relatório DRE</h2>
+        <button onclick="gerarPDF()" class="botao">Gerar PDF</button>`;
+      }
+
+      window.gerarPDF = function () {
+        const doc = new jspdf.jsPDF();
+        doc.text("Relatório DRE", 20, 20);
+        doc.text("Empresa: " + localStorage.getItem("empresaNome"), 20, 30);
+        doc.text("CNPJ: " + localStorage.getItem("empresaCNPJ"), 20, 40);
+        doc.save("relatorio-dre.pdf");
       }
     });
   </script>

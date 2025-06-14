@@ -41,18 +41,12 @@
   <script>
     document.addEventListener("DOMContentLoaded", function () {
       const conteudo = document.getElementById("conteudo");
-      const dados = {
-        calibracao: JSON.parse(localStorage.getItem("calibracao")) || {},
-        receitas: JSON.parse(localStorage.getItem("receitas")) || [],
-        cmv: JSON.parse(localStorage.getItem("cmv")) || [],
-        fixas: JSON.parse(localStorage.getItem("fixas")) || [],
-        maoObra: JSON.parse(localStorage.getItem("maoObra")) || []
-      };
+      const form = document.getElementById("formInicio");
 
-      document.getElementById("formInicio").addEventListener("submit", function (e) {
+      form.addEventListener("submit", function (e) {
         e.preventDefault();
-        const nome = document.getElementById("empresaNome").value;
-        const cnpj = document.getElementById("empresaCNPJ").value;
+        const nome = document.getElementById("empresaNome").value.trim();
+        const cnpj = document.getElementById("empresaCNPJ").value.trim();
         if (!nome || !cnpj) return alert("Preencha todos os campos.");
         localStorage.setItem("empresaNome", nome);
         localStorage.setItem("empresaCNPJ", cnpj);
@@ -60,6 +54,14 @@
         document.getElementById("app").classList.remove("hidden");
         abrirAba("calibracao");
       });
+
+      const dados = {
+        calibracao: JSON.parse(localStorage.getItem("calibracao")) || {},
+        receitas: JSON.parse(localStorage.getItem("receitas")) || [],
+        cmv: JSON.parse(localStorage.getItem("cmv")) || [],
+        fixas: JSON.parse(localStorage.getItem("fixas")) || [],
+        maoObra: JSON.parse(localStorage.getItem("maoObra")) || []
+      };
 
       window.abrirAba = function (aba) {
         if (aba === "calibracao") renderCalibracao();
@@ -71,17 +73,17 @@
       };
 
       function renderCalibracao() {
-        conteudo.innerHTML = \`
+        conteudo.innerHTML = `
           <h2 class="text-xl font-bold mb-4">Calibração de Impostos e Taxas</h2>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input type="number" id="imposto" class="input" placeholder="Imposto sobre faturamento (%)" value="\${dados.calibracao.imposto || ''}" />
-            <input type="number" id="debito" class="input" placeholder="Taxa de Débito (%)" value="\${dados.calibracao.debito || ''}" />
-            <input type="number" id="credito" class="input" placeholder="Taxa de Crédito (%)" value="\${dados.calibracao.credito || ''}" />
-            <input type="number" id="apps" class="input" placeholder="Comissão de Apps (%)" value="\${dados.calibracao.apps || ''}" />
-            <input type="number" id="encargos" class="input" placeholder="Encargos diversos" value="\${dados.calibracao.encargos || ''}" />
+            <input type="number" id="imposto" class="input" placeholder="Imposto sobre faturamento (%)" value="${dados.calibracao.imposto || ''}" />
+            <input type="number" id="debito" class="input" placeholder="Taxa de Débito (%)" value="${dados.calibracao.debito || ''}" />
+            <input type="number" id="credito" class="input" placeholder="Taxa de Crédito (%)" value="${dados.calibracao.credito || ''}" />
+            <input type="number" id="apps" class="input" placeholder="Comissão de Apps (%)" value="${dados.calibracao.apps || ''}" />
+            <input type="number" id="encargos" class="input" placeholder="Encargos diversos" value="${dados.calibracao.encargos || ''}" />
           </div>
           <button onclick="salvarCalibracao()" class="mt-4 botao">Salvar</button>
-        \`;
+        `;
       }
 
       window.salvarCalibracao = function () {
@@ -97,14 +99,14 @@
       };
 
       function renderReceitas() {
-        conteudo.innerHTML = \`
+        conteudo.innerHTML = `
           <h2 class="text-xl font-bold mb-4">Lançamento de Receitas</h2>
           <input id="novaReceita" type="number" class="input" placeholder="Valor da Receita" />
           <button onclick="adicionarReceita()" class="mt-2 botao">Adicionar Receita</button>
           <div class="scroll-container">
             <table><thead><tr><th>Valor</th></tr></thead><tbody id="listaReceitas"></tbody></table>
           </div>
-        \`;
+        `;
         atualizarTabela("receitas", "listaReceitas");
       }
 
@@ -116,34 +118,14 @@
         atualizarTabela("receitas", "listaReceitas");
       }
 
-      function renderCMV() {
-        conteudo.innerHTML = \`
-          <h2 class="text-xl font-bold mb-4">CMV (Despesas Variáveis)</h2>
-          <input id="novoCMV" type="number" class="input" placeholder="Valor do CMV" />
-          <button onclick="adicionarCMV()" class="mt-2 botao">Adicionar Despesa CMV</button>
-          <div class="scroll-container">
-            <table><thead><tr><th>Valor</th></tr></thead><tbody id="listaCMV"></tbody></table>
-          </div>
-        \`;
-        atualizarTabela("cmv", "listaCMV");
-      }
-
-      window.adicionarCMV = function () {
-        const valor = parseFloat(document.getElementById("novoCMV").value);
-        if (!valor) return;
-        dados.cmv.push(valor);
-        localStorage.setItem("cmv", JSON.stringify(dados.cmv));
-        atualizarTabela("cmv", "listaCMV");
-      }
-
       function atualizarTabela(tipo, elementoId) {
         const tbody = document.getElementById(elementoId);
         if (!tbody) return;
-        tbody.innerHTML = dados[tipo].map(r => \`<tr><td>R$ \${parseFloat(r).toFixed(2)}</td></tr>\`).join('');
+        tbody.innerHTML = dados[tipo].map(r => `<tr><td>R$ ${parseFloat(r).toFixed(2)}</td></tr>`).join('');
       }
 
       function renderRelatorio() {
-        conteudo.innerHTML = \`
+        conteudo.innerHTML = `
           <h2 class="text-xl font-bold mb-4">Relatório DRE</h2>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <select id="tipoRelatorio" class="input">
@@ -153,7 +135,7 @@
             <input type="month" id="periodoRelatorio" class="input" />
           </div>
           <button onclick="gerarPDF()" class="mt-4 botao">Gerar PDF</button>
-        \`;
+        `;
       }
 
       window.gerarPDF = function () {

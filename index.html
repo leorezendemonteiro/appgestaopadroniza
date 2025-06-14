@@ -1,142 +1,271 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CORRETAGESTAO02 - App DRE</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body class="bg-gray-100">
-  <!-- Tela inicial e abas já existentes acima -->
+
+  <!-- Tela inicial -->
+  <div id="telaInicial" class="flex flex-col items-center justify-center h-screen p-4">
+    <h1 class="text-2xl font-bold mb-4">📊 Padroniza DRE</h1>
+    <form onsubmit="iniciarApp(); return false;" class="w-full max-w-xs">
+      <input id="empresaNome" type="text" placeholder="Nome da Empresa" class="mb-2 p-2 border rounded w-full" />
+      <input id="empresaCNPJ" type="text" placeholder="CNPJ" class="mb-4 p-2 border rounded w-full" />
+      <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded w-full">Iniciar DRE</button>
+    </form>
+  </div>
+
+  <!-- Interface principal -->
+  <div id="app" class="hidden p-4">
+    <div class="flex gap-2 mb-4 overflow-x-auto">
+      <button onclick="abrirAba('calibracao')" class="aba">Calibração</button>
+      <button onclick="abrirAba('receitas')" class="aba">Receitas</button>
+      <button onclick="abrirAba('cmv')" class="aba">CMV</button>
+      <button onclick="abrirAba('fixas')" class="aba">Fixas</button>
+      <button onclick="abrirAba('maoObra')" class="aba">Mão de Obra</button>
+      <button onclick="abrirAba('relatorio')" class="aba">Relatório</button>
+    </div>
+    <div id="conteudo"></div>
+  </div>
 
   <script>
-    // ABA: Mão de Obra
+    const conteudo = document.getElementById("conteudo");
+
+    function iniciarApp() {
+      const nome = document.getElementById("empresaNome").value;
+      const cnpj = document.getElementById("empresaCNPJ").value;
+      if (!nome || !cnpj) return alert("Preencha todos os campos.");
+      localStorage.setItem("empresaNome", nome);
+      localStorage.setItem("empresaCNPJ", cnpj);
+      document.getElementById("telaInicial").classList.add("hidden");
+      document.getElementById("app").classList.remove("hidden");
+      abrirAba("calibracao");
+    }
+
+    function abrirAba(aba) {
+      const fn = {
+        calibracao: renderCalibracao,
+        receitas: renderReceitas,
+        cmv: renderCmv,
+        fixas: renderFixas,
+        maoObra: renderMo,
+        relatorio: renderRelatorio
+      };
+      fn[aba]?.();
+    }
+
+    function renderCalibracao() {
+      const c = JSON.parse(localStorage.getItem("calibracao") || "{}");
+      conteudo.innerHTML = `
+        <h2 class="text-xl mb-4">Calibração</h2>
+        <div class="grid gap-2">
+          <input id="imp" class="input" placeholder="Imposto sobre faturamento (%)" value="${c.imp || ''}">
+          <input id="deb" class="input" placeholder="Taxa de débito (%)" value="${c.deb || ''}">
+          <input id="cred" class="input" placeholder="Taxa de crédito (%)" value="${c.cred || ''}">
+          <input id="apps" class="input" placeholder="Comissão de apps/iFood (%)" value="${c.apps || ''}">
+          <input id="enc" class="input" placeholder="Encargos diversos" value="${c.enc || ''}">
+          <button onclick="salvarCalibracao()" class="botao">Salvar Calibração</button>
+        </div>`;
+    }
+
+    function salvarCalibracao() {
+      const obj = {
+        imp: +document.getElementById("imp").value,
+        deb: +document.getElementById("deb").value,
+        cred: +document.getElementById("cred").value,
+        apps: +document.getElementById("apps").value,
+        enc: +document.getElementById("enc").value
+      };
+      localStorage.setItem("calibracao", JSON.stringify(obj));
+      alert("Salvo com sucesso!");
+    }
+
+    function renderReceitas() {
+      conteudo.innerHTML = `
+        <h2 class="text-xl mb-4">Receitas</h2>
+        <div class="grid gap-2">
+          <input id="descR" placeholder="Descrição" class="input">
+          <input id="valR" type="number" placeholder="Valor (R$)" class="input">
+          <input id="dataR" type="date" class="input">
+          <select id="formaR" class="input">
+            <option>Crédito</option><option>Débito</option><option>Pix</option><option>Dinheiro</option><option>iFood</option><option>99</option>
+          </select>
+          <button onclick="salvarReceita()" class="botao">Salvar Receita</button>
+        </div>
+        <div id="listaR" class="mt-4"></div>`;
+      listar("receitas", "listaR");
+    }
+
+    function salvarReceita() {
+      const lista = JSON.parse(localStorage.getItem("receitas") || "[]");
+      lista.push({
+        descricao: document.getElementById("descR").value,
+        valor: +document.getElementById("valR").value,
+        data: document.getElementById("dataR").value,
+        forma: document.getElementById("formaR").value
+      });
+      localStorage.setItem("receitas", JSON.stringify(lista));
+      renderReceitas();
+    }
+
+    function renderCmv() {
+      conteudo.innerHTML = `
+        <h2 class="text-xl mb-4">CMV</h2>
+        <div class="grid gap-2">
+          <select id="catC" class="input">
+            <option>Alimentar</option><option>Limpeza</option><option>Descartáveis</option><option>Gás</option><option>Bebidas</option><option>Outros</option>
+          </select>
+          <input id="descC" placeholder="Descrição" class="input">
+          <input id="valC" type="number" placeholder="Valor" class="input">
+          <input id="dataC" type="date" class="input">
+          <input id="fornC" placeholder="Fornecedor" class="input">
+          <button onclick="salvarCmv()" class="botao">Salvar Despesa Variável</button>
+        </div>
+        <div id="listaC" class="mt-4"></div>`;
+      listar("cmv", "listaC");
+    }
+
+    function salvarCmv() {
+      const lista = JSON.parse(localStorage.getItem("cmv") || "[]");
+      lista.push({
+        categoria: document.getElementById("catC").value,
+        descricao: document.getElementById("descC").value,
+        valor: +document.getElementById("valC").value,
+        data: document.getElementById("dataC").value,
+        fornecedor: document.getElementById("fornC").value
+      });
+      localStorage.setItem("cmv", JSON.stringify(lista));
+      renderCmv();
+    }
+
+    function renderFixas() {
+      conteudo.innerHTML = `
+        <h2 class="text-xl mb-4">Despesas Fixas</h2>
+        <div class="grid gap-2">
+          <select id="catF" class="input">
+            <option>Aluguel</option><option>IPTU</option><option>Água</option><option>Energia elétrica</option>
+            <option>Internet/telefone</option><option>Software</option><option>Contabilidade</option>
+            <option>Marketing</option><option>Financiamento</option><option>Prólabore</option>
+          </select>
+          <input id="valF" type="number" placeholder="Valor" class="input">
+          <input id="dataF" type="date" class="input">
+          <input id="fornF" placeholder="Fornecedor" class="input">
+          <button onclick="salvarFixa()" class="botao">Salvar Despesa Fixa</button>
+        </div>
+        <div id="listaF" class="mt-4"></div>`;
+      listar("fixas", "listaF");
+    }
+
+    function salvarFixa() {
+      const lista = JSON.parse(localStorage.getItem("fixas") || "[]");
+      lista.push({
+        categoria: document.getElementById("catF").value,
+        valor: +document.getElementById("valF").value,
+        data: document.getElementById("dataF").value,
+        fornecedor: document.getElementById("fornF").value
+      });
+      localStorage.setItem("fixas", JSON.stringify(lista));
+      renderFixas();
+    }
+
     function renderMo() {
       conteudo.innerHTML = `
         <h2 class="text-xl mb-4">Mão de Obra</h2>
         <div class="grid gap-2">
-          <select id="categoriaMO" class="input">
-            <option value="">Categoria</option>
-            <option>Salários</option>
-            <option>Férias</option>
-            <option>Verbas rescisórias</option>
-            <option>INSS</option>
-            <option>FGTS</option>
-            <option>Vale transporte</option>
-            <option>Vale alimentação</option>
-            <option>Exames periódicos</option>
-            <option>Uniformes</option>
+          <select id="catM" class="input">
+            <option>Salários</option><option>Férias</option><option>Rescisões</option><option>INSS</option><option>FGTS</option>
+            <option>Vale transporte</option><option>Vale alimentação</option><option>Exames</option><option>Uniformes</option>
           </select>
-          <input id="valorMO" type="number" placeholder="Valor (R$)" class="input">
-          <input id="dataMO" type="date" class="input">
-          <input id="fornecedorMO" placeholder="Fornecedor" class="input">
-          <button onclick="salvarMO()" class="botao">Salvar Mão de Obra</button>
+          <input id="valM" type="number" placeholder="Valor" class="input">
+          <input id="dataM" type="date" class="input">
+          <input id="fornM" placeholder="Fornecedor" class="input">
+          <button onclick="salvarMo()" class="botao">Salvar Mão de Obra</button>
         </div>
-        <div id="listaMO" class="mt-4"></div>
-      `;
-      listarMO();
+        <div id="listaM" class="mt-4"></div>`;
+      listar("mao", "listaM");
     }
 
-    function salvarMO() {
-      const mao = JSON.parse(localStorage.getItem('mao') || '[]');
-      mao.push({
-        categoria: document.getElementById('categoriaMO').value,
-        valor: parseFloat(document.getElementById('valorMO').value),
-        data: document.getElementById('dataMO').value,
-        fornecedor: document.getElementById('fornecedorMO').value
+    function salvarMo() {
+      const lista = JSON.parse(localStorage.getItem("mao") || "[]");
+      lista.push({
+        categoria: document.getElementById("catM").value,
+        valor: +document.getElementById("valM").value,
+        data: document.getElementById("dataM").value,
+        fornecedor: document.getElementById("fornM").value
       });
-      localStorage.setItem('mao', JSON.stringify(mao));
+      localStorage.setItem("mao", JSON.stringify(lista));
       renderMo();
     }
 
-    function excluirMO(index) {
-      const mao = JSON.parse(localStorage.getItem('mao') || '[]');
-      mao.splice(index, 1);
-      localStorage.setItem('mao', JSON.stringify(mao));
-      renderMo();
-    }
-
-    function listarMO() {
-      const mao = JSON.parse(localStorage.getItem('mao') || '[]');
-      const lista = mao.map((d, i) => `
-        <div class="flex justify-between bg-gray-200 p-2 mb-1 rounded">
-          <div><strong>${d.categoria}</strong> - R$ ${d.valor.toFixed(2)} - ${d.data} - ${d.fornecedor}</div>
-          <button onclick="excluirMO(${i})" class="text-red-500">Excluir</button>
-        </div>
-      `).join('');
-      document.getElementById('listaMO').innerHTML = lista;
-    }
-
-    // ABA: Relatório (pré-estrutura)
     function renderRelatorio() {
       conteudo.innerHTML = `
-        <h2 class="text-xl mb-4">Relatório DRE</h2>
-        <div class="grid gap-2">
-          <select id="tipoRelatorio" class="input">
-            <option value="mensal">Mensal</option>
-            <option value="anual">Anual</option>
-          </select>
-          <input id="filtroData" class="input" placeholder="Digite o mês (ex: 2025-06) ou ano (ex: 2025)">
-          <button onclick="gerarRelatorio()" class="botao">Gerar Relatório</button>
-        </div>
-        <div id="resultadoRelatorio" class="mt-4"></div>
-        <button onclick="exportarPDF()" class="mt-4 botao">Exportar como PDF</button>
-      `;
+        <h2 class="text-xl mb-4">Relatório</h2>
+        <input id="filtro" class="input mb-2" placeholder="Ex: 2025-06 ou 2025" />
+        <button onclick="gerarRelatorio()" class="botao mb-4">Gerar Relatório</button>
+        <div id="saidaRelatorio"></div>`;
     }
 
     function gerarRelatorio() {
-      const tipo = document.getElementById('tipoRelatorio').value;
-      const filtro = document.getElementById('filtroData').value;
-
-      let receitas = JSON.parse(localStorage.getItem('receitas') || '[]');
-      let cmv = JSON.parse(localStorage.getItem('cmv') || '[]');
-      let fixas = JSON.parse(localStorage.getItem('fixas') || '[]');
-      let mao = JSON.parse(localStorage.getItem('mao') || '[]');
-      let calib = JSON.parse(localStorage.getItem('calibracao') || '{}');
-
-      function filtrarPorPeriodo(lista) {
-        return lista.filter(item => item.data && item.data.startsWith(filtro));
+      const filtro = document.getElementById("filtro").value;
+      function filtroPorData(lista) {
+        return lista.filter(x => x.data && x.data.startsWith(filtro));
       }
+      const receitas = filtroPorData(JSON.parse(localStorage.getItem("receitas") || "[]"));
+      const cmv = filtroPorData(JSON.parse(localStorage.getItem("cmv") || "[]"));
+      const fixas = filtroPorData(JSON.parse(localStorage.getItem("fixas") || "[]"));
+      const mao = filtroPorData(JSON.parse(localStorage.getItem("mao") || "[]"));
+      const c = JSON.parse(localStorage.getItem("calibracao") || "{}");
 
-      receitas = filtrarPorPeriodo(receitas);
-      cmv = filtrarPorPeriodo(cmv);
-      fixas = filtrarPorPeriodo(fixas);
-      mao = filtrarPorPeriodo(mao);
+      const rTot = receitas.reduce((a, b) => a + b.valor, 0);
+      const cTot = cmv.reduce((a, b) => a + b.valor, 0);
+      const fTot = fixas.reduce((a, b) => a + b.valor, 0);
+      const mTot = mao.reduce((a, b) => a + b.valor, 0);
+      const impostos = (c.imp || 0) / 100 * rTot;
+      const taxas = ((c.deb || 0) + (c.cred || 0) + (c.apps || 0)) / 100 * rTot;
+      const encargos = +c.enc || 0;
 
-      const totalReceita = receitas.reduce((acc, cur) => acc + (cur.valor || 0), 0);
-      const totalCMV = cmv.reduce((acc, cur) => acc + (cur.valor || 0), 0);
-      const totalFixas = fixas.reduce((acc, cur) => acc + (cur.valor || 0), 0);
-      const totalMO = mao.reduce((acc, cur) => acc + (cur.valor || 0), 0);
-      const imposto = (calib.imposto || 0) / 100 * totalReceita;
-      const taxas = ((calib.debito || 0) + (calib.credito || 0) + (calib.apps || 0) + (calib.encargos || 0)) / 100 * totalReceita;
+      const lucroBruto = rTot - cTot;
+      const lucroLiquido = lucroBruto - fTot - mTot - impostos - taxas - encargos;
+      const margem = rTot > 0 ? (lucroLiquido / rTot) * 100 : 0;
 
-      const lucroBruto = totalReceita - totalCMV;
-      const lucroLiquido = lucroBruto - totalFixas - totalMO - imposto - taxas;
-      const margem = totalReceita > 0 ? (lucroLiquido / totalReceita) * 100 : 0;
-
-      document.getElementById('resultadoRelatorio').innerHTML = `
-        <div class="bg-white p-4 shadow rounded">
-          <p><strong>Receita Total:</strong> R$ ${totalReceita.toFixed(2)}</p>
-          <p><strong>CMV:</strong> R$ ${totalCMV.toFixed(2)}</p>
+      document.getElementById("saidaRelatorio").innerHTML = `
+        <div class="bg-white p-4 rounded shadow">
+          <p><strong>Receita:</strong> R$ ${rTot.toFixed(2)}</p>
+          <p><strong>CMV:</strong> R$ ${cTot.toFixed(2)}</p>
           <p><strong>Lucro Bruto:</strong> R$ ${lucroBruto.toFixed(2)}</p>
-          <p><strong>Despesas Fixas:</strong> R$ ${totalFixas.toFixed(2)}</p>
-          <p><strong>Mão de Obra:</strong> R$ ${totalMO.toFixed(2)}</p>
-          <p><strong>Impostos e Taxas:</strong> R$ ${(imposto + taxas).toFixed(2)}</p>
+          <p><strong>Despesas Fixas:</strong> R$ ${fTot.toFixed(2)}</p>
+          <p><strong>Mão de Obra:</strong> R$ ${mTot.toFixed(2)}</p>
+          <p><strong>Impostos e Taxas:</strong> R$ ${(impostos + taxas + encargos).toFixed(2)}</p>
           <p><strong>Lucro Líquido:</strong> R$ ${lucroLiquido.toFixed(2)}</p>
           <p><strong>Margem:</strong> ${margem.toFixed(2)}%</p>
-        </div>
-      `;
+        </div>`;
     }
 
-    function exportarPDF() {
-      const doc = new jspdf.jsPDF();
-      const relatorio = document.getElementById('resultadoRelatorio');
-      doc.text("Relatório DRE", 10, 10);
-      doc.fromHTML(relatorio.innerHTML, 10, 20);
-      doc.save("relatorio_dre.pdf");
+    function listar(chave, destino) {
+      const dados = JSON.parse(localStorage.getItem(chave) || "[]");
+      document.getElementById(destino).innerHTML = dados.map((x, i) => `
+        <div class="flex justify-between bg-gray-200 p-2 mb-1 rounded">
+          <div><strong>${x.categoria || x.forma}</strong> - R$ ${x.valor?.toFixed(2)} - ${x.data} - ${x.descricao || x.fornecedor}</div>
+          <button onclick="excluirItem('${chave}', ${i})" class="text-red-600">Excluir</button>
+        </div>`).join('');
+    }
+
+    function excluirItem(chave, index) {
+      const dados = JSON.parse(localStorage.getItem(chave) || "[]");
+      dados.splice(index, 1);
+      localStorage.setItem(chave, JSON.stringify(dados));
+      abrirAba(chave === 'mao' ? 'maoObra' : chave);
     }
   </script>
 
+  <style>
+    .input { @apply p-2 border rounded w-full; }
+    .botao { @apply bg-green-600 text-white px-4 py-2 rounded; }
+    .aba { @apply px-4 py-2 rounded bg-gray-200 hover:bg-blue-600 hover:text-white transition; }
+  </style>
 </body>
 </html>

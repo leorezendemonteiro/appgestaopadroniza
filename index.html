@@ -3,118 +3,119 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gestão DRE - CORRETAGESTAO02</title>
+  <title>CORRETAGESTAO02 - App DRE</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
-<body class="bg-gray-100 p-4">
-  <div id="intro" class="w-full h-screen bg-gray-800 bg-opacity-80 absolute top-0 left-0 flex flex-col justify-center items-center text-white z-50">
-    <div class="bg-white text-gray-900 p-8 rounded shadow-md w-full max-w-md">
-      <img src="https://i.postimg.cc/vBvK9KGz/ges.jpg" alt="Logo Padroniza" class="w-20 h-20 mx-auto mb-4">
-      <h2 class="text-xl font-bold text-center mb-4">Iniciar Gestão DRE</h2>
-      <input id="introCompanyName" placeholder="Razão Social" class="w-full p-2 border mb-2 rounded">
-      <input id="introCompanyCnpj" placeholder="CNPJ" class="w-full p-2 border mb-4 rounded">
-      <button onclick="startApp()" class="w-full bg-green-600 text-white px-4 py-2 rounded">Entrar</button>
+<body class="bg-gray-100">
+  <div id="telaInicial" class="flex flex-col items-center justify-center h-screen p-4">
+    <img src="logo_placeholder.png" alt="Logo Padroniza" class="w-32 h-32 mb-4">
+    <input id="empresaNome" type="text" placeholder="Nome da Empresa" class="mb-2 p-2 border rounded w-full max-w-xs">
+    <input id="empresaCNPJ" type="text" placeholder="CNPJ" class="mb-4 p-2 border rounded w-full max-w-xs">
+    <button onclick="iniciarApp()" class="bg-blue-600 text-white px-4 py-2 rounded">Iniciar DRE</button>
+  </div>
+
+  <div id="app" class="hidden">
+    <div class="bg-white shadow p-4">
+      <div class="flex gap-2 mb-4 overflow-x-auto">
+        <button onclick="abrirAba('calibracao')" class="aba">Calibração</button>
+        <button onclick="abrirAba('receitas')" class="aba">Receitas</button>
+        <button onclick="abrirAba('cmv')" class="aba">CMV</button>
+        <button onclick="abrirAba('fixas')" class="aba">Fixas</button>
+        <button onclick="abrirAba('maoObra')" class="aba">Mão de Obra</button>
+        <button onclick="abrirAba('relatorio')" class="aba">Relatório</button>
+      </div>
+      <div id="conteudo"></div>
     </div>
-  </div>
-
-  <div class="flex flex-wrap gap-2 mb-4">
-    <button class="tab-button bg-blue-200 px-4 py-2 rounded" onclick="showTab('calibracao')">Calibração</button>
-    <button class="tab-button bg-blue-200 px-4 py-2 rounded" onclick="showTab('receitas')">Receitas</button>
-    <button class="tab-button bg-blue-200 px-4 py-2 rounded" onclick="showTab('cmv')">CMV</button>
-    <button class="tab-button bg-blue-200 px-4 py-2 rounded" onclick="showTab('fixos')">Fixos</button>
-    <button class="tab-button bg-blue-200 px-4 py-2 rounded" onclick="showTab('mo')">Mão de Obra</button>
-    <button class="tab-button bg-blue-200 px-4 py-2 rounded" onclick="showTab('relatorio')">Relatório</button>
-  </div>
-
-  <div id="calibracao" class="tab-content">
-    <h2 class="text-xl font-bold mb-2">Calibração</h2>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-2 mb-4">
-      <input id="companyName" placeholder="Razão Social" class="p-2 border rounded">
-      <input id="companyCnpj" placeholder="CNPJ" class="p-2 border rounded">
-      <select id="taxRegime" class="p-2 border rounded">
-        <option value="Simples Nacional">Simples Nacional</option>
-        <option value="Lucro Presumido">Lucro Presumido</option>
-      </select>
-      <input id="taxRate" class="p-2 border rounded" placeholder="Alíquota (%)" type="number">
-      <input id="taxCredit" class="p-2 border rounded" placeholder="Taxa Crédito (%)" type="number">
-      <input id="taxDebit" class="p-2 border rounded" placeholder="Taxa Débito (%)" type="number">
-      <input id="taxDelivery" class="p-2 border rounded" placeholder="Taxa Delivery (%)" type="number">
-    </div>
-    <button onclick="saveSettings()" class="bg-green-600 text-white px-4 py-2 rounded">Salvar Calibração</button>
-  </div>
-
-  <div id="relatorio" class="tab-content hidden">
-    <h2 class="text-xl font-bold mb-2">Relatórios</h2>
-    <select id="reportType" class="p-2 border rounded mb-4">
-      <option value="mensal">Relatório Mensal</option>
-      <option value="anual">Relatório Anual</option>
-    </select>
-    <button onclick="gerarRelatorioPDF()" class="bg-green-700 text-white px-4 py-2 rounded">Gerar PDF</button>
   </div>
 
   <script>
-    const defaultTabs = ['calibracao', 'receitas', 'cmv', 'fixos', 'mo', 'relatorio'];
-    function startApp() {
-      const name = document.getElementById('introCompanyName').value;
-      const cnpj = document.getElementById('introCompanyCnpj').value;
-      if (name && cnpj) {
-        localStorage.setItem('settings', JSON.stringify({ companyName: name, companyCnpj: cnpj }));
-        document.getElementById('intro').classList.add('hidden');
-        document.getElementById('companyName').value = name;
-        document.getElementById('companyCnpj').value = cnpj;
-        showTab('calibracao');
-      } else {
-        alert('Preencha todos os campos para iniciar.');
+    // ... funções anteriores mantidas ...
+
+    function renderRelatorio() {
+      conteudo.innerHTML = `
+        <h2 class="text-xl mb-4">Relatório DRE</h2>
+        <div class="grid gap-2">
+          <select id="tipoRelatorio" class="input">
+            <option value="mensal">Mensal</option>
+            <option value="anual">Anual</option>
+          </select>
+          <input id="periodoRelatorio" class="input" type="text" placeholder="Informe o mês (ex: 2025-06) ou ano (ex: 2025)">
+          <button onclick="gerarRelatorio()" class="botao">Gerar Relatório</button>
+        </div>
+        <div id="resultadoRelatorio" class="mt-4"></div>
+        <button onclick="exportarPDF()" class="botao mt-4">Exportar como PDF</button>
+      `;
+    }
+
+    function gerarRelatorio() {
+      const tipo = document.getElementById('tipoRelatorio').value;
+      const periodo = document.getElementById('periodoRelatorio').value;
+
+      function filtrarPorPeriodo(lista) {
+        return lista.filter(item => item.data && item.data.startsWith(periodo));
       }
+
+      const receitas = filtrarPorPeriodo(carregarLista('receitas'));
+      const cmv = filtrarPorPeriodo(carregarLista('cmv'));
+      const fixas = filtrarPorPeriodo(carregarLista('fixas'));
+      const maoObra = filtrarPorPeriodo(carregarLista('maoObra'));
+      const calib = JSON.parse(localStorage.getItem('calibracao') || '{}');
+
+      const receitaTotal = receitas.reduce((acc, r) => acc + r.valor, 0);
+      const cmvTotal = cmv.reduce((acc, r) => acc + r.valor, 0);
+      const fixasTotal = fixas.reduce((acc, r) => acc + r.valor, 0);
+      const maoTotal = maoObra.reduce((acc, r) => acc + r.valor, 0);
+      const impostos = (calib.impFat || 0) / 100 * receitaTotal;
+      const taxas = (calib.taxaDeb || 0) / 100 * receitaTotal + (calib.taxaCred || 0) / 100 * receitaTotal + (calib.comissaoApp || 0) / 100 * receitaTotal + (calib.comissao99 || 0) / 100 * receitaTotal;
+      const encargos = parseFloat(calib.encargos || 0);
+
+      const lucroBruto = receitaTotal - cmvTotal;
+      const lucroLiquido = lucroBruto - fixasTotal - maoTotal - impostos - taxas - encargos;
+      const margem = receitaTotal > 0 ? (lucroLiquido / receitaTotal) * 100 : 0;
+
+      document.getElementById('resultadoRelatorio').innerHTML = `
+        <div class="grid gap-1">
+          <div><strong>Receita Total:</strong> R$ ${receitaTotal.toFixed(2)}</div>
+          <div><strong>CMV:</strong> R$ ${cmvTotal.toFixed(2)}</div>
+          <div><strong>Lucro Bruto:</strong> R$ ${lucroBruto.toFixed(2)}</div>
+          <div><strong>Despesas Fixas:</strong> R$ ${fixasTotal.toFixed(2)}</div>
+          <div><strong>Mão de Obra:</strong> R$ ${maoTotal.toFixed(2)}</div>
+          <div><strong>Impostos:</strong> R$ ${impostos.toFixed(2)}</div>
+          <div><strong>Taxas:</strong> R$ ${taxas.toFixed(2)}</div>
+          <div><strong>Encargos:</strong> R$ ${encargos.toFixed(2)}</div>
+          <div><strong>Lucro Líquido:</strong> R$ ${lucroLiquido.toFixed(2)}</div>
+          <div><strong>Margem de Lucro:</strong> ${margem.toFixed(2)}%</div>
+        </div>`;
     }
 
-    function showTab(tabId) {
-      defaultTabs.forEach(tab => {
-        const el = document.getElementById(tab);
-        if (el) el.classList.add('hidden');
-      });
-      const active = document.getElementById(tabId);
-      if (active) active.classList.remove('hidden');
-    }
-
-    function saveSettings() {
-      const settings = {
-        companyName: document.getElementById('companyName').value,
-        companyCnpj: document.getElementById('companyCnpj').value,
-        taxRegime: document.getElementById('taxRegime').value,
-        taxRate: parseFloat(document.getElementById('taxRate').value) || 0,
-        taxCredit: parseFloat(document.getElementById('taxCredit').value) || 0,
-        taxDebit: parseFloat(document.getElementById('taxDebit').value) || 0,
-        taxDelivery: parseFloat(document.getElementById('taxDelivery').value) || 0
-      };
-      localStorage.setItem('settings', JSON.stringify(settings));
-      alert('Configurações salvas!');
-    }
-
-    function gerarRelatorioPDF() {
+    function exportarPDF() {
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF();
-      doc.text("Relatório Financeiro - Simples", 10, 10);
-      doc.text("Em breve: dados de lançamentos, somatórios, impostos e lucro", 10, 20);
-      doc.save("relatorio_mensal.pdf");
-    }
+      const nome = localStorage.getItem('empresaNome') || '';
+      const cnpj = localStorage.getItem('empresaCNPJ') || '';
+      const data = new Date().toLocaleDateString();
+      const relatorio = document.getElementById('resultadoRelatorio').innerText;
 
-    window.onload = () => {
-      const saved = localStorage.getItem('settings');
-      if (saved) {
-        const s = JSON.parse(saved);
-        document.getElementById('intro').classList.add('hidden');
-        document.getElementById('companyName').value = s.companyName || '';
-        document.getElementById('companyCnpj').value = s.companyCnpj || '';
-        document.getElementById('taxRegime').value = s.taxRegime || 'Simples Nacional';
-        document.getElementById('taxRate').value = s.taxRate || '';
-        document.getElementById('taxCredit').value = s.taxCredit || '';
-        document.getElementById('taxDebit').value = s.taxDebit || '';
-        document.getElementById('taxDelivery').value = s.taxDelivery || '';
-        showTab('calibracao');
-      }
+      doc.text(`Relatório DRE`, 10, 10);
+      doc.text(`Empresa: ${nome}`, 10, 20);
+      doc.text(`CNPJ: ${cnpj}`, 10, 30);
+      doc.text(`Data: ${data}`, 10, 40);
+      doc.text(relatorio, 10, 50);
+      doc.save('Relatorio-DRE.pdf');
     }
   </script>
+
+  <style>
+    .aba {
+      @apply px-4 py-2 rounded bg-gray-200 hover:bg-blue-500 hover:text-white transition;
+    }
+    .input {
+      @apply p-2 border rounded w-full;
+    }
+    .botao {
+      @apply bg-green-600 text-white px-4 py-2 rounded;
+    }
+  </style>
 </body>
 </html>

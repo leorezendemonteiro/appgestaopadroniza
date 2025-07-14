@@ -482,7 +482,10 @@
             </form>
             <div id="admin-panel" class="hidden mt-6">
                 <h3 class="font-bold mb-2">Empresas</h3>
-                <div id="admin-empresas" class="text-sm"></div>
+                <input id="search-empresa" type="text" placeholder="Pesquisar..." class="w-full p-2 border rounded mb-4" />
+                <div id="admin-empresas" class="text-sm space-y-2"></div>
+                <h3 class="font-bold my-2">Usuários</h3>
+                <div id="admin-usuarios" class="text-sm space-y-2"></div>
             </div>
         </div>
     </div>
@@ -502,8 +505,8 @@
             maoDeObra: [],
         };
 
-        const MASTER_EMAIL = 'master@example.com';
-        const MASTER_PASSWORD = 'master123';
+        const MASTER_EMAIL = 'admin@traktogestao.com';
+        const MASTER_PASSWORD = 'admin123';
 
         const STORAGE_KEYS = {
             COMPANY: 'corretagestao02_empresa',
@@ -529,6 +532,8 @@
         const adminLoginForm = document.getElementById('admin-login-form');
         const adminPanel = document.getElementById('admin-panel');
         const adminEmpresas = document.getElementById('admin-empresas');
+        const adminUsuarios = document.getElementById('admin-usuarios');
+        const searchEmpresa = document.getElementById('search-empresa');
         const tabButtons = document.querySelectorAll('.tab-button');
         const tabContents = document.querySelectorAll('.tab-content');
         const logoutButton = document.getElementById('logout-button');
@@ -545,30 +550,111 @@
             appState.maoDeObra = JSON.parse(localStorage.getItem(STORAGE_KEYS.MO)) || [];
         }
         
-        function saveState(key, data) {
-            localStorage.setItem(key, JSON.stringify(data));
+function saveState(key, data) {
+    localStorage.setItem(key, JSON.stringify(data));
+}
+
+        async function ensureMasterUser() {
+            try {
+                await auth.signInWithEmailAndPassword(MASTER_EMAIL, MASTER_PASSWORD);
+                const uid = auth.currentUser.uid;
+                const snap = await db.collection('usuarios').doc(uid).get();
+                if (!snap.exists) {
+                    await db.collection('usuarios').doc(uid).set({ nome: 'Admin', tipo_acesso: 'master', status: 'ativo' });
+                }
+                await auth.signOut();
+            } catch (err) {
+                try {
+                    const cred = await auth.createUserWithEmailAndPassword(MASTER_EMAIL, MASTER_PASSWORD);
+                    await db.collection('usuarios').doc(cred.user.uid).set({ nome: 'Admin', tipo_acesso: 'master', status: 'ativo' });
+                    await auth.signOut();
+                } catch (e) {
+                    console.error(e);
+                }
+            }
+        }
+
+        function renderAdminEmpresas(list) {
+            adminEmpresas.innerHTML = list.map(emp => `
+                <div class="border-b py-1 flex items-center justify-between">
+                    <div>${emp.razao_social} - <span class="text-sm">${emp.status}</span></div>
+                    <div>
+                        <select data-id="${emp.id}" class="validade border rounded p-1 text-xs">
+                            <option value="15d">15 dias</option>
+                            <option value="6m">6 meses</option>
+                            <option value="12m">12 meses</option>
+                            <option value="24m">24 meses</option>
+                            <option value="fantasma">Fantasma</option>
+                        </select>
+                        <button class="liberar text-indigo-600 ml-2" data-id="${emp.id}">Salvar</button>
+                    </div>
+                </div>`).join('');
+        }
+
+        async function loadAdminData() {
+            const empSnapshot = await db.collection('empresas').get();
+            window._empresas = empSnapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+            renderAdminEmpresas(window._empresas);
+            const userSnap = await db.collection('usuarios').get();
+            const list = userSnap.docs.filter(doc => doc.data().tipo_acesso !== 'master');
+            adminUsuarios.innerHTML = list.map(u => `
+                <div class="border-b py-1 flex justify-between items-center">
+                    ${u.data().nome} - ${u.data().email} - <span class="status">${u.data().status}</span>
+                    <div>
+                        <button class="reset text-indigo-600 mr-2" data-email="${u.data().email}">Resetar Senha</button>
+                        <button class="toggle text-indigo-600" data-id="${u.id}">Toggle Status</button>
+                    </div>
+                </div>`).join('');
         }
         
         function init() {
             loadState();
+            ensureMasterUser();
             if (window.location.pathname.includes('admin')) {
                 showAdminScreen();
                 adminLoginForm.addEventListener('submit', async (e) => {
                     e.preventDefault();
-                    if (document.getElementById('admin-email').value === MASTER_EMAIL && document.getElementById('admin-password').value === MASTER_PASSWORD) {
-                        adminLoginForm.classList.add('hidden');
-                        adminPanel.classList.remove('hidden');
-                        const snapshot = await db.collection('empresas').get();
-                        adminEmpresas.innerHTML = snapshot.docs.map(d => `<div class='border-b py-1'>${d.data().razao_social} - <button data-id='${d.id}' class='liberar text-indigo-600'>Liberar</button></div>`).join('');
-                        adminEmpresas.addEventListener('click', async (ev) => {
-                            if (ev.target.classList.contains('liberar')) {
-                                const id = ev.target.dataset.id;
-                                await db.collection('empresas').doc(id).update({ status: 'ativo', validade: '12m' });
-                                ev.target.textContent = 'Liberado';
-                            }
-                        });
-                    } else {
+                    try {
+                        await auth.signInWithEmailAndPassword(document.getElementById('admin-email').value, document.getElementById('admin-password').value);
+                        const snap = await db.collection('usuarios').doc(auth.currentUser.uid).get();
+                        if (snap.exists && snap.data().tipo_acesso === 'master') {
+                            adminLoginForm.classList.add('hidden');
+                            adminPanel.classList.remove('hidden');
+                            loadAdminData();
+                        } else {
+                            alert('Acesso não autorizado');
+                            auth.signOut();
+                        }
+                    } catch (err) {
                         alert('Credenciais inválidas');
+                    }
+                });
+                adminEmpresas.addEventListener('click', async (ev) => {
+                    if (ev.target.classList.contains('liberar')) {
+                        const id = ev.target.dataset.id;
+                        const validade = ev.target.parentElement.querySelector('.validade').value;
+                        await db.collection('empresas').doc(id).update({ status: 'ativo', validade });
+                        const users = await db.collection('usuarios').where('empresaId', '==', id).get();
+                        users.forEach(u => db.collection('usuarios').doc(u.id).update({ status: 'ativo', validade_acesso: validade }));
+                        ev.target.textContent = 'Salvo';
+                    }
+                });
+                searchEmpresa.addEventListener('input', () => {
+                    const term = searchEmpresa.value.toLowerCase();
+                    const filtered = window._empresas.filter(e => e.cnpj?.includes(term) || e.razao_social.toLowerCase().includes(term) || (e.nome_fantasia||'').toLowerCase().includes(term));
+                    renderAdminEmpresas(filtered);
+                });
+                adminUsuarios.addEventListener('click', async (ev) => {
+                    if (ev.target.classList.contains('toggle')) {
+                        const id = ev.target.dataset.id;
+                        const doc = await db.collection('usuarios').doc(id).get();
+                        const newStatus = doc.data().status === 'ativo' ? 'bloqueado' : 'ativo';
+                        await db.collection('usuarios').doc(id).update({ status: newStatus });
+                        ev.target.parentElement.parentElement.querySelector('.status').textContent = newStatus;
+                    }
+                    if (ev.target.classList.contains('reset')) {
+                        await auth.sendPasswordResetEmail(ev.target.dataset.email);
+                        alert('Email de recuperação enviado');
                     }
                 });
                 return;
@@ -590,6 +676,10 @@
                         saveState(STORAGE_KEYS.COMPANY, appState.companyInfo);
                         document.getElementById('company-name').value = appState.companyInfo.name || '';
                         document.getElementById('company-cnpj').value = appState.companyInfo.cnpj || '';
+                        document.getElementById('reg-razao').value = d.razao_social || '';
+                        document.getElementById('reg-fantasia').value = d.nome_fantasia || '';
+                        document.getElementById('reg-cnpj').value = d.cnpj || '';
+                        document.getElementById('reg-endereco').value = d.endereco || '';
                     }
                     showWelcomeScreen();
                 } else {

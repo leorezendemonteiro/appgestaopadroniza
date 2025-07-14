@@ -9,6 +9,22 @@
     <!-- jsPDF and html2canvas for PDF Export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.24.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.24.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.24.0/firebase-firestore-compat.js"></script>
+    <script>
+      const firebaseConfig = {
+        apiKey: "AIzaSyCqYsuVE3oju_BT_nMDNyws-8QiglgZN-8",
+        authDomain: "appgestao-trakto.firebaseapp.com",
+        projectId: "appgestao-trakto",
+        storageBucket: "appgestao-trakto.firebasestorage.app",
+        messagingSenderId: "967772034888",
+        appId: "1:967772034888:web:37ac2d26c3092c8413857d"
+      };
+      firebase.initializeApp(firebaseConfig);
+      const db = firebase.firestore();
+      const auth = firebase.auth();
+    </script>
     <style>
         /* Estilo para a aba ativa */
         .tab-active {
@@ -65,8 +81,37 @@
 </head>
 <body class="bg-slate-100 text-slate-800 font-sans">
 
+    <!-- =========== AUTENTICAÇÃO =========== -->
+    <div id="auth-screen" class="min-h-screen flex items-center justify-center p-4">
+        <div class="w-full max-w-md bg-white p-8 rounded-xl shadow-lg text-center">
+            <img src="https://placehold.co/250x80/e2e8f0/475569?text=Logo+Padroniza" alt="Logo Padroniza" class="mx-auto mb-4">
+            <div id="login-form-div" class="space-y-4">
+                <h2 class="text-xl font-bold mb-4">Acessar Conta</h2>
+                <form id="login-form" class="space-y-4">
+                    <input type="email" id="login-email" placeholder="Email" class="w-full p-3 border border-slate-300 rounded-lg" required>
+                    <input type="password" id="login-password" placeholder="Senha" class="w-full p-3 border border-slate-300 rounded-lg" required>
+                    <button type="submit" class="w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700 transition-colors">Entrar</button>
+                </form>
+                <p class="text-sm">Não possui cadastro? <a href="#" id="show-register" class="text-indigo-600">Criar conta</a></p>
+            </div>
+            <div id="register-form-div" class="space-y-4 hidden">
+                <h2 class="text-xl font-bold mb-4">Cadastro</h2>
+                <form id="register-form" class="space-y-3">
+                    <input type="text" id="reg-razao" placeholder="Razão Social" class="w-full p-3 border border-slate-300 rounded-lg" required>
+                    <input type="text" id="reg-fantasia" placeholder="Nome Fantasia" class="w-full p-3 border border-slate-300 rounded-lg" required>
+                    <input type="text" id="reg-cnpj" placeholder="CNPJ" class="w-full p-3 border border-slate-300 rounded-lg" required>
+                    <input type="text" id="reg-endereco" placeholder="Endereço" class="w-full p-3 border border-slate-300 rounded-lg" required>
+                    <input type="email" id="reg-email" placeholder="Email" class="w-full p-3 border border-slate-300 rounded-lg" required>
+                    <input type="password" id="reg-senha" placeholder="Senha" class="w-full p-3 border border-slate-300 rounded-lg" required>
+                    <button type="submit" class="w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700 transition-colors">Cadastrar</button>
+                </form>
+                <p class="text-sm"><a href="#" id="show-login" class="text-indigo-600">Já tenho conta</a></p>
+            </div>
+        </div>
+    </div>
+
     <!-- =========== TELA DE BOAS-VINDAS =========== -->
-    <div id="welcome-screen" class="min-h-screen flex items-center justify-center p-4">
+    <div id="welcome-screen" class="hidden min-h-screen flex items-center justify-center p-4">
         <div class="w-full max-w-md bg-white p-8 rounded-xl shadow-lg text-center">
             <img src="https://placehold.co/250x80/e2e8f0/475569?text=Logo+Padroniza" alt="Logo Padroniza" class="mx-auto mb-8">
             <h1 class="text-2xl font-bold mb-6 text-slate-700">Bem-vindo ao DRE Simplificado</h1>
@@ -426,6 +471,22 @@
         </div>
     </div>
 
+    <!-- ADMIN -->
+    <div id="admin-screen" class="hidden min-h-screen flex items-center justify-center p-4">
+        <div class="w-full max-w-xl bg-white p-6 rounded-xl shadow">
+            <h2 class="text-xl font-bold mb-4">Acesso Admin</h2>
+            <form id="admin-login-form" class="space-y-4">
+                <input type="email" id="admin-email" placeholder="Email" class="w-full p-3 border border-slate-300 rounded-lg" required>
+                <input type="password" id="admin-password" placeholder="Senha" class="w-full p-3 border border-slate-300 rounded-lg" required>
+                <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded-lg">Entrar</button>
+            </form>
+            <div id="admin-panel" class="hidden mt-6">
+                <h3 class="font-bold mb-2">Empresas</h3>
+                <div id="admin-empresas" class="text-sm"></div>
+            </div>
+        </div>
+    </div>
+
 
     <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -441,6 +502,9 @@
             maoDeObra: [],
         };
 
+        const MASTER_EMAIL = 'master@example.com';
+        const MASTER_PASSWORD = 'master123';
+
         const STORAGE_KEYS = {
             COMPANY: 'corretagestao02_empresa',
             CALIBRATION: 'corretagestao02_calibracao',
@@ -451,9 +515,20 @@
         };
 
         // Elementos da DOM
+        const authScreen = document.getElementById('auth-screen');
         const welcomeScreen = document.getElementById('welcome-screen');
         const mainApp = document.getElementById('main-app');
         const companyForm = document.getElementById('company-form');
+        const loginForm = document.getElementById('login-form');
+        const registerForm = document.getElementById('register-form');
+        const showRegister = document.getElementById('show-register');
+        const showLogin = document.getElementById('show-login');
+        const loginFormDiv = document.getElementById('login-form-div');
+        const registerFormDiv = document.getElementById('register-form-div');
+        const adminScreen = document.getElementById('admin-screen');
+        const adminLoginForm = document.getElementById('admin-login-form');
+        const adminPanel = document.getElementById('admin-panel');
+        const adminEmpresas = document.getElementById('admin-empresas');
         const tabButtons = document.querySelectorAll('.tab-button');
         const tabContents = document.querySelectorAll('.tab-content');
         const logoutButton = document.getElementById('logout-button');
@@ -476,11 +551,51 @@
         
         function init() {
             loadState();
-            if (appState.companyInfo && appState.companyInfo.name && appState.companyInfo.cnpj) {
-                showMainApp();
-            } else {
-                showWelcomeScreen();
+            if (window.location.pathname.includes('admin')) {
+                showAdminScreen();
+                adminLoginForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    if (document.getElementById('admin-email').value === MASTER_EMAIL && document.getElementById('admin-password').value === MASTER_PASSWORD) {
+                        adminLoginForm.classList.add('hidden');
+                        adminPanel.classList.remove('hidden');
+                        const snapshot = await db.collection('empresas').get();
+                        adminEmpresas.innerHTML = snapshot.docs.map(d => `<div class='border-b py-1'>${d.data().razao_social} - <button data-id='${d.id}' class='liberar text-indigo-600'>Liberar</button></div>`).join('');
+                        adminEmpresas.addEventListener('click', async (ev) => {
+                            if (ev.target.classList.contains('liberar')) {
+                                const id = ev.target.dataset.id;
+                                await db.collection('empresas').doc(id).update({ status: 'ativo', validade: '12m' });
+                                ev.target.textContent = 'Liberado';
+                            }
+                        });
+                    } else {
+                        alert('Credenciais inválidas');
+                    }
+                });
+                return;
             }
+            auth.onAuthStateChanged(async user => {
+                if (user) {
+                    const userSnap = await db.collection('usuarios').doc(user.uid).get();
+                    if (!userSnap.exists) { showAuthScreen(); return; }
+                    const uData = userSnap.data();
+                    if (uData.status !== 'ativo') {
+                        alert('Cadastro aguardando liberação ou bloqueado.');
+                        auth.signOut();
+                        return;
+                    }
+                    const empSnap = await db.collection('empresas').doc(uData.empresaId).get();
+                    if (empSnap.exists) {
+                        const d = empSnap.data();
+                        appState.companyInfo = { id: empSnap.id, name: d.razao_social, cnpj: d.cnpj };
+                        saveState(STORAGE_KEYS.COMPANY, appState.companyInfo);
+                        document.getElementById('company-name').value = appState.companyInfo.name || '';
+                        document.getElementById('company-cnpj').value = appState.companyInfo.cnpj || '';
+                    }
+                    showWelcomeScreen();
+                } else {
+                    showAuthScreen();
+                }
+            });
             renderAllLists();
             populateCalibrationForm();
             setupReportSelectors();
@@ -490,7 +605,14 @@
         // ===================================================================
         // 3. FUNÇÕES DE RENDERIZAÇÃO E UI
         // ===================================================================
+        function showAuthScreen() {
+            authScreen.style.display = 'flex';
+            welcomeScreen.style.display = 'none';
+            mainApp.style.display = 'none';
+        }
+
         function showWelcomeScreen() {
+            authScreen.style.display = 'none';
             welcomeScreen.style.display = 'flex';
             mainApp.style.display = 'none';
         }
@@ -498,8 +620,17 @@
         function showMainApp() {
             document.getElementById('header-company-name').textContent = appState.companyInfo.name;
             document.getElementById('header-company-cnpj').textContent = `CNPJ: ${appState.companyInfo.cnpj}`;
+            authScreen.style.display = 'none';
             welcomeScreen.style.display = 'none';
+            adminScreen.style.display = 'none';
             mainApp.style.display = 'block';
+        }
+
+        function showAdminScreen() {
+            authScreen.style.display = 'none';
+            welcomeScreen.style.display = 'none';
+            mainApp.style.display = 'none';
+            adminScreen.style.display = 'flex';
         }
 
         function switchTab(tabName) {
@@ -883,16 +1014,54 @@
         // 6. EVENT LISTENERS
         // ===================================================================
         function addEventListeners() {
-            companyForm.addEventListener('submit', (e) => {
+            companyForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const name = document.getElementById('company-name').value;
                 const cnpj = document.getElementById('company-cnpj').value;
-                if(name && cnpj) { appState.companyInfo = { name, cnpj }; saveState(STORAGE_KEYS.COMPANY, appState.companyInfo); showMainApp(); }
+                if(auth.currentUser && appState.companyInfo){
+                    await db.collection('empresas').doc(appState.companyInfo.id).update({ razao_social: name, cnpj });
+                }
+                if(name && cnpj){
+                    appState.companyInfo = { ...appState.companyInfo, name, cnpj };
+                    saveState(STORAGE_KEYS.COMPANY, appState.companyInfo);
+                    showMainApp();
+                }
             });
 
             logoutButton.addEventListener('click', () => {
-                showConfirmationModal('Tem certeza que deseja sair?', () => { localStorage.removeItem(STORAGE_KEYS.COMPANY); window.location.reload(); });
+                showConfirmationModal('Tem certeza que deseja sair?', () => { localStorage.removeItem(STORAGE_KEYS.COMPANY); auth.signOut(); });
             });
+
+            loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                try {
+                    await auth.signInWithEmailAndPassword(document.getElementById('login-email').value, document.getElementById('login-password').value);
+                } catch(err){ alert(err.message); }
+            });
+
+            registerForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const data = {
+                    razao: document.getElementById('reg-razao').value,
+                    fantasia: document.getElementById('reg-fantasia').value,
+                    cnpj: document.getElementById('reg-cnpj').value,
+                    endereco: document.getElementById('reg-endereco').value,
+                    email: document.getElementById('reg-email').value,
+                    senha: document.getElementById('reg-senha').value,
+                };
+                try {
+                    const cred = await auth.createUserWithEmailAndPassword(data.email, data.senha);
+                    const empRef = await db.collection('empresas').add({ cnpj: data.cnpj, razao_social: data.razao, nome_fantasia: data.fantasia, endereco: data.endereco, status: 'aguardando', validade: '' });
+                    await db.collection('usuarios').doc(cred.user.uid).set({ empresaId: empRef.id, nome: data.razao, tipo_acesso: 'admin', status: 'aguardando', validade_acesso: '' });
+                    alert('Cadastro realizado. Aguarde liberação.');
+                    registerForm.reset();
+                    loginFormDiv.classList.remove('hidden');
+                    registerFormDiv.classList.add('hidden');
+                } catch(err){ alert(err.message); }
+            });
+
+            showRegister.addEventListener('click', (e)=>{ e.preventDefault(); loginFormDiv.classList.add('hidden'); registerFormDiv.classList.remove('hidden'); });
+            showLogin.addEventListener('click', (e)=>{ e.preventDefault(); registerFormDiv.classList.add('hidden'); loginFormDiv.classList.remove('hidden'); });
 
             tabButtons.forEach(button => button.addEventListener('click', () => switchTab(button.dataset.tab)));
 

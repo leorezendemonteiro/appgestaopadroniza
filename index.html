@@ -603,11 +603,10 @@
                     loadUsers();
                 } else {
                     const doc = await db.collection('usuarios').doc(user.uid).get();
-                    if (doc.exists && doc.data().primeiroAcesso) {
-                        show(firstAccessScreen);
-                    } else {
-                        show(mainApp);
+                    if (doc.exists) {
+                        localStorage.setItem('usuario', JSON.stringify(doc.data()));
                     }
+                    show(mainApp);
                 }
             } catch (err) {
                 switch (err.code) {
@@ -646,20 +645,19 @@
                 const secApp = firebase.initializeApp(firebase.app().options, 'sec');
                 const cred = await secApp.auth().createUserWithEmailAndPassword(email, senha);
                 await db.collection('usuarios').doc(cred.user.uid).set({
+                    email,
                     cnpj,
                     razaoSocial: razao,
                     nomeFantasia: fantasia,
                     tempoLiberacao: parseInt(tempo),
-                    email,
-                    primeiroAcesso: true,
-                    liberadoPor: auth.currentUser.email,
-                    dataCadastro: firebase.firestore.FieldValue.serverTimestamp()
+                    dataCadastro: firebase.firestore.FieldValue.serverTimestamp(),
+                    status: 'ativo'
                 });
                 await secApp.auth().signOut();
                 secApp.delete();
                 e.target.reset();
                 loadUsers();
-                alert('Usuário cadastrado com sucesso');
+                alert('Usuário cadastrado e liberado para uso!');
             } catch (err) {
                 if (err.code === 'auth/email-already-in-use') {
                     alert('Email já cadastrado');

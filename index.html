@@ -507,7 +507,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <script>
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', function() {
         const adminEmail = 'admin@gestao.com';
         const adminPassword = 'admin123';
 
@@ -537,21 +537,21 @@
             el.classList.remove('hidden');
         }
 
-        showRegisterLink.addEventListener('click', (e) => {
+        showRegisterLink.addEventListener('click', function(e) {
             e.preventDefault();
             loginFormDiv.classList.add('hidden');
             cadastroScreen.classList.remove('hidden');
             loginError.textContent = '';
         });
 
-        showLoginLink.addEventListener('click', (e) => {
+        showLoginLink.addEventListener('click', function(e) {
             e.preventDefault();
             cadastroScreen.classList.add('hidden');
             loginFormDiv.classList.remove('hidden');
             loginError.textContent = '';
         });
 
-        cadastroForm.addEventListener('submit', async (e) => {
+        cadastroForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             cadastroErro.textContent = '';
             const nome = document.getElementById('cadastro-nome').value;
@@ -583,13 +583,13 @@
 
         async function loadUsers() {
             const snap = await db.collection('usuarios').get();
-            clientsList.innerHTML = snap.docs.map(d => {
+            clientsList.innerHTML = snap.docs.map(function(d) {
                 const c = d.data();
                 return `<div class="border p-2 rounded">${c.nomeFantasia} - ${c.email}</div>`;
             }).join('');
         }
 
-        loginForm.addEventListener('submit', async (e) => {
+        loginForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             loginError.textContent = '';
             const email = document.getElementById('login-email').value;
@@ -624,7 +624,7 @@
             }
         });
 
-        firstAccessForm.addEventListener('submit', async (e) => {
+        firstAccessForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             const newPass = document.getElementById('first-password').value;
             try {
@@ -636,7 +636,7 @@
             }
         });
 
-        clientForm.addEventListener('submit', async (e) => {
+        clientForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             const cnpj = document.getElementById('client-cnpj').value;
             const razao = document.getElementById('client-razao').value;
@@ -671,13 +671,13 @@
             }
         });
 
-        adminLogout.addEventListener('click', () => {
+        adminLogout.addEventListener('click', function() {
             auth.signOut();
             show(authScreen);
             loginError.textContent = '';
         });
 
-        logoutButton.addEventListener('click', () => {
+        logoutButton.addEventListener('click', function() {
             auth.signOut();
             show(authScreen);
             loginError.textContent = '';

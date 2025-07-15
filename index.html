@@ -108,6 +108,17 @@
         </div>
     </div>
 
+    <!-- =========== PRIMEIRO ACESSO =========== -->
+    <div id="first-access-screen" class="hidden min-h-screen flex items-center justify-center p-4">
+        <div class="w-full max-w-md bg-white p-8 rounded-xl shadow-lg text-center">
+            <h2 class="text-xl font-bold mb-4">Definir Nova Senha</h2>
+            <form id="first-access-form" class="space-y-4">
+                <input type="password" id="first-password" placeholder="Nova senha" class="w-full p-3 border border-slate-300 rounded-lg" required>
+                <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded-lg">Salvar</button>
+            </form>
+        </div>
+    </div>
+
     <!-- =========== TELA DE BOAS-VINDAS =========== -->
     <div id="welcome-screen" class="hidden min-h-screen flex items-center justify-center p-4">
         <div class="w-full max-w-md bg-white p-8 rounded-xl shadow-lg text-center">
@@ -472,26 +483,154 @@
     <!-- ADMIN -->
     <div id="admin-screen" class="hidden min-h-screen flex items-center justify-center p-4">
         <div class="w-full max-w-xl bg-white p-6 rounded-xl shadow">
-            <h2 class="text-xl font-bold mb-4">Acesso Admin</h2>
-            <form id="admin-login-form" class="space-y-4">
-                <input type="email" id="admin-email" placeholder="Email" class="w-full p-3 border border-slate-300 rounded-lg" required>
-                <input type="password" id="admin-password" placeholder="Senha" class="w-full p-3 border border-slate-300 rounded-lg" required>
-                <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded-lg">Entrar</button>
+            <h2 class="text-xl font-bold mb-4">Painel Administrativo</h2>
+            <form id="client-form" class="space-y-3">
+                <input type="text" id="client-cnpj" placeholder="CNPJ" class="w-full p-2 border rounded" required>
+                <input type="text" id="client-razao" placeholder="Razão Social" class="w-full p-2 border rounded" required>
+                <input type="text" id="client-fantasia" placeholder="Nome Fantasia" class="w-full p-2 border rounded" required>
+                <select id="client-tempo" class="w-full p-2 border rounded" required>
+                    <option value="6">6 meses</option>
+                    <option value="12">12 meses</option>
+                    <option value="24">24 meses</option>
+                </select>
+                <input type="email" id="client-email" placeholder="Email do cliente" class="w-full p-2 border rounded" required>
+                <input type="password" id="client-senha" placeholder="Senha de primeiro acesso" class="w-full p-2 border rounded" required>
+                <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded">Cadastrar Cliente</button>
             </form>
-            <div id="admin-panel" class="hidden mt-6">
-                <h3 class="font-bold mb-2">Empresas</h3>
-                <input id="search-empresa" type="text" placeholder="Pesquisar..." class="w-full p-2 border rounded mb-4" />
-                <div id="admin-empresas" class="text-sm space-y-2"></div>
-                <h3 class="font-bold my-2">Usuários</h3>
-                <div id="admin-usuarios" class="text-sm space-y-2"></div>
-            </div>
+            <div id="clients-list" class="mt-6 space-y-2 text-sm"></div>
+            <button id="admin-logout" class="mt-6 w-full bg-red-600 text-white py-2 rounded">Sair</button>
         </div>
-    
-</div>
+
+    </div>
     <!-- jsPDF and html2canvas for PDF Export -->
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const adminEmail = 'admin@gestao.com';
+        const adminPassword = 'admin123';
+
+        const authScreen = document.getElementById('auth-screen');
+        const adminScreen = document.getElementById('admin-screen');
+        const firstAccessScreen = document.getElementById('first-access-screen');
+        const mainApp = document.getElementById('main-app');
+        const loginForm = document.getElementById('login-form');
+        const clientForm = document.getElementById('client-form');
+        const clientsList = document.getElementById('clients-list');
+        const adminLogout = document.getElementById('admin-logout');
+        const firstAccessForm = document.getElementById('first-access-form');
+        const logoutButton = document.getElementById('logout-button');
+
+        function show(el) {
+            authScreen.classList.add('hidden');
+            adminScreen.classList.add('hidden');
+            firstAccessScreen.classList.add('hidden');
+            mainApp.classList.add('hidden');
+            el.classList.remove('hidden');
+        }
+
+        async function ensureAdmin() {
+            try {
+                await auth.signInWithEmailAndPassword(adminEmail, adminPassword);
+            } catch (e) {
+                if (e.code === 'auth/user-not-found') {
+                    await auth.createUserWithEmailAndPassword(adminEmail, adminPassword);
+                }
+            } finally {
+                await auth.signOut();
+            }
+        }
+
+        async function loadClients() {
+            const snap = await db.collection('clientes').get();
+            clientsList.innerHTML = snap.docs.map(d => {
+                const c = d.data();
+                return `<div class="border p-2 rounded">${c.nomeFantasia} - ${c.email} - ${c.status}</div>`;
+            }).join('');
+        }
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
+                const user = auth.currentUser;
+                if (user.email === adminEmail) {
+                    show(adminScreen);
+                    loadClients();
+                } else {
+                    const doc = await db.collection('clientes').doc(user.uid).get();
+                    if (doc.exists && doc.data().primeiroAcesso) {
+                        show(firstAccessScreen);
+                    } else {
+                        show(mainApp);
+                    }
+                }
+            } catch (err) {
+                alert(err.message);
+            }
+        });
+
+        firstAccessForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const newPass = document.getElementById('first-password').value;
+            try {
+                await auth.currentUser.updatePassword(newPass);
+                await db.collection('clientes').doc(auth.currentUser.uid).update({ primeiroAcesso: false });
+                show(mainApp);
+            } catch (err) {
+                alert(err.message);
+            }
+        });
+
+        clientForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const cnpj = document.getElementById('client-cnpj').value;
+            const razao = document.getElementById('client-razao').value;
+            const fantasia = document.getElementById('client-fantasia').value;
+            const tempo = document.getElementById('client-tempo').value;
+            const email = document.getElementById('client-email').value;
+            const senha = document.getElementById('client-senha').value;
+            try {
+                const secApp = firebase.initializeApp(firebase.app().options, 'sec');
+                const cred = await secApp.auth().createUserWithEmailAndPassword(email, senha);
+                await db.collection('clientes').doc(cred.user.uid).set({
+                    cnpj,
+                    razaoSocial: razao,
+                    nomeFantasia: fantasia,
+                    tempoLiberacao: parseInt(tempo),
+                    email,
+                    status: 'ativo',
+                    primeiroAcesso: true,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                await secApp.auth().signOut();
+                secApp.delete();
+                e.target.reset();
+                loadClients();
+                alert('Cliente cadastrado');
+            } catch (err) {
+                alert(err.message);
+            }
+        });
+
+        adminLogout.addEventListener('click', () => {
+            auth.signOut();
+            show(authScreen);
+        });
+
+        logoutButton.addEventListener('click', () => {
+            auth.signOut();
+            show(authScreen);
+        });
+
+        ensureAdmin();
+        show(authScreen);
+    });
+    </script>
 
 
 </body>

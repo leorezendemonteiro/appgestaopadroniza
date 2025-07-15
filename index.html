@@ -477,11 +477,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <!-- Firebase SDK -->
-    <script type="module">
-      import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.24.0/firebase-app.js';
-      import { getAuth } from 'https://www.gstatic.com/firebasejs/9.24.0/firebase-auth.js';
-      import { getFirestore } from 'https://www.gstatic.com/firebasejs/9.24.0/firebase-firestore.js';
-
+    <script src="https://www.gstatic.com/firebasejs/9.24.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.24.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.24.0/firebase-firestore-compat.js"></script>
+    <script>
       const firebaseConfig = {
         apiKey: "AIzaSyCqYsuVE3oju_BT_nMDNyws-8QiglgZN-8",
         authDomain: "appgestao-trakto.firebaseapp.com",
@@ -490,9 +489,9 @@
         messagingSenderId: "967772034888",
         appId: "1:967772034888:web:37ac2d26c3092c8413857d"
       };
-      const app = initializeApp(firebaseConfig);
-      window.db = getFirestore(app);
-      window.auth = getAuth(app);
+      firebase.initializeApp(firebaseConfig);
+      window.db = firebase.firestore();
+      window.auth = firebase.auth();
     </script>
 
 </body>

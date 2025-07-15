@@ -68,7 +68,7 @@
         apiKey: "AIzaSyCqYsuVE3oju_BT_nMDNyws-8QiglgZN-8",
         authDomain: "appgestao-trakto.firebaseapp.com",
         projectId: "appgestao-trakto",
-        storageBucket: "appgestao-trakto.firebasestorage.app",
+        storageBucket: "appgestao-trakto.appspot.com",
         messagingSenderId: "967772034888",
         appId: "1:967772034888:web:37ac2d26c3092c8413857d"
       };
@@ -89,6 +89,7 @@
                     <input type="email" id="login-email" placeholder="Email" class="w-full p-3 border border-slate-300 rounded-lg" required>
                     <input type="password" id="login-password" placeholder="Senha" class="w-full p-3 border border-slate-300 rounded-lg" required>
                     <button type="submit" class="w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700 transition-colors">Entrar</button>
+                    <p id="login-error" class="text-red-600 text-sm"></p>
                 </form>
                 <p class="text-sm">Não possui cadastro? <a href="#" id="show-register" class="text-indigo-600">Criar conta</a></p>
             </div>
@@ -517,6 +518,11 @@
         const firstAccessScreen = document.getElementById('first-access-screen');
         const mainApp = document.getElementById('main-app');
         const loginForm = document.getElementById('login-form');
+        const loginError = document.getElementById('login-error');
+        const showRegisterLink = document.getElementById('show-register');
+        const showLoginLink = document.getElementById('show-login');
+        const loginFormDiv = document.getElementById('login-form-div');
+        const registerFormDiv = document.getElementById('register-form-div');
         const clientForm = document.getElementById('client-form');
         const clientsList = document.getElementById('clients-list');
         const adminLogout = document.getElementById('admin-logout');
@@ -530,6 +536,20 @@
             mainApp.classList.add('hidden');
             el.classList.remove('hidden');
         }
+
+        showRegisterLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            loginFormDiv.classList.add('hidden');
+            registerFormDiv.classList.remove('hidden');
+            loginError.textContent = '';
+        });
+
+        showLoginLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            registerFormDiv.classList.add('hidden');
+            loginFormDiv.classList.remove('hidden');
+            loginError.textContent = '';
+        });
 
         async function ensureAdmin() {
             try {
@@ -553,11 +573,12 @@
 
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
+            loginError.textContent = '';
             const email = document.getElementById('login-email').value;
             const password = document.getElementById('login-password').value;
             try {
-                await auth.signInWithEmailAndPassword(email, password);
-                const user = auth.currentUser;
+                const cred = await auth.signInWithEmailAndPassword(email, password);
+                const user = cred.user;
                 if (user.email === adminEmail) {
                     show(adminScreen);
                     loadUsers();
@@ -570,7 +591,14 @@
                     }
                 }
             } catch (err) {
-                alert(err.message);
+                switch (err.code) {
+                    case 'auth/user-not-found':
+                    case 'auth/wrong-password':
+                        loginError.textContent = 'Email ou senha inválidos';
+                        break;
+                    default:
+                        loginError.textContent = err.message;
+                }
             }
         });
 
@@ -624,11 +652,13 @@
         adminLogout.addEventListener('click', () => {
             auth.signOut();
             show(authScreen);
+            loginError.textContent = '';
         });
 
         logoutButton.addEventListener('click', () => {
             auth.signOut();
             show(authScreen);
+            loginError.textContent = '';
         });
 
         ensureAdmin();

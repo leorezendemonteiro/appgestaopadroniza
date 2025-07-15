@@ -59,6 +59,23 @@
             border-bottom: 1px solid #eee;
         }
     </style>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.24.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.24.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.24.0/firebase-firestore-compat.js"></script>
+    <script>
+      const firebaseConfig = {
+        apiKey: "AIzaSyCqYsuVE3oju_BT_nMDNyws-8QiglgZN-8",
+        authDomain: "appgestao-trakto.firebaseapp.com",
+        projectId: "appgestao-trakto",
+        storageBucket: "appgestao-trakto.firebasestorage.app",
+        messagingSenderId: "967772034888",
+        appId: "1:967772034888:web:37ac2d26c3092c8413857d"
+      };
+      firebase.initializeApp(firebaseConfig);
+      window.db = firebase.firestore();
+      window.auth = firebase.auth();
+</script>
 </head>
 <body class="bg-slate-100 text-slate-800 font-sans">
 
@@ -476,23 +493,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.24.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.24.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.24.0/firebase-firestore-compat.js"></script>
-    <script>
-      const firebaseConfig = {
-        apiKey: "AIzaSyCqYsuVE3oju_BT_nMDNyws-8QiglgZN-8",
-        authDomain: "appgestao-trakto.firebaseapp.com",
-        projectId: "appgestao-trakto",
-        storageBucket: "appgestao-trakto.firebasestorage.app",
-        messagingSenderId: "967772034888",
-        appId: "1:967772034888:web:37ac2d26c3092c8413857d"
-      };
-      firebase.initializeApp(firebaseConfig);
-      window.db = firebase.firestore();
-      window.auth = firebase.auth();
-    </script>
 
 </body>
 </html>

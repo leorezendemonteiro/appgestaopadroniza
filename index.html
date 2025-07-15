@@ -576,8 +576,10 @@
             loginError.textContent = '';
             const email = document.getElementById('login-email').value;
             const password = document.getElementById('login-password').value;
+            console.log('Tentativa de login para:', email);
             try {
                 const cred = await auth.signInWithEmailAndPassword(email, password);
+                console.log('Login realizado:', cred.user.uid);
                 const user = cred.user;
                 if (user.email === adminEmail) {
                     show(adminScreen);
@@ -591,6 +593,7 @@
                     }
                 }
             } catch (err) {
+                console.error('Erro ao fazer login:', err);
                 switch (err.code) {
                     case 'auth/user-not-found':
                     case 'auth/wrong-password':
@@ -599,6 +602,7 @@
                     default:
                         loginError.textContent = err.message;
                 }
+                alert('Falha no login: ' + (err.message || err));
             }
         });
 

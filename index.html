@@ -597,16 +597,44 @@
             const nome = document.getElementById('cadastro-nome').value;
             const email = document.getElementById('cadastro-email').value;
             const senha = document.getElementById('cadastro-senha').value;
+
+            // Campos opcionais (podem não existir no formulário)
+            const cnpj = document.getElementById('cadastro-cnpj')?.value || '';
+            const razao = document.getElementById('cadastro-razao')?.value || '';
+            const tempo = document.getElementById('cadastro-tempo')?.value || '';
+
             try {
                 const cred = await auth.createUserWithEmailAndPassword(email, senha);
+
+                // Grava o documento no Firestore imediatamente após o cadastro
+                try {
+                    await db.collection('usuarios').doc(cred.user.uid).set({
+                        uid: cred.user.uid,
+                        nome,
+                        email,
+                        cnpj,
+                        razaoSocial: razao,
+                        tempoContrato: tempo,
+                        tempoLiberacao: tempo,
+                        status: 'pendente',
+                        aprovado: false,
+                        dataCadastro: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                } catch (fireErr) {
+                    // Remove o usuário do Auth se falhar ao gravar no Firestore
+                    await cred.user.delete();
+                    throw fireErr;
+                }
+
                 await cred.user.updateProfile({ displayName: nome });
+                await auth.signOut();
                 alert('Cadastro realizado com sucesso! Faça login para acessar.');
                 cadastroForm.reset();
                 cadastroScreen.classList.add('hidden');
                 loginFormDiv.classList.remove('hidden');
             } catch (err) {
                 cadastroErro.textContent = err.message;
-                alert(err.message);
+                alert('Erro ao concluir cadastro: ' + err.message);
             }
         });
 
@@ -634,7 +662,7 @@
                             <th class="px-2 py-1 border">Email</th>
                             <th class="px-2 py-1 border">CNPJ</th>
                             <th class="px-2 py-1 border">Razão Social</th>
-                            <th class="px-2 py-1 border">Tempo</th>
+                            <th class="px-2 py-1 border">Tempo Contrato</th>
                             <th class="px-2 py-1 border">Status</th>
                             <th class="px-2 py-1 border">Ações</th>
                         </tr>
@@ -649,11 +677,11 @@
                                     <td class="px-2 py-1 border">${u.email || ''}</td>
                                     <td class="px-2 py-1 border">${u.cnpj || ''}</td>
                                     <td class="px-2 py-1 border">${u.razaoSocial || ''}</td>
-                                    <td class="px-2 py-1 border">${u.tempoLiberacao || ''}</td>
+                                    <td class="px-2 py-1 border">${u.tempoContrato || u.tempoLiberacao || ''}</td>
                                     <td class="px-2 py-1 border">${status}</td>
                                     <td class="px-2 py-1 border space-x-1">
                                         <button onclick="toggleStatus('${u.id}', '${toggle}')" class="${status === 'Ativo' ? 'text-red-600' : 'text-green-600'} text-xs">${status === 'Ativo' ? 'Desativar' : 'Ativar'}</button>
-                                        <button onclick="editarTempo('${u.id}', ${u.tempoLiberacao || 6})" class="text-blue-600 text-xs">Editar Tempo</button>
+                                        <button onclick="editarTempo('${u.id}', ${u.tempoContrato || u.tempoLiberacao || 6})" class="text-blue-600 text-xs">Editar Tempo</button>
                                     </td>
                                 </tr>
                             `;
@@ -684,7 +712,7 @@
                 return;
             }
             try {
-                await db.collection('usuarios').doc(id).update({ tempoLiberacao: valor });
+                await db.collection('usuarios').doc(id).update({ tempoLiberacao: valor, tempoContrato: valor });
                 loadUsers();
                 alert('Tempo atualizado');
             } catch (err) {
@@ -719,6 +747,7 @@
                             status: 'ativo',
                             aprovado: true,
                             tempoLiberacao: 6,
+                            tempoContrato: 6,
                             dataCadastro: firebase.firestore.FieldValue.serverTimestamp()
                         };
                         await ref.set(data);
@@ -781,6 +810,7 @@
                     razaoSocial: razao,
                     nomeFantasia: fantasia,
                     tempoLiberacao: parseInt(tempo),
+                    tempoContrato: parseInt(tempo),
                     dataCadastro: firebase.firestore.FieldValue.serverTimestamp(),
                     status: 'ativo',
                     aprovado: true

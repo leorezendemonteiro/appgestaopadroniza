@@ -102,7 +102,7 @@
                     <button type="submit" class="w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700 transition-colors">Cadastrar</button>
                     <p id="cadastro-erro" class="text-red-600 text-sm"></p>
                 </form>
-                <p class="text-sm"><a href="#" id="show-login" class="text-indigo-600">Já tenho conta</a></p>
+                <p class="text-sm"><a href="#" id="show-login" class="text-indigo-600">Voltar ao Login</a></p>
             </div>
         </div>
     </div>
@@ -566,6 +566,7 @@
                 loginFormDiv.classList.remove('hidden');
             } catch (err) {
                 cadastroErro.textContent = err.message;
+                alert(err.message);
             }
         });
 
@@ -594,10 +595,8 @@
             loginError.textContent = '';
             const email = document.getElementById('login-email').value;
             const password = document.getElementById('login-password').value;
-            console.log('Tentativa de login para:', email);
             try {
                 const cred = await auth.signInWithEmailAndPassword(email, password);
-                console.log('Login realizado:', cred.user.uid);
                 const user = cred.user;
                 if (user.email === adminEmail) {
                     show(adminScreen);
@@ -611,7 +610,6 @@
                     }
                 }
             } catch (err) {
-                console.error('Erro ao fazer login:', err);
                 switch (err.code) {
                     case 'auth/user-not-found':
                     case 'auth/wrong-password':

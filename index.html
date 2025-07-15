@@ -93,18 +93,7 @@
                     <button type="submit" class="w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700 transition-colors">Entrar</button>
                     <p id="login-error" class="text-red-600 text-sm"></p>
                 </form>
-                <p class="text-sm">Não possui cadastro? <a href="#" id="criar-conta-link" class="text-indigo-600">Criar conta</a></p>
-            </div>
-            <div id="cadastro-screen" class="space-y-4 hidden">
-                <h2 class="text-xl font-bold mb-4">Cadastro</h2>
-                <form id="cadastro-form" class="space-y-3">
-                    <input type="text" id="cadastro-nome" placeholder="Nome" class="w-full p-3 border border-slate-300 rounded-lg" required>
-                    <input type="email" id="cadastro-email" placeholder="Email" class="w-full p-3 border border-slate-300 rounded-lg" required>
-                    <input type="password" id="cadastro-senha" placeholder="Senha" class="w-full p-3 border border-slate-300 rounded-lg" required>
-                    <button type="submit" class="w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700 transition-colors">Cadastrar</button>
-                    <p id="cadastro-erro" class="text-red-600 text-sm"></p>
-                </form>
-                <p class="text-sm"><a href="#" id="show-login" class="text-indigo-600">Voltar ao Login</a></p>
+                <!-- Link e formulário de auto cadastro removidos -->
             </div>
         </div>
     </div>
@@ -158,6 +147,7 @@
                     <button data-tab="despesas-fixas" class="tab-button whitespace-nowrap py-4 px-3 sm:px-4 border-b-2 font-medium text-sm">Desp. Fixas</button>
                     <button data-tab="mao-de-obra" class="tab-button whitespace-nowrap py-4 px-3 sm:px-4 border-b-2 font-medium text-sm">Mão de Obra</button>
                     <button data-tab="relatorio" class="tab-button whitespace-nowrap py-4 px-3 sm:px-4 border-b-2 font-medium text-sm">Relatório</button>
+                    <button data-tab="perfil" class="tab-button whitespace-nowrap py-4 px-3 sm:px-4 border-b-2 font-medium text-sm">Perfil</button>
                 </div>
             </div>
         </nav>
@@ -465,6 +455,22 @@
                     <button id="export-pdf-btn" class="w-full mt-6 bg-green-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-green-700">Exportar Relatório Detalhado (PDF)</button>
                 </div>
             </div>
+            <div id="tab-perfil" class="tab-content">
+                <div class="bg-white p-6 rounded-xl shadow-lg">
+                    <h2 class="text-xl font-bold mb-4">Meu Cadastro</h2>
+                    <form id="perfil-form" class="space-y-3">
+                        <input type="text" id="perfil-nome" class="w-full p-2 border rounded" placeholder="Nome">
+                        <input type="tel" id="perfil-telefone" class="w-full p-2 border rounded" placeholder="Telefone">
+                        <input type="email" id="perfil-email" class="w-full p-2 border rounded bg-slate-100" disabled>
+                        <input type="text" id="perfil-cnpj" class="w-full p-2 border rounded bg-slate-100" disabled>
+                        <input type="text" id="perfil-razao" class="w-full p-2 border rounded bg-slate-100" disabled>
+                        <input type="text" id="perfil-plano" class="w-full p-2 border rounded bg-slate-100" disabled>
+                        <input type="text" id="perfil-status" class="w-full p-2 border rounded bg-slate-100" disabled>
+                        <input type="text" id="perfil-data" class="w-full p-2 border rounded bg-slate-100" disabled>
+                        <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded">Salvar</button>
+                    </form>
+                </div>
+            </div>
         </main>
     </div>
 
@@ -496,6 +502,11 @@
                     <input type="text" id="client-cnpj" placeholder="CNPJ" class="w-full p-2 border rounded" required>
                     <input type="text" id="client-razao" placeholder="Razão Social" class="w-full p-2 border rounded" required>
                     <input type="text" id="client-fantasia" placeholder="Nome Fantasia" class="w-full p-2 border rounded" required>
+                    <input type="tel" id="client-telefone" placeholder="Telefone" class="w-full p-2 border rounded">
+                    <select id="client-plano" class="w-full p-2 border rounded" required>
+                        <option value="basico">Básico</option>
+                        <option value="premium">Premium</option>
+                    </select>
                     <select id="client-tempo" class="w-full p-2 border rounded" required>
                         <option value="6">6 meses</option>
                         <option value="12">12 meses</option>
@@ -530,12 +541,7 @@
         const mainApp = document.getElementById('main-app');
         const loginForm = document.getElementById('login-form');
         const loginError = document.getElementById('login-error');
-        const showRegisterLink = document.getElementById('criar-conta-link');
-        const showLoginLink = document.getElementById('show-login');
         const loginFormDiv = document.getElementById('login-form-div');
-        const cadastroScreen = document.getElementById('cadastro-screen');
-        const cadastroForm = document.getElementById('cadastro-form');
-        const cadastroErro = document.getElementById('cadastro-erro');
         const clientForm = document.getElementById('client-form');
         const clientsList = document.getElementById('clients-list');
         const adminTabCadastroBtn = document.getElementById('admin-tab-cadastro-btn');
@@ -545,6 +551,17 @@
         const adminLogout = document.getElementById('admin-logout');
         const firstAccessForm = document.getElementById('first-access-form');
         const logoutButton = document.getElementById('logout-button');
+        const perfilForm = document.getElementById('perfil-form');
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabContents = document.querySelectorAll('.tab-content');
+        tabButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                tabButtons.forEach(b => b.classList.remove('tab-active'));
+                tabContents.forEach(c => c.classList.remove('tab-content-active'));
+                btn.classList.add('tab-active');
+                document.getElementById('tab-' + btn.dataset.tab).classList.add('tab-content-active');
+            });
+        });
 
         function show(el) {
             authScreen.classList.add('hidden');
@@ -577,66 +594,7 @@
             loadUsers();
         });
 
-        showRegisterLink.addEventListener('click', function(e) {
-            e.preventDefault();
-            loginFormDiv.classList.add('hidden');
-            cadastroScreen.classList.remove('hidden');
-            loginError.textContent = '';
-        });
-
-        showLoginLink.addEventListener('click', function(e) {
-            e.preventDefault();
-            cadastroScreen.classList.add('hidden');
-            loginFormDiv.classList.remove('hidden');
-            loginError.textContent = '';
-        });
-
-        cadastroForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            cadastroErro.textContent = '';
-            const nome = document.getElementById('cadastro-nome').value;
-            const email = document.getElementById('cadastro-email').value;
-            const senha = document.getElementById('cadastro-senha').value;
-
-            // Campos opcionais (podem não existir no formulário)
-            const cnpj = document.getElementById('cadastro-cnpj')?.value || '';
-            const razao = document.getElementById('cadastro-razao')?.value || '';
-            const tempo = document.getElementById('cadastro-tempo')?.value || '';
-
-            try {
-                const cred = await auth.createUserWithEmailAndPassword(email, senha);
-
-                // Grava o documento no Firestore imediatamente após o cadastro
-                try {
-                    await db.collection('usuarios').doc(cred.user.uid).set({
-                        uid: cred.user.uid,
-                        nome,
-                        email,
-                        cnpj,
-                        razaoSocial: razao,
-                        tempoContrato: tempo,
-                        tempoLiberacao: tempo,
-                        status: 'pendente',
-                        aprovado: false,
-                        dataCadastro: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-                } catch (fireErr) {
-                    // Remove o usuário do Auth se falhar ao gravar no Firestore
-                    await cred.user.delete();
-                    throw fireErr;
-                }
-
-                await cred.user.updateProfile({ displayName: nome });
-                await auth.signOut();
-                alert('Cadastro realizado com sucesso! Faça login para acessar.');
-                cadastroForm.reset();
-                cadastroScreen.classList.add('hidden');
-                loginFormDiv.classList.remove('hidden');
-            } catch (err) {
-                cadastroErro.textContent = err.message;
-                alert('Erro ao concluir cadastro: ' + err.message);
-            }
-        });
+        // Auto cadastro desabilitado. Apenas administradores podem criar usuários.
 
         async function ensureAdmin() {
             try {
@@ -662,6 +620,7 @@
                             <th class="px-2 py-1 border">Email</th>
                             <th class="px-2 py-1 border">CNPJ</th>
                             <th class="px-2 py-1 border">Razão Social</th>
+                            <th class="px-2 py-1 border">Plano</th>
                             <th class="px-2 py-1 border">Tempo Contrato</th>
                             <th class="px-2 py-1 border">Status</th>
                             <th class="px-2 py-1 border">Ações</th>
@@ -677,6 +636,7 @@
                                     <td class="px-2 py-1 border">${u.email || ''}</td>
                                     <td class="px-2 py-1 border">${u.cnpj || ''}</td>
                                     <td class="px-2 py-1 border">${u.razaoSocial || ''}</td>
+                                    <td class="px-2 py-1 border">${u.plano || ''}</td>
                                     <td class="px-2 py-1 border">${u.tempoContrato || u.tempoLiberacao || ''}</td>
                                     <td class="px-2 py-1 border">${status}</td>
                                     <td class="px-2 py-1 border space-x-1">
@@ -688,6 +648,21 @@
                         }).join('')}
                     </tbody>
                 </table>`;
+        }
+
+        function fillProfile(data) {
+            document.getElementById('perfil-nome').value = data.nome || '';
+            document.getElementById('perfil-telefone').value = data.telefone || '';
+            document.getElementById('perfil-email').value = data.email || '';
+            document.getElementById('perfil-cnpj').value = data.cnpj || '';
+            document.getElementById('perfil-razao').value = data.razaoSocial || '';
+            document.getElementById('perfil-plano').value = data.plano || '';
+            document.getElementById('perfil-status').value = data.status || '';
+            if (data.dataCadastro && data.dataCadastro.toDate) {
+                document.getElementById('perfil-data').value = data.dataCadastro.toDate().toLocaleDateString();
+            }
+            document.getElementById('header-company-name').textContent = data.nomeFantasia || data.razaoSocial || '';
+            document.getElementById('header-company-cnpj').textContent = data.cnpj || '';
         }
 
 
@@ -723,6 +698,22 @@
         window.toggleStatus = toggleStatus;
         window.editarTempo = editarTempo;
 
+        perfilForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const nome = document.getElementById('perfil-nome').value;
+            const telefone = document.getElementById('perfil-telefone').value;
+            try {
+                await db.collection('usuarios').doc(auth.currentUser.uid).update({ nome, telefone });
+                const doc = await db.collection('usuarios').doc(auth.currentUser.uid).get();
+                const data = doc.data();
+                localStorage.setItem('usuario', JSON.stringify(data));
+                fillProfile(data);
+                alert('Dados atualizados');
+            } catch (err) {
+                alert('Erro ao atualizar: ' + err.message);
+            }
+        });
+
         loginForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             loginError.textContent = '';
@@ -737,21 +728,12 @@
                 } else {
                     const ref = db.collection('usuarios').doc(user.uid);
                     const doc = await ref.get();
-                    let data;
-                    if (doc.exists) {
-                        data = doc.data();
-                    } else {
-                        data = {
-                            nome: user.displayName || '',
-                            email: user.email,
-                            status: 'ativo',
-                            aprovado: true,
-                            tempoLiberacao: 6,
-                            tempoContrato: 6,
-                            dataCadastro: firebase.firestore.FieldValue.serverTimestamp()
-                        };
-                        await ref.set(data);
+                    if (!doc.exists) {
+                        alert('Usuário não cadastrado. Solicite acesso ao administrador.');
+                        await auth.signOut();
+                        return;
                     }
+                    const data = doc.data();
                     if (!data.aprovado) {
                         alert('Aguardando aprovação do administrador');
                         await auth.signOut();
@@ -763,6 +745,7 @@
                         return;
                     }
                     localStorage.setItem('usuario', JSON.stringify(data));
+                    fillProfile(data);
                     show(mainApp);
                 }
             } catch (err) {
@@ -784,6 +767,10 @@
             try {
                 await auth.currentUser.updatePassword(newPass);
                 await db.collection('usuarios').doc(auth.currentUser.uid).update({ primeiroAcesso: false });
+                const doc = await db.collection('usuarios').doc(auth.currentUser.uid).get();
+                const data = doc.data();
+                localStorage.setItem('usuario', JSON.stringify(data));
+                fillProfile(data);
                 show(mainApp);
             } catch (err) {
                 alert(err.message);
@@ -797,18 +784,28 @@
             const cnpj = document.getElementById('client-cnpj').value;
             const razao = document.getElementById('client-razao').value;
             const fantasia = document.getElementById('client-fantasia').value;
+            const telefone = document.getElementById('client-telefone').value;
+            const plano = document.getElementById('client-plano').value;
             const tempo = document.getElementById('client-tempo').value;
             try {
                 const secApp = firebase.initializeApp(firebase.app().options, 'sec');
                 const tempPass = Math.random().toString(36).slice(-10);
+                const dup = await db.collection('usuarios').where('cnpj', '==', cnpj).limit(1).get();
+                if (!dup.empty) {
+                    alert('CNPJ já cadastrado');
+                    return;
+                }
                 const cred = await secApp.auth().createUserWithEmailAndPassword(email, tempPass);
                 await secApp.auth().sendPasswordResetEmail(email);
                 await db.collection('usuarios').doc(cred.user.uid).set({
+                    uid: cred.user.uid,
                     nome,
                     email,
                     cnpj,
                     razaoSocial: razao,
                     nomeFantasia: fantasia,
+                    telefone,
+                    plano,
                     tempoLiberacao: parseInt(tempo),
                     tempoContrato: parseInt(tempo),
                     dataCadastro: firebase.firestore.FieldValue.serverTimestamp(),

@@ -728,7 +728,7 @@
                         await auth.signOut();
                         return;
                     }
-                    if (data.status === 'desativado') {
+                    if (data.status === 'desativado' || data.status === 'inativo') {
                         alert('Usuário desativado');
                         await auth.signOut();
                         return;

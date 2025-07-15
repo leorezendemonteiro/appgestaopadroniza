@@ -496,7 +496,16 @@
                 <input type="password" id="client-senha" placeholder="Senha de primeiro acesso" class="w-full p-2 border rounded" required>
                 <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded">Cadastrar Usuário</button>
             </form>
-            <div id="clients-list" class="mt-6 space-y-2 text-sm"></div>
+            <div class="mt-6">
+                <div class="flex flex-col sm:flex-row gap-2 mb-2">
+                    <input id="user-search" type="text" placeholder="Buscar por email ou CNPJ" class="flex-1 p-2 border rounded"><select id="filter-status" class="p-2 border rounded"><option value="all">Todos Status</option><option value="ativo">Ativos</option>
+                        <option value="desativado">Desativados</option>
+                    </select><select id="filter-tempo" class="p-2 border rounded"><option value="all">Todos Tempos</option><option value="6">6 meses</option><option value="12">12 meses</option><option value="24">24 meses</option></select>
+                    <button id="filter-btn" class="bg-slate-200 px-4 py-2 rounded">Filtrar</button>
+                </div>
+                <div id="clients-list" class="overflow-auto text-xs"></div>
+            </div>
+
             <button id="admin-logout" class="mt-6 w-full bg-red-600 text-white py-2 rounded">Sair</button>
         </div>
 
@@ -525,6 +534,10 @@
         const cadastroErro = document.getElementById('cadastro-erro');
         const clientForm = document.getElementById('client-form');
         const clientsList = document.getElementById('clients-list');
+        const filterStatus = document.getElementById('filter-status');
+        const filterTempo = document.getElementById('filter-tempo');
+        const userSearch = document.getElementById('user-search');
+        const filterBtn = document.getElementById('filter-btn');
         const adminLogout = document.getElementById('admin-logout');
         const firstAccessForm = document.getElementById('first-access-form');
         const logoutButton = document.getElementById('logout-button');
@@ -536,6 +549,11 @@
             mainApp.classList.add('hidden');
             el.classList.remove('hidden');
         }
+
+        filterBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            loadUsers();
+        });
 
         showRegisterLink.addEventListener('click', function(e) {
             e.preventDefault();
@@ -583,12 +601,96 @@
         }
 
         async function loadUsers() {
-            const snap = await db.collection('usuarios').get();
-            clientsList.innerHTML = snap.docs.map(function(d) {
-                const c = d.data();
-                return `<div class="border p-2 rounded">${c.nomeFantasia} - ${c.email}</div>`;
-            }).join('');
+            const snap = await db.collection('usuarios').orderBy('dataCadastro', 'desc').get();
+            let users = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+            const status = filterStatus.value;
+            const tempo = filterTempo.value;
+            const term = userSearch.value.trim().toLowerCase();
+
+            users = users.filter(u => (status === 'all' || u.status === status));
+            users = users.filter(u => (tempo === 'all' || String(u.tempoLiberacao) === tempo));
+            if (term) {
+                users = users.filter(u =>
+                    (u.email && u.email.toLowerCase().includes(term)) ||
+                    (u.cnpj && u.cnpj.toLowerCase().includes(term))
+                );
+            }
+
+            clientsList.innerHTML = `
+                <table class="min-w-full border">
+                    <thead class="bg-slate-100">
+                        <tr>
+                            <th class="px-2 py-1 border">Email</th>
+                            <th class="px-2 py-1 border">CNPJ</th>
+                            <th class="px-2 py-1 border">Razão Social</th>
+                            <th class="px-2 py-1 border">Fantasia</th>
+                            <th class="px-2 py-1 border">Tempo</th>
+                            <th class="px-2 py-1 border">Cadastro</th>
+                            <th class="px-2 py-1 border">Status</th>
+                            <th class="px-2 py-1 border">Situação</th>
+                            <th class="px-2 py-1 border">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${users.map(u => `
+                            <tr>
+                                <td class="px-2 py-1 border">${u.email || ''}</td>
+                                <td class="px-2 py-1 border">${u.cnpj || ''}</td>
+                                <td class="px-2 py-1 border">${u.razaoSocial || ''}</td>
+                                <td class="px-2 py-1 border">${u.nomeFantasia || ''}</td>
+                                <td class="px-2 py-1 border">
+                                    <select onchange="changeTempo('${u.id}', this.value)" class="p-1 border rounded">
+                                        <option value="6" ${u.tempoLiberacao==6?'selected':''}>6</option>
+                                        <option value="12" ${u.tempoLiberacao==12?'selected':''}>12</option>
+                                        <option value="24" ${u.tempoLiberacao==24?'selected':''}>24</option>
+                                    </select>
+                                </td>
+                                <td class="px-2 py-1 border">${u.dataCadastro ? u.dataCadastro.toDate().toLocaleDateString() : ''}</td>
+                                <td class="px-2 py-1 border">${u.status}</td>
+                                <td class="px-2 py-1 border">${u.aprovado ? 'Aprovado' : 'Pendente'}</td>
+                                <td class="px-2 py-1 border space-x-1 text-xs">
+                                    ${!u.aprovado ? `<button onclick="approveUser('${u.id}')" class="text-green-600">Aprovar</button>` : ''}
+                                    <button onclick="toggleStatus('${u.id}', '${u.status === 'ativo' ? 'desativado' : 'ativo'}')" class="${u.status === 'ativo' ? 'text-red-600' : 'text-green-600'}">
+                                        ${u.status === 'ativo' ? 'Desativar' : 'Ativar'}
+                                    </button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>`;
         }
+
+        async function approveUser(id) {
+            try {
+                await db.collection('usuarios').doc(id).update({ aprovado: true, status: 'ativo' });
+                loadUsers();
+                alert('Usuário aprovado');
+            } catch (err) {
+                alert('Erro ao aprovar usuário: ' + err.message);
+            }
+        }
+
+        async function toggleStatus(id, status) {
+            try {
+                await db.collection('usuarios').doc(id).update({ status });
+                loadUsers();
+            } catch (err) {
+                alert('Erro ao alterar status: ' + err.message);
+            }
+        }
+
+        async function changeTempo(id, valor) {
+            try {
+                await db.collection('usuarios').doc(id).update({ tempoLiberacao: parseInt(valor) });
+            } catch (err) {
+                alert('Erro ao alterar tempo: ' + err.message);
+            }
+        }
+
+        window.approveUser = approveUser;
+        window.toggleStatus = toggleStatus;
+        window.changeTempo = changeTempo;
 
         loginForm.addEventListener('submit', async function(e) {
             e.preventDefault();
@@ -604,7 +706,18 @@
                 } else {
                     const doc = await db.collection('usuarios').doc(user.uid).get();
                     if (doc.exists) {
-                        localStorage.setItem('usuario', JSON.stringify(doc.data()));
+                        const data = doc.data();
+                        if (!data.aprovado) {
+                            alert('Aguardando aprovação do administrador');
+                            await auth.signOut();
+                            return;
+                        }
+                        if (data.status === 'desativado') {
+                            alert('Usuário desativado');
+                            await auth.signOut();
+                            return;
+                        }
+                        localStorage.setItem('usuario', JSON.stringify(data));
                     }
                     show(mainApp);
                 }
@@ -651,13 +764,14 @@
                     nomeFantasia: fantasia,
                     tempoLiberacao: parseInt(tempo),
                     dataCadastro: firebase.firestore.FieldValue.serverTimestamp(),
-                    status: 'ativo'
+                    status: 'ativo',
+                    aprovado: false
                 });
                 await secApp.auth().signOut();
                 secApp.delete();
                 e.target.reset();
                 loadUsers();
-                alert('Usuário cadastrado e liberado para uso!');
+                alert('Usuário cadastrado e Aguardando aprovação!');
             } catch (err) {
                 if (err.code === 'auth/email-already-in-use') {
                     alert('Email já cadastrado');

@@ -91,18 +91,16 @@
                     <button type="submit" class="w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700 transition-colors">Entrar</button>
                     <p id="login-error" class="text-red-600 text-sm"></p>
                 </form>
-                <p class="text-sm">Não possui cadastro? <a href="#" id="show-register" class="text-indigo-600">Criar conta</a></p>
+                <p class="text-sm">Não possui cadastro? <a href="#" id="criar-conta-link" class="text-indigo-600">Criar conta</a></p>
             </div>
-            <div id="register-form-div" class="space-y-4 hidden">
+            <div id="cadastro-screen" class="space-y-4 hidden">
                 <h2 class="text-xl font-bold mb-4">Cadastro</h2>
-                <form id="register-form" class="space-y-3">
-                    <input type="text" id="reg-razao" placeholder="Razão Social" class="w-full p-3 border border-slate-300 rounded-lg" required>
-                    <input type="text" id="reg-fantasia" placeholder="Nome Fantasia" class="w-full p-3 border border-slate-300 rounded-lg" required>
-                    <input type="text" id="reg-cnpj" placeholder="CNPJ" class="w-full p-3 border border-slate-300 rounded-lg" required>
-                    <input type="text" id="reg-endereco" placeholder="Endereço" class="w-full p-3 border border-slate-300 rounded-lg" required>
-                    <input type="email" id="reg-email" placeholder="Email" class="w-full p-3 border border-slate-300 rounded-lg" required>
-                    <input type="password" id="reg-senha" placeholder="Senha" class="w-full p-3 border border-slate-300 rounded-lg" required>
+                <form id="cadastro-form" class="space-y-3">
+                    <input type="text" id="cadastro-nome" placeholder="Nome" class="w-full p-3 border border-slate-300 rounded-lg" required>
+                    <input type="email" id="cadastro-email" placeholder="Email" class="w-full p-3 border border-slate-300 rounded-lg" required>
+                    <input type="password" id="cadastro-senha" placeholder="Senha" class="w-full p-3 border border-slate-300 rounded-lg" required>
                     <button type="submit" class="w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700 transition-colors">Cadastrar</button>
+                    <p id="cadastro-erro" class="text-red-600 text-sm"></p>
                 </form>
                 <p class="text-sm"><a href="#" id="show-login" class="text-indigo-600">Já tenho conta</a></p>
             </div>
@@ -519,10 +517,12 @@
         const mainApp = document.getElementById('main-app');
         const loginForm = document.getElementById('login-form');
         const loginError = document.getElementById('login-error');
-        const showRegisterLink = document.getElementById('show-register');
+        const showRegisterLink = document.getElementById('criar-conta-link');
         const showLoginLink = document.getElementById('show-login');
         const loginFormDiv = document.getElementById('login-form-div');
-        const registerFormDiv = document.getElementById('register-form-div');
+        const cadastroScreen = document.getElementById('cadastro-screen');
+        const cadastroForm = document.getElementById('cadastro-form');
+        const cadastroErro = document.getElementById('cadastro-erro');
         const clientForm = document.getElementById('client-form');
         const clientsList = document.getElementById('clients-list');
         const adminLogout = document.getElementById('admin-logout');
@@ -540,15 +540,33 @@
         showRegisterLink.addEventListener('click', (e) => {
             e.preventDefault();
             loginFormDiv.classList.add('hidden');
-            registerFormDiv.classList.remove('hidden');
+            cadastroScreen.classList.remove('hidden');
             loginError.textContent = '';
         });
 
         showLoginLink.addEventListener('click', (e) => {
             e.preventDefault();
-            registerFormDiv.classList.add('hidden');
+            cadastroScreen.classList.add('hidden');
             loginFormDiv.classList.remove('hidden');
             loginError.textContent = '';
+        });
+
+        cadastroForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            cadastroErro.textContent = '';
+            const nome = document.getElementById('cadastro-nome').value;
+            const email = document.getElementById('cadastro-email').value;
+            const senha = document.getElementById('cadastro-senha').value;
+            try {
+                const cred = await auth.createUserWithEmailAndPassword(email, senha);
+                await cred.user.updateProfile({ displayName: nome });
+                alert('Cadastro realizado com sucesso! Faça login para acessar.');
+                cadastroForm.reset();
+                cadastroScreen.classList.add('hidden');
+                loginFormDiv.classList.remove('hidden');
+            } catch (err) {
+                cadastroErro.textContent = err.message;
+            }
         });
 
         async function ensureAdmin() {

@@ -21,6 +21,8 @@
         .tab-content-active {
             display: block;
         }
+        .admin-tab-content { display: none; }
+        .admin-tab-content-active { display: block; }
         /* Estilos para a área de impressão do PDF */
         #pdf-detailed-content {
             font-family: Arial, sans-serif;
@@ -483,27 +485,49 @@
     <div id="admin-screen" class="hidden min-h-screen flex items-center justify-center p-4">
         <div class="w-full max-w-xl bg-white p-6 rounded-xl shadow">
             <h2 class="text-xl font-bold mb-4">Painel Administrativo</h2>
-            <form id="client-form" class="space-y-3">
-                <input type="text" id="client-cnpj" placeholder="CNPJ" class="w-full p-2 border rounded" required>
-                <input type="text" id="client-razao" placeholder="Razão Social" class="w-full p-2 border rounded" required>
-                <input type="text" id="client-fantasia" placeholder="Nome Fantasia" class="w-full p-2 border rounded" required>
-                <select id="client-tempo" class="w-full p-2 border rounded" required>
-                    <option value="6">6 meses</option>
-                    <option value="12">12 meses</option>
-                    <option value="24">24 meses</option>
-                </select>
-                <input type="email" id="client-email" placeholder="Email do usuário" class="w-full p-2 border rounded" required>
-                <input type="password" id="client-senha" placeholder="Senha de primeiro acesso" class="w-full p-2 border rounded" required>
-                <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded">Cadastrar Usuário</button>
-            </form>
-            <div class="mt-6">
-                <div class="flex flex-col sm:flex-row gap-2 mb-2">
-                    <input id="user-search" type="text" placeholder="Buscar por email ou CNPJ" class="flex-1 p-2 border rounded"><select id="filter-status" class="p-2 border rounded"><option value="all">Todos Status</option><option value="ativo">Ativos</option>
-                        <option value="desativado">Desativados</option>
-                    </select><select id="filter-tempo" class="p-2 border rounded"><option value="all">Todos Tempos</option><option value="6">6 meses</option><option value="12">12 meses</option><option value="24">24 meses</option></select>
-                    <button id="filter-btn" class="bg-slate-200 px-4 py-2 rounded">Filtrar</button>
+            <div class="flex mb-4 border-b">
+                <button id="admin-tab-cadastro-btn" class="px-3 py-2 border-b-2 tab-active">Cadastro</button>
+                <button id="admin-tab-usuarios-btn" class="px-3 py-2 border-b-2">Usuários</button>
+            </div>
+            <div id="admin-tab-cadastro" class="admin-tab-content admin-tab-content-active">
+                <form id="client-form" class="space-y-3">
+                    <input type="text" id="client-cnpj" placeholder="CNPJ" class="w-full p-2 border rounded" required>
+                    <input type="text" id="client-razao" placeholder="Razão Social" class="w-full p-2 border rounded" required>
+                    <input type="text" id="client-fantasia" placeholder="Nome Fantasia" class="w-full p-2 border rounded" required>
+                    <select id="client-tempo" class="w-full p-2 border rounded" required>
+                        <option value="6">6 meses</option>
+                        <option value="12">12 meses</option>
+                        <option value="24">24 meses</option>
+                    </select>
+                    <input type="email" id="client-email" placeholder="Email do usuário" class="w-full p-2 border rounded" required>
+                    <input type="password" id="client-senha" placeholder="Senha de primeiro acesso" class="w-full p-2 border rounded" required>
+                    <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded">Cadastrar Usuário</button>
+                </form>
+            </div>
+            <div id="admin-tab-usuarios" class="admin-tab-content">
+                <div class="mt-6">
+                    <div class="flex flex-col sm:flex-row gap-2 mb-2">
+                        <input id="user-search" type="text" placeholder="Buscar por email ou CNPJ" class="flex-1 p-2 border rounded">
+                        <select id="filter-status" class="p-2 border rounded">
+                            <option value="all">Todos Status</option>
+                            <option value="ativo">Ativos</option>
+                            <option value="desativado">Desativados</option>
+                        </select>
+                        <select id="filter-tempo" class="p-2 border rounded">
+                            <option value="all">Todos Tempos</option>
+                            <option value="6">6 meses</option>
+                            <option value="12">12 meses</option>
+                            <option value="24">24 meses</option>
+                        </select>
+                        <select id="filter-situacao" class="p-2 border rounded">
+                            <option value="all">Todas Situações</option>
+                            <option value="aprovado">Liberados</option>
+                            <option value="pendente">Pendentes</option>
+                        </select>
+                        <button id="filter-btn" class="bg-slate-200 px-4 py-2 rounded">Filtrar</button>
+                    </div>
+                    <div id="clients-list" class="overflow-auto text-xs"></div>
                 </div>
-                <div id="clients-list" class="overflow-auto text-xs"></div>
             </div>
 
             <button id="admin-logout" class="mt-6 w-full bg-red-600 text-white py-2 rounded">Sair</button>
@@ -536,8 +560,13 @@
         const clientsList = document.getElementById('clients-list');
         const filterStatus = document.getElementById('filter-status');
         const filterTempo = document.getElementById('filter-tempo');
+        const filterSituacao = document.getElementById('filter-situacao');
         const userSearch = document.getElementById('user-search');
         const filterBtn = document.getElementById('filter-btn');
+        const adminTabCadastroBtn = document.getElementById('admin-tab-cadastro-btn');
+        const adminTabUsuariosBtn = document.getElementById('admin-tab-usuarios-btn');
+        const adminTabCadastro = document.getElementById('admin-tab-cadastro');
+        const adminTabUsuarios = document.getElementById('admin-tab-usuarios');
         const adminLogout = document.getElementById('admin-logout');
         const firstAccessForm = document.getElementById('first-access-form');
         const logoutButton = document.getElementById('logout-button');
@@ -552,6 +581,28 @@
 
         filterBtn.addEventListener('click', function(e) {
             e.preventDefault();
+            loadUsers();
+        });
+
+        function switchAdminTab(tab) {
+            adminTabCadastro.classList.remove('admin-tab-content-active');
+            adminTabUsuarios.classList.remove('admin-tab-content-active');
+            adminTabCadastroBtn.classList.remove('tab-active');
+            adminTabUsuariosBtn.classList.remove('tab-active');
+            if (tab === 'cadastro') {
+                adminTabCadastro.classList.add('admin-tab-content-active');
+                adminTabCadastroBtn.classList.add('tab-active');
+            } else {
+                adminTabUsuarios.classList.add('admin-tab-content-active');
+                adminTabUsuariosBtn.classList.add('tab-active');
+            }
+        }
+
+        adminTabCadastroBtn.addEventListener('click', function() {
+            switchAdminTab('cadastro');
+        });
+        adminTabUsuariosBtn.addEventListener('click', function() {
+            switchAdminTab('usuarios');
             loadUsers();
         });
 
@@ -604,12 +655,16 @@
             const snap = await db.collection('usuarios').orderBy('dataCadastro', 'desc').get();
             let users = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
+            users = users.filter(u => u.email !== adminEmail);
+
             const status = filterStatus.value;
             const tempo = filterTempo.value;
+            const situacao = filterSituacao.value;
             const term = userSearch.value.trim().toLowerCase();
 
             users = users.filter(u => (status === 'all' || u.status === status));
             users = users.filter(u => (tempo === 'all' || String(u.tempoLiberacao) === tempo));
+            users = users.filter(u => (situacao === 'all' || (situacao === 'aprovado' ? u.aprovado : !u.aprovado)));
             if (term) {
                 users = users.filter(u =>
                     (u.email && u.email.toLowerCase().includes(term)) ||
@@ -675,6 +730,7 @@
             try {
                 await db.collection('usuarios').doc(id).update({ status });
                 loadUsers();
+                alert('Status atualizado');
             } catch (err) {
                 alert('Erro ao alterar status: ' + err.message);
             }
@@ -683,6 +739,8 @@
         async function changeTempo(id, valor) {
             try {
                 await db.collection('usuarios').doc(id).update({ tempoLiberacao: parseInt(valor) });
+                loadUsers();
+                alert('Tempo atualizado');
             } catch (err) {
                 alert('Erro ao alterar tempo: ' + err.message);
             }
@@ -765,13 +823,13 @@
                     tempoLiberacao: parseInt(tempo),
                     dataCadastro: firebase.firestore.FieldValue.serverTimestamp(),
                     status: 'ativo',
-                    aprovado: false
+                    aprovado: true
                 });
                 await secApp.auth().signOut();
                 secApp.delete();
                 e.target.reset();
                 loadUsers();
-                alert('Usuário cadastrado e Aguardando aprovação!');
+                alert('Usuário cadastrado com sucesso!');
             } catch (err) {
                 if (err.code === 'auth/email-already-in-use') {
                     alert('Email já cadastrado');

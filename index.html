@@ -493,9 +493,9 @@
                     <option value="12">12 meses</option>
                     <option value="24">24 meses</option>
                 </select>
-                <input type="email" id="client-email" placeholder="Email do cliente" class="w-full p-2 border rounded" required>
+                <input type="email" id="client-email" placeholder="Email do usuário" class="w-full p-2 border rounded" required>
                 <input type="password" id="client-senha" placeholder="Senha de primeiro acesso" class="w-full p-2 border rounded" required>
-                <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded">Cadastrar Cliente</button>
+                <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded">Cadastrar Usuário</button>
             </form>
             <div id="clients-list" class="mt-6 space-y-2 text-sm"></div>
             <button id="admin-logout" class="mt-6 w-full bg-red-600 text-white py-2 rounded">Sair</button>
@@ -543,11 +543,11 @@
             }
         }
 
-        async function loadClients() {
-            const snap = await db.collection('clientes').get();
+        async function loadUsers() {
+            const snap = await db.collection('usuarios').get();
             clientsList.innerHTML = snap.docs.map(d => {
                 const c = d.data();
-                return `<div class="border p-2 rounded">${c.nomeFantasia} - ${c.email} - ${c.status}</div>`;
+                return `<div class="border p-2 rounded">${c.nomeFantasia} - ${c.email}</div>`;
             }).join('');
         }
 
@@ -560,9 +560,9 @@
                 const user = auth.currentUser;
                 if (user.email === adminEmail) {
                     show(adminScreen);
-                    loadClients();
+                    loadUsers();
                 } else {
-                    const doc = await db.collection('clientes').doc(user.uid).get();
+                    const doc = await db.collection('usuarios').doc(user.uid).get();
                     if (doc.exists && doc.data().primeiroAcesso) {
                         show(firstAccessScreen);
                     } else {
@@ -579,7 +579,7 @@
             const newPass = document.getElementById('first-password').value;
             try {
                 await auth.currentUser.updatePassword(newPass);
-                await db.collection('clientes').doc(auth.currentUser.uid).update({ primeiroAcesso: false });
+                await db.collection('usuarios').doc(auth.currentUser.uid).update({ primeiroAcesso: false });
                 show(mainApp);
             } catch (err) {
                 alert(err.message);
@@ -597,23 +597,27 @@
             try {
                 const secApp = firebase.initializeApp(firebase.app().options, 'sec');
                 const cred = await secApp.auth().createUserWithEmailAndPassword(email, senha);
-                await db.collection('clientes').doc(cred.user.uid).set({
+                await db.collection('usuarios').doc(cred.user.uid).set({
                     cnpj,
                     razaoSocial: razao,
                     nomeFantasia: fantasia,
                     tempoLiberacao: parseInt(tempo),
                     email,
-                    status: 'ativo',
                     primeiroAcesso: true,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    liberadoPor: auth.currentUser.email,
+                    dataCadastro: firebase.firestore.FieldValue.serverTimestamp()
                 });
                 await secApp.auth().signOut();
                 secApp.delete();
                 e.target.reset();
-                loadClients();
-                alert('Cliente cadastrado');
+                loadUsers();
+                alert('Usuário cadastrado com sucesso');
             } catch (err) {
-                alert(err.message);
+                if (err.code === 'auth/email-already-in-use') {
+                    alert('Email já cadastrado');
+                } else {
+                    alert(err.message);
+                }
             }
         });
 

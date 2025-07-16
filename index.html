@@ -562,6 +562,15 @@
         const loginFormDiv = document.getElementById('login-form-div');
         const clientForm = document.getElementById('client-form');
         const clientsList = document.getElementById('clients-list');
+        const calibrationForm = document.getElementById('calibration-form');
+        const receitasForm = document.getElementById('receitas-form');
+        const despesasVariaveisForm = document.getElementById('despesas-variaveis-form');
+        const despesasFixasForm = document.getElementById('despesas-fixas-form');
+        const maoDeObraForm = document.getElementById('mao-de-obra-form');
+        const receitasList = document.getElementById('receitas-list');
+        const despesasVariaveisList = document.getElementById('despesas-variaveis-list');
+        const despesasFixasList = document.getElementById('despesas-fixas-list');
+        const maoDeObraList = document.getElementById('mao-de-obra-list');
         const adminTabCadastroBtn = document.getElementById('admin-tab-cadastro-btn');
         const adminTabUsuariosBtn = document.getElementById('admin-tab-usuarios-btn');
         const adminTabCadastro = document.getElementById('admin-tab-cadastro');
@@ -621,14 +630,17 @@
         // Auto cadastro desabilitado. Apenas administradores podem criar usuários.
 
         async function ensureAdmin() {
+            // Usa app secundário para não interferir na sessão atual
+            const tempApp = firebase.initializeApp(firebase.app().options, 'ensure');
             try {
-                await auth.signInWithEmailAndPassword(adminEmail, adminPassword);
+                await tempApp.auth().createUserWithEmailAndPassword(adminEmail, adminPassword);
             } catch (e) {
-                if (e.code === 'auth/user-not-found') {
-                    await auth.createUserWithEmailAndPassword(adminEmail, adminPassword);
+                if (e.code !== 'auth/email-already-in-use') {
+                    console.log('Erro ao criar admin', e);
                 }
             } finally {
-                await auth.signOut();
+                await tempApp.auth().signOut();
+                tempApp.delete();
             }
         }
 
@@ -703,9 +715,51 @@
         window.toggleStatus = toggleStatus;
         window.editarTempo = editarTempo;
 
+        function logUserState(prefix) {
+            const user = auth.currentUser;
+            console.log(prefix, user ? user.email : 'sem usuário');
+        }
+
+        async function saveCalibration(data) {
+            logUserState('Salvar calibração - usuário');
+            if (!auth.currentUser) {
+                alert('Sessão expirada. Faça login novamente.');
+                show(authScreen);
+                return;
+            }
+            const uid = auth.currentUser.uid;
+            await db.collection('usuarios').doc(uid).collection('calibracao').doc('dados').set(data, { merge: true });
+            console.log('Calibração salva', data);
+        }
+
+        async function addItem(col, data) {
+            logUserState('Adicionar em ' + col + ' - usuário');
+            if (!auth.currentUser) {
+                alert('Sessão expirada. Faça login novamente.');
+                show(authScreen);
+                return;
+            }
+            const uid = auth.currentUser.uid;
+            await db.collection('usuarios').doc(uid).collection(col).add(data);
+            console.log('Item salvo em', col, data);
+        }
+
+        async function loadCollection(col, listEl) {
+            if (!auth.currentUser) return;
+            const uid = auth.currentUser.uid;
+            const snap = await db.collection('usuarios').doc(uid).collection(col).orderBy('data', 'desc').get();
+            const html = snap.docs.map(d => {
+                const item = d.data();
+                return `<div class="border-b py-1 text-sm">${item.descricao || item.categoria || ''} - R$ ${item.valor || ''}</div>`;
+            }).join('');
+            listEl.querySelector('div').innerHTML = html;
+        }
+
         async function handleLogin(user) {
+            console.log('handleLogin', user ? user.email : 'sem usuário');
             try {
                 if (user.email === adminEmail) {
+                    console.log('Usuário é admin, carregando painel');
                     show(adminScreen);
                     await loadUsers();
                     return;
@@ -713,28 +767,37 @@
                 const ref = db.collection('usuarios').doc(user.uid);
                 const doc = await ref.get();
                 if (!doc.exists) {
+                    console.log('Usuário sem registro em usuarios');
                     alert('Usuário não cadastrado. Solicite acesso ao administrador.');
                     show(authScreen);
                     return;
                 }
                 const data = doc.data();
                 if (!data.aprovado) {
+                    console.log('Cadastro não aprovado');
                     alert('Aguardando aprovação do administrador');
                     show(authScreen);
                     return;
                 }
                 if (data.status === 'desativado' || data.status === 'inativo') {
+                    console.log('Usuário desativado');
                     alert('Usuário desativado');
                     show(authScreen);
                     return;
                 }
                 if (data.primeiroAcesso !== false) {
+                    console.log('Primeiro acesso pendente');
                     show(firstAccessScreen);
                     return;
                 }
                 localStorage.setItem('usuario', JSON.stringify(data));
                 fillProfile(data);
+                console.log('Login concluído, exibindo app');
                 show(mainApp);
+                await loadCollection('receitas', receitasList);
+                await loadCollection('despesasVariaveis', despesasVariaveisList);
+                await loadCollection('despesasFixas', despesasFixasList);
+                await loadCollection('maoDeObra', maoDeObraList);
             } catch (err) {
                 console.log('handleLogin error', err);
                 alert('Erro ao carregar dados: ' + err.message);
@@ -742,6 +805,7 @@
         }
 
         auth.onAuthStateChanged(user => {
+            console.log('onAuthStateChanged', user ? user.email : 'nenhum');
             if (user) {
                 handleLogin(user);
             } else {
@@ -871,6 +935,102 @@
                 } else {
                     alert(err.message);
                 }
+            }
+        });
+
+        calibrationForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const data = {
+                imposto_faturamento: parseFloat(document.getElementById('imposto-faturamento').value) || 0,
+                taxa_debito: parseFloat(document.getElementById('taxa-debito').value) || 0,
+                taxa_credito: parseFloat(document.getElementById('taxa-credito').value) || 0,
+                comissao_ifood: parseFloat(document.getElementById('comissao-ifood').value) || 0,
+                comissao_99: parseFloat(document.getElementById('comissao-99').value) || 0,
+                encargos_diversos: parseFloat(document.getElementById('encargos-diversos').value) || 0
+            };
+            try {
+                await saveCalibration(data);
+                alert('Calibração salva');
+            } catch (err) {
+                console.log('Erro ao salvar calibração', err);
+                alert(err.message);
+            }
+        });
+
+        receitasForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const data = {
+                descricao: document.getElementById('receita-descricao').value,
+                tipo: document.getElementById('receita-tipo').value,
+                valor: parseFloat(document.getElementById('receita-valor').value) || 0,
+                data: document.getElementById('receita-data').value
+            };
+            try {
+                await addItem('receitas', data);
+                e.target.reset();
+                alert('Receita salva');
+                await loadCollection('receitas', receitasList);
+            } catch (err) {
+                console.log('Erro ao salvar receita', err);
+                alert(err.message);
+            }
+        });
+
+        despesasVariaveisForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const data = {
+                categoria: document.getElementById('dv-categoria').value,
+                descricao: document.getElementById('dv-descricao').value,
+                valor: parseFloat(document.getElementById('dv-valor').value) || 0,
+                data: document.getElementById('dv-data').value,
+                fornecedor: document.getElementById('dv-fornecedor').value
+            };
+            try {
+                await addItem('despesasVariaveis', data);
+                e.target.reset();
+                alert('Lançamento salvo');
+                await loadCollection('despesasVariaveis', despesasVariaveisList);
+            } catch (err) {
+                console.log('Erro ao salvar consumo', err);
+                alert(err.message);
+            }
+        });
+
+        despesasFixasForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const data = {
+                categoria: document.getElementById('df-categoria').value,
+                valor: parseFloat(document.getElementById('df-valor').value) || 0,
+                data: document.getElementById('df-data').value,
+                fornecedor: document.getElementById('df-fornecedor').value
+            };
+            try {
+                await addItem('despesasFixas', data);
+                e.target.reset();
+                alert('Despesa fixa salva');
+                await loadCollection('despesasFixas', despesasFixasList);
+            } catch (err) {
+                console.log('Erro ao salvar despesa fixa', err);
+                alert(err.message);
+            }
+        });
+
+        maoDeObraForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const data = {
+                categoria: document.getElementById('mo-categoria').value,
+                valor: parseFloat(document.getElementById('mo-valor').value) || 0,
+                data: document.getElementById('mo-data').value,
+                fornecedor: document.getElementById('mo-fornecedor').value
+            };
+            try {
+                await addItem('maoDeObra', data);
+                e.target.reset();
+                alert('Custo salvo');
+                await loadCollection('maoDeObra', maoDeObraList);
+            } catch (err) {
+                console.log('Erro ao salvar mão de obra', err);
+                alert(err.message);
             }
         });
 

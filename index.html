@@ -572,6 +572,7 @@
         const perfilForm = document.getElementById('perfil-form');
         const tabButtons = document.querySelectorAll('.tab-button');
         const tabContents = document.querySelectorAll('.tab-content');
+        auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(() => {});
         tabButtons.forEach(btn => {
             btn.addEventListener('click', () => {
                 tabButtons.forEach(b => b.classList.remove('tab-active'));
@@ -694,6 +695,51 @@
         window.toggleStatus = toggleStatus;
         window.editarTempo = editarTempo;
 
+        async function handleLogin(user) {
+            try {
+                if (user.email === adminEmail) {
+                    show(adminScreen);
+                    await loadUsers();
+                    return;
+                }
+                const ref = db.collection('usuarios').doc(user.uid);
+                const doc = await ref.get();
+                if (!doc.exists) {
+                    alert('Usuário não cadastrado. Solicite acesso ao administrador.');
+                    await auth.signOut();
+                    return;
+                }
+                const data = doc.data();
+                if (!data.aprovado) {
+                    alert('Aguardando aprovação do administrador');
+                    await auth.signOut();
+                    return;
+                }
+                if (data.status === 'desativado' || data.status === 'inativo') {
+                    alert('Usuário desativado');
+                    await auth.signOut();
+                    return;
+                }
+                if (data.primeiroAcesso !== false) {
+                    show(firstAccessScreen);
+                    return;
+                }
+                localStorage.setItem('usuario', JSON.stringify(data));
+                fillProfile(data);
+                show(mainApp);
+            } catch (err) {
+                alert('Erro ao carregar dados: ' + err.message);
+            }
+        }
+
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                handleLogin(user);
+            } else {
+                show(authScreen);
+            }
+        });
+
         perfilForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             const nome = document.getElementById('perfil-nome').value;
@@ -717,37 +763,7 @@
             const password = document.getElementById('login-password').value;
             try {
                 const cred = await auth.signInWithEmailAndPassword(email, password);
-                const user = cred.user;
-                if (user.email === adminEmail) {
-                    show(adminScreen);
-                    loadUsers();
-                } else {
-                    const ref = db.collection('usuarios').doc(user.uid);
-                    const doc = await ref.get();
-                    if (!doc.exists) {
-                        alert('Usuário não cadastrado. Solicite acesso ao administrador.');
-                        await auth.signOut();
-                        return;
-                    }
-                    const data = doc.data();
-                    if (!data.aprovado) {
-                        alert('Aguardando aprovação do administrador');
-                        await auth.signOut();
-                        return;
-                    }
-                    if (data.status === 'desativado' || data.status === 'inativo') {
-                        alert('Usuário desativado');
-                        await auth.signOut();
-                        return;
-                    }
-                    if (data.primeiroAcesso !== false) {
-                        show(firstAccessScreen);
-                        return;
-                    }
-                    localStorage.setItem('usuario', JSON.stringify(data));
-                    fillProfile(data);
-                    show(mainApp);
-                }
+                await handleLogin(cred.user);
             } catch (err) {
                 switch (err.code) {
                     case 'auth/user-not-found':

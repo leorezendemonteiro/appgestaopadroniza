@@ -590,6 +590,10 @@
             el.classList.remove('hidden');
         }
 
+        function isAdmin() {
+            return auth.currentUser && auth.currentUser.email === adminEmail;
+        }
+
 
         function switchAdminTab(tab) {
             adminTabCadastro.classList.remove('admin-tab-content-active');
@@ -609,6 +613,7 @@
             switchAdminTab('cadastro');
         });
         adminTabUsuariosBtn.addEventListener('click', function() {
+            if (!isAdmin()) return;
             switchAdminTab('usuarios');
             loadUsers();
         });
@@ -628,6 +633,7 @@
         }
 
         async function loadUsers() {
+            if (!isAdmin()) return;
             const snap = await db.collection('usuarios').orderBy('dataCadastro', 'desc').get();
             const users = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(u => u.email !== adminEmail);
 
@@ -664,6 +670,7 @@
 
 
         async function toggleStatus(id, status, approve = false) {
+            if (!isAdmin()) return;
             try {
                 const update = { status };
                 if (approve) update.aprovado = true;
@@ -676,6 +683,7 @@
         }
 
         async function editarTempo(id, atual) {
+            if (!isAdmin()) return;
             const novo = prompt('Novo tempo de contrato (6, 12 ou 24 meses)', atual);
             if (!novo) return;
             const valor = parseInt(novo);
@@ -804,6 +812,7 @@
 
         clientForm.addEventListener('submit', async function(e) {
             e.preventDefault();
+            if (!isAdmin()) return;
             const nome = document.getElementById('client-nome').value;
             const email = document.getElementById('client-email').value;
             const cnpj = document.getElementById('client-cnpj').value;

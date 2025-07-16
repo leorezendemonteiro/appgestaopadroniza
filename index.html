@@ -714,18 +714,18 @@
                 const doc = await ref.get();
                 if (!doc.exists) {
                     alert('Usuário não cadastrado. Solicite acesso ao administrador.');
-                    await auth.signOut();
+                    show(authScreen);
                     return;
                 }
                 const data = doc.data();
                 if (!data.aprovado) {
                     alert('Aguardando aprovação do administrador');
-                    await auth.signOut();
+                    show(authScreen);
                     return;
                 }
                 if (data.status === 'desativado' || data.status === 'inativo') {
                     alert('Usuário desativado');
-                    await auth.signOut();
+                    show(authScreen);
                     return;
                 }
                 if (data.primeiroAcesso !== false) {
@@ -736,6 +736,7 @@
                 fillProfile(data);
                 show(mainApp);
             } catch (err) {
+                console.log('handleLogin error', err);
                 alert('Erro ao carregar dados: ' + err.message);
             }
         }
@@ -750,6 +751,7 @@
 
         perfilForm.addEventListener('submit', async function(e) {
             e.preventDefault();
+            console.log('Atualizando perfil');
             const nome = document.getElementById('perfil-nome').value;
             const telefone = document.getElementById('perfil-telefone').value;
             try {
@@ -758,8 +760,10 @@
                 const data = doc.data();
                 localStorage.setItem('usuario', JSON.stringify(data));
                 fillProfile(data);
+                console.log('Perfil atualizado');
                 alert('Dados atualizados');
             } catch (err) {
+                console.log('Erro ao atualizar perfil', err);
                 alert('Erro ao atualizar: ' + err.message);
             }
         });
@@ -769,10 +773,13 @@
             loginError.textContent = '';
             const email = document.getElementById('login-email').value;
             const password = document.getElementById('login-password').value;
+            console.log('Tentativa de login', email);
             try {
                 const cred = await auth.signInWithEmailAndPassword(email, password);
+                console.log('Login realizado', cred.user.uid);
                 await handleLogin(cred.user);
             } catch (err) {
+                console.log('Erro no login', err);
                 switch (err.code) {
                     case 'auth/user-not-found':
                     case 'auth/wrong-password':
@@ -787,6 +794,7 @@
 
         firstAccessForm.addEventListener('submit', async function(e) {
             e.preventDefault();
+            console.log('Primeiro acesso - definindo senha');
             const newPass = document.getElementById('first-password').value;
             const confirmPass = document.getElementById('first-confirm').value;
             if (newPass !== confirmPass) {
@@ -804,8 +812,10 @@
                 const data = doc.data();
                 localStorage.setItem('usuario', JSON.stringify(data));
                 fillProfile(data);
+                console.log('Primeiro acesso finalizado');
                 show(mainApp);
             } catch (err) {
+                console.log('Erro no primeiro acesso', err);
                 alert(err.message);
             }
         });
@@ -813,6 +823,7 @@
         clientForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             if (!isAdmin()) return;
+            console.log('Cadastro de usuário');
             const nome = document.getElementById('client-nome').value;
             const email = document.getElementById('client-email').value;
             const cnpj = document.getElementById('client-cnpj').value;
@@ -824,6 +835,7 @@
             try {
             const secApp = firebase.initializeApp(firebase.app().options, 'sec');
             const tempPass = 'gestao123';
+            await secApp.auth().setPersistence(firebase.auth.Auth.Persistence.NONE);
                 const dup = await db.collection('usuarios').where('cnpj', '==', cnpj).limit(1).get();
                 if (!dup.empty) {
                     alert('CNPJ já cadastrado');
@@ -850,8 +862,10 @@
                 secApp.delete();
                 e.target.reset();
                 loadUsers();
+                console.log('Usuário cadastrado');
                 alert('Usuário cadastrado com sucesso!');
             } catch (err) {
+                console.log('Erro ao cadastrar usuário', err);
                 if (err.code === 'auth/email-already-in-use') {
                     alert('Email já cadastrado');
                 } else {
@@ -862,12 +876,14 @@
 
         adminLogout.addEventListener('click', function() {
             auth.signOut();
+            localStorage.removeItem('usuario');
             show(authScreen);
             loginError.textContent = '';
         });
 
         logoutButton.addEventListener('click', function() {
             auth.signOut();
+            localStorage.removeItem('usuario');
             show(authScreen);
             loginError.textContent = '';
         });

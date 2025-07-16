@@ -581,6 +581,18 @@
         const perfilForm = document.getElementById('perfil-form');
         const tabButtons = document.querySelectorAll('.tab-button');
         const tabContents = document.querySelectorAll('.tab-content');
+
+        const reportType = document.getElementById('report-type');
+        const reportMonth = document.getElementById('report-month');
+        const reportYear = document.getElementById('report-year');
+        const monthSelectorDiv = document.getElementById('month-selector-div');
+        const yearSelectorDiv = document.getElementById('year-selector-div');
+        const generateReportBtn = document.getElementById('generate-report-btn');
+        const exportPdfBtn = document.getElementById('export-pdf-btn');
+        const reportOutput = document.getElementById('report-output');
+        const reportSummaryView = document.getElementById('report-summary-view');
+
+        const { jsPDF } = window.jspdf;
         auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(() => {});
         tabButtons.forEach(btn => {
             btn.addEventListener('click', () => {
@@ -589,6 +601,16 @@
                 btn.classList.add('tab-active');
                 document.getElementById('tab-' + btn.dataset.tab).classList.add('tab-content-active');
             });
+        });
+
+        reportType.addEventListener('change', () => {
+            if (reportType.value === 'monthly') {
+                monthSelectorDiv.classList.remove('hidden');
+                yearSelectorDiv.classList.add('hidden');
+            } else {
+                yearSelectorDiv.classList.remove('hidden');
+                monthSelectorDiv.classList.add('hidden');
+            }
         });
 
         function show(el) {
@@ -719,6 +741,122 @@
             const user = auth.currentUser;
             console.log(prefix, user ? user.email : 'sem usuário');
         }
+
+        function formatCurrency(v) {
+            return Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        }
+
+        async function sumCollection(col, start, end) {
+            const uid = auth.currentUser.uid;
+            const snap = await db.collection('usuarios').doc(uid).collection(col)
+                .where('data', '>=', start).where('data', '<=', end).get();
+            let total = 0;
+            snap.forEach(d => {
+                total += parseFloat(d.data().valor) || 0;
+            });
+            return total;
+        }
+
+        async function generateReport(e) {
+            e.preventDefault();
+            if (!auth.currentUser) {
+                alert('Sessão expirada. Faça login novamente.');
+                show(authScreen);
+                return;
+            }
+
+            const type = reportType.value;
+            let startDate, endDate, periodLabel;
+            if (type === 'monthly') {
+                if (!reportMonth.value) { alert('Selecione o mês'); return; }
+                const [year, month] = reportMonth.value.split('-').map(Number);
+                startDate = new Date(year, month - 1, 1);
+                endDate = new Date(year, month, 0);
+                periodLabel = reportMonth.value.split('-').reverse().join('/');
+            } else {
+                if (!reportYear.value) { alert('Informe o ano'); return; }
+                const year = parseInt(reportYear.value);
+                startDate = new Date(year, 0, 1);
+                endDate = new Date(year, 11, 31);
+                periodLabel = year.toString();
+            }
+            const startStr = startDate.toISOString().slice(0,10);
+            const endStr = endDate.toISOString().slice(0,10);
+
+            const uid = auth.currentUser.uid;
+
+            const calibSnap = await db.collection('usuarios').doc(uid).collection('calibracao').doc('dados').get();
+            const calib = calibSnap.exists ? calibSnap.data() : {};
+
+            const recSnap = await db.collection('usuarios').doc(uid).collection('receitas')
+                .where('data','>=',startStr).where('data','<=',endStr).get();
+            let totalReceitas = 0;
+            let impostosTaxas = 0;
+            recSnap.forEach(d => {
+                const r = d.data();
+                const valor = parseFloat(r.valor) || 0;
+                totalReceitas += valor;
+                impostosTaxas += valor * (calib.imposto_faturamento || 0) / 100;
+                switch(r.tipo) {
+                    case 'Débito':
+                        impostosTaxas += valor * (calib.taxa_debito || 0) / 100;
+                        break;
+                    case 'Crédito':
+                        impostosTaxas += valor * (calib.taxa_credito || 0) / 100;
+                        break;
+                    case 'iFood':
+                        impostosTaxas += valor * (calib.comissao_ifood || 0) / 100;
+                        break;
+                    case '99':
+                        impostosTaxas += valor * (calib.comissao_99 || 0) / 100;
+                        break;
+                }
+            });
+            impostosTaxas += totalReceitas * (calib.encargos_diversos || 0) / 100;
+
+            const totalConsumo = await sumCollection('despesasVariaveis', startStr, endStr);
+            const totalFixas = await sumCollection('despesasFixas', startStr, endStr);
+            const totalMao = await sumCollection('maoDeObra', startStr, endStr);
+
+            const lucroBruto = totalReceitas - totalConsumo;
+            const lucroLiquido = totalReceitas - totalConsumo - totalFixas - totalMao - impostosTaxas;
+
+            const perc = v => totalReceitas ? ((v/totalReceitas)*100).toFixed(2) : '0.00';
+
+            const user = JSON.parse(localStorage.getItem('usuario') || '{}');
+            document.getElementById('report-company-name-view').textContent = user.nomeFantasia || user.razaoSocial || '';
+            document.getElementById('report-company-cnpj-view').textContent = user.cnpj || '';
+            document.getElementById('report-period-view').textContent = type === 'monthly' ? periodLabel : 'Ano de ' + periodLabel;
+            document.getElementById('report-date-view').textContent = 'Gerado em: ' + new Date().toLocaleDateString();
+
+            document.getElementById('report-receita-total').textContent = formatCurrency(totalReceitas);
+            document.getElementById('report-consumo').textContent = formatCurrency(totalConsumo);
+            document.getElementById('report-consumo-perc').textContent = '(' + perc(totalConsumo) + '%)';
+            document.getElementById('report-lucro-bruto').textContent = formatCurrency(lucroBruto);
+            document.getElementById('report-despesas-fixas').textContent = formatCurrency(totalFixas);
+            document.getElementById('report-despesas-fixas-perc').textContent = '(' + perc(totalFixas) + '%)';
+            document.getElementById('report-mao-de-obra').textContent = formatCurrency(totalMao);
+            document.getElementById('report-mao-de-obra-perc').textContent = '(' + perc(totalMao) + '%)';
+            document.getElementById('report-impostos-taxas').textContent = formatCurrency(impostosTaxas);
+            document.getElementById('report-impostos-taxas-perc').textContent = '(' + perc(impostosTaxas) + '%)';
+            document.getElementById('report-lucro-liquido').textContent = formatCurrency(lucroLiquido);
+            document.getElementById('report-lucro-liquido-perc').textContent = '(' + perc(lucroLiquido) + '%)';
+
+            reportOutput.classList.remove('hidden');
+        }
+
+        async function exportPDF() {
+            const canvas = await html2canvas(reportSummaryView);
+            const imgData = canvas.toDataURL('image/png');
+            const pdf = new jsPDF('p', 'pt', 'a4');
+            const pageWidth = pdf.internal.pageSize.getWidth();
+            const pageHeight = canvas.height * pageWidth / canvas.width;
+            pdf.addImage(imgData, 'PNG', 0, 0, pageWidth, pageHeight);
+            pdf.save('relatorio-dre.pdf');
+        }
+
+        generateReportBtn.addEventListener('click', generateReport);
+        exportPdfBtn.addEventListener('click', exportPDF);
 
         async function saveCalibration(data) {
             logUserState('Salvar calibração - usuário');

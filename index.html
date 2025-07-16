@@ -117,6 +117,7 @@
             <h2 class="text-xl font-bold mb-4">Definir Nova Senha</h2>
             <form id="first-access-form" class="space-y-4">
                 <input type="password" id="first-password" placeholder="Nova senha" class="w-full p-3 border border-slate-300 rounded-lg" required>
+                <input type="password" id="first-confirm" placeholder="Confirme a senha" class="w-full p-3 border border-slate-300 rounded-lg" required>
                 <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded-lg">Salvar</button>
             </form>
         </div>
@@ -629,42 +630,20 @@
             const snap = await db.collection('usuarios').orderBy('dataCadastro', 'desc').get();
             const users = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(u => u.email !== adminEmail);
 
-            clientsList.innerHTML = `
-                <table class="min-w-full border text-xs">
-                    <thead class="bg-slate-100">
-                        <tr>
-                            <th class="px-2 py-1 border">Nome</th>
-                            <th class="px-2 py-1 border">Email</th>
-                            <th class="px-2 py-1 border">CNPJ</th>
-                            <th class="px-2 py-1 border">Razão Social</th>
-                            <th class="px-2 py-1 border">Plano</th>
-                            <th class="px-2 py-1 border">Tempo Contrato</th>
-                            <th class="px-2 py-1 border">Status</th>
-                            <th class="px-2 py-1 border">Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${users.map(u => {
-                            const status = !u.aprovado ? 'Pendente' : (u.status === 'ativo' ? 'Ativo' : 'Inativo');
-                            const toggle = status === 'Ativo' ? 'inativo' : 'ativo';
-                            return `
-                                <tr>
-                                    <td class="px-2 py-1 border">${u.nome || ''}</td>
-                                    <td class="px-2 py-1 border">${u.email || ''}</td>
-                                    <td class="px-2 py-1 border">${u.cnpj || ''}</td>
-                                    <td class="px-2 py-1 border">${u.razaoSocial || ''}</td>
-                                    <td class="px-2 py-1 border">${u.plano || ''}</td>
-                                    <td class="px-2 py-1 border">${u.tempoContrato || u.tempoLiberacao || ''}</td>
-                                    <td class="px-2 py-1 border">${status}</td>
-                                    <td class="px-2 py-1 border space-x-1">
-                                        <button onclick="toggleStatus('${u.id}', '${toggle}')" class="${status === 'Ativo' ? 'text-red-600' : 'text-green-600'} text-xs">${status === 'Ativo' ? 'Desativar' : 'Ativar'}</button>
-                                        <button onclick="editarTempo('${u.id}', ${u.tempoContrato || u.tempoLiberacao || 6})" class="text-blue-600 text-xs">Editar Tempo</button>
-                                    </td>
-                                </tr>
-                            `;
-                        }).join('')}
-                    </tbody>
-                </table>`;
+            clientsList.innerHTML = users.map(u => {
+                const label = !u.aprovado ? 'Autorizar' : (u.status === 'ativo' ? 'Cancelar' : 'Ativar');
+                const nextStatus = !u.aprovado ? 'ativo' : (u.status === 'ativo' ? 'inativo' : 'ativo');
+                const approve = !u.aprovado;
+                const color = label === 'Cancelar' ? 'bg-red-600' : 'bg-green-600';
+                const meses = u.tempoContrato || u.tempoLiberacao || '';
+                return `
+                    <div class="bg-white p-4 shadow rounded mb-4 mx-auto max-w-[350px] text-center">
+                        <p class="text-lg font-bold">${u.razaoSocial || ''}</p>
+                        <p class="text-sm text-slate-500 mb-4">${meses ? meses + ' meses' : ''}</p>
+                        <button onclick="toggleStatus('${u.id}', '${nextStatus}', ${approve})" class="w-full ${color} text-white py-2 rounded">${label}</button>
+                    </div>
+                `;
+            }).join('');
         }
 
         function fillProfile(data) {
@@ -683,10 +662,10 @@
         }
 
 
-        async function toggleStatus(id, status) {
+        async function toggleStatus(id, status, approve = false) {
             try {
                 const update = { status };
-                if (status === 'ativo') update.aprovado = true;
+                if (approve) update.aprovado = true;
                 await db.collection('usuarios').doc(id).update(update);
                 loadUsers();
                 alert('Status atualizado');
@@ -761,6 +740,10 @@
                         await auth.signOut();
                         return;
                     }
+                    if (data.primeiroAcesso !== false) {
+                        show(firstAccessScreen);
+                        return;
+                    }
                     localStorage.setItem('usuario', JSON.stringify(data));
                     fillProfile(data);
                     show(mainApp);
@@ -781,6 +764,15 @@
         firstAccessForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             const newPass = document.getElementById('first-password').value;
+            const confirmPass = document.getElementById('first-confirm').value;
+            if (newPass !== confirmPass) {
+                alert('As senhas não conferem');
+                return;
+            }
+            if (newPass.length < 6 || newPass === 'gestao123') {
+                alert('Escolha uma senha mais forte');
+                return;
+            }
             try {
                 await auth.currentUser.updatePassword(newPass);
                 await db.collection('usuarios').doc(auth.currentUser.uid).update({ primeiroAcesso: false });
@@ -805,15 +797,14 @@
             const plano = document.getElementById('client-plano').value;
             const tempo = document.getElementById('client-tempo').value;
             try {
-                const secApp = firebase.initializeApp(firebase.app().options, 'sec');
-                const tempPass = Math.random().toString(36).slice(-10);
+            const secApp = firebase.initializeApp(firebase.app().options, 'sec');
+            const tempPass = 'gestao123';
                 const dup = await db.collection('usuarios').where('cnpj', '==', cnpj).limit(1).get();
                 if (!dup.empty) {
                     alert('CNPJ já cadastrado');
                     return;
                 }
-                const cred = await secApp.auth().createUserWithEmailAndPassword(email, tempPass);
-                await secApp.auth().sendPasswordResetEmail(email);
+            const cred = await secApp.auth().createUserWithEmailAndPassword(email, tempPass);
                 await db.collection('usuarios').doc(cred.user.uid).set({
                     uid: cred.user.uid,
                     nome,
@@ -827,7 +818,8 @@
                     tempoContrato: parseInt(tempo),
                     dataCadastro: firebase.firestore.FieldValue.serverTimestamp(),
                     status: 'ativo',
-                    aprovado: true
+                    aprovado: true,
+                    primeiroAcesso: true
                 });
                 await secApp.auth().signOut();
                 secApp.delete();
